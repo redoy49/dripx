@@ -378,7 +378,7 @@ function NotificationBanner() {
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
+// Main Dashboard
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("7 days");
   const tabs = [
@@ -872,7 +872,7 @@ export default function DashboardPage() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// Styles
 const styles = {
   main: {
     margin: "0 auto",
