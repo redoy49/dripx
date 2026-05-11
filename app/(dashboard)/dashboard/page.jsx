@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// ── Inline SVG Icons ──────────────────────────────────────────────────────────
+// Inline SVG Icons
 const LinkedInIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -409,7 +409,7 @@ export default function DashboardPage() {
               gap: 8,
             }}
           >
-            Good evening, Mahin! <WaveEmoji />
+            Good evening, Ridoy! <WaveEmoji />
           </h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9ca3af" }}>
             Here&apos;s what&apos;s happening with your LinkedIn account today
@@ -570,7 +570,7 @@ export default function DashboardPage() {
         >
           <h2 style={styles.cardTitle}>Recent campaigns</h2>
           <div style={{ display: "flex", gap: 8 }}>
-            <a href="/campaigns" style={styles.outlineBtn}>
+            <a href="/dashboard/campaigns" style={styles.outlineBtn}>
               All campaigns
             </a>
             <button
@@ -877,7 +877,6 @@ const styles = {
   main: {
     margin: "0 auto",
     padding: "16px 24px 40px",
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     background: "#f9fafb",
     minHeight: "100vh",
     display: "flex",

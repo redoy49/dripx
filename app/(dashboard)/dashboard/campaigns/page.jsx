@@ -211,16 +211,25 @@ function TrashIcon({ onClick }) {
 function BellIcon() {
   return (
     <svg
-      className="w-5 h-5 text-gray-600"
-      fill="none"
-      stroke="currentColor"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
+      fill="none"
+      className="text-gray-500"
     >
       <path
+        d="M13.6 20H10.4"
+        stroke="currentColor"
+        strokeWidth="1.5"
         strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.8}
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M17 10V10C17 7.239 14.761 5 12 5 9.239 5 7 7.239 7 10V12.504C7 12.828 6.817 13.123 6.528 13.268L6.025 13.519C5.397 13.834 5 14.476 5 15.178 5 16.202 5.83 17.032 6.854 17.032H17.146C18.17 17.032 19 16.202 19 15.178 19 14.476 18.603 13.834 17.975 13.52L17.472 13.269C17.183 13.123 17 12.828 17 12.504V10Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -270,7 +279,7 @@ export default function CampaignPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Header */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 flex items-center justify-between gap-4">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 p-4 mb-4 flex items-center justify-between gap-4">
         <h1
           className="text-2xl font-semibold"
           style={{
@@ -282,13 +291,13 @@ export default function CampaignPage() {
           Campaigns
         </h1>
 
-        <button className="p-2 transition-colors rounded-full hover:ring bg-gray-100 hover:ring-gray-200">
+        <button className="p-2 transition-colors rounded-full hover:ring bg-gray-100 hover:ring-gray-200 ">
           <BellIcon />
         </button>
       </div>
 
       {/* Toolbar + Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden ">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden ">
         {/* Toolbar */}
         <div className="grid grid-cols-[2fr_1.2fr_1.4fr_0.8fr] items-center gap-4 px-6 py-4 border-b border-gray-100">
           {/* Search */}
@@ -321,7 +330,7 @@ export default function CampaignPage() {
 
           {/* Button */}
           <button
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 shadow-sm"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 shadow-xs"
             style={{
               background: "linear-gradient(to right, #7f64f5, #ae79f8)",
             }}
