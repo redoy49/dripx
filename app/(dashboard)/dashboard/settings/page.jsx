@@ -175,7 +175,16 @@ export default function SettingsPage() {
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 font-sans">
       {/* Top bar */}
       <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-8 bg-white border-b border-gray-100 rounded-xl">
-        <h1 className="text-lg font-bold tracking-tight">Settings</h1>
+        <h1
+          className="text-2xl font-semibold"
+          style={{
+            background: "linear-gradient(90deg, #ee7aee 0%, #fe9b85 100%)",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          Settings
+        </h1>
         <button className="p-2 transition-colors rounded-full hover:ring bg-gray-100 hover:ring-gray-200 ">
           <BellIcon />
         </button>
