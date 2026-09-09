@@ -1,6 +1,7 @@
 // app/teams/page.jsx
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ChevronDown,
   Download,
@@ -9,6 +10,7 @@ import {
   Mail,
   Pencil,
 } from "lucide-react";
+import MembersTab from "@/app/(dashboard)/dashboard/teams/MembersTab";
 
 const stats = [
   {
@@ -164,6 +166,15 @@ function OverviewCard({ item, border }) {
 }
 
 export default function TeamsPage() {
+  const [tab, setTab] = useState("profile");
+  const [me, setMe] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then(setMe);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Top Header */}
@@ -185,6 +196,32 @@ export default function TeamsPage() {
         </button>
       </div>
 
+      {/* Sub-tabs */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 mb-4 px-6">
+        <nav className="flex">
+          {[
+            { key: "profile", label: "My Profile" },
+            { key: "members", label: "Members" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                tab === t.key
+                  ? "border-indigo-600 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {tab === "members" && <MembersTab currentRole={me?.role || "member"} />}
+
+      {tab === "profile" && (
+      <>
       {/* Profile Section */}
       <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         <div className="p-6">
@@ -200,7 +237,7 @@ export default function TeamsPage() {
 
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-semibold text-gray-700 tracking-tight">
-                  Arthur O.
+                  {me?.user?.name || "..."}
                 </h1>
 
                 <button className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -335,6 +372,8 @@ export default function TeamsPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Floating Chat */}
       <button

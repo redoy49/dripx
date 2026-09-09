@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="pt-28">
       {/* HERO SECTION */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="max-w-384 mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-[#1c1c1d] leading-tight">
           Automate Your LinkedIn Outreach <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7f64f5] to-[#ae79f8]">
@@ -35,7 +35,7 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 mt-24 grid md:grid-cols-3 gap-8">
+      <section className="max-w-384 mx-auto px-4 sm:px-6 lg:px-8 mt-24 grid md:grid-cols-3 gap-8">
         {[
           {
             title: "Automated Messaging",

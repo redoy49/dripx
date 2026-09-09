@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 // Inline SVG Icons
 const LinkedInIcon = () => (
@@ -212,28 +213,18 @@ function CircleProgress({ color, bgColor, value, current, total, label }) {
 }
 
 // ── Mini Bar Chart ────────────────────────────────────────────────────────────
-const chartData = [
-  { day: "Apr 29", invites: 0, accepted: 0, messages: 0 },
-  { day: "Apr 30", invites: 0, accepted: 0, messages: 0 },
-  { day: "May 01", invites: 3, accepted: 0, messages: 0 },
-  { day: "May 02", invites: 0, accepted: 0, messages: 0 },
-  { day: "May 03", invites: 0, accepted: 0, messages: 0 },
-  { day: "May 04", invites: 0, accepted: 0, messages: 0 },
-  { day: "May 05", invites: 0, accepted: 0, messages: 0 },
-];
-
-const maxVal = Math.max(
-  ...chartData.map((d) => Math.max(d.invites, d.accepted, d.messages, 1)),
-);
-
 const barColors = {
   invites: "#7c5cfc",
   accepted: "#22d3ee",
   messages: "#f97316",
 };
 
-function BarChart() {
+function BarChart({ chartData }) {
   const chartHeight = 160;
+  if (chartData.length === 0) return null;
+  const maxVal = Math.max(
+    ...chartData.map((d) => Math.max(d.invites, d.accepted, d.messages, 1)),
+  );
   return (
     <div style={{ overflowX: "auto" }}>
       <svg
@@ -379,8 +370,78 @@ function NotificationBanner() {
 }
 
 // Main Dashboard
+// Toggle/delete actions for a campaign row, reusing the same endpoints as the
+// Campaigns page's table (activate/pause + delete), wired for use on the dashboard's
+// "Recent campaigns" preview.
+function CampaignRowActions({ campaign, onChanged }) {
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async () => {
+    setBusy(true);
+    if (campaign.status === "active") {
+      await fetch(`/api/campaigns/${campaign.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "paused" }),
+      });
+    } else {
+      await fetch(`/api/campaigns/${campaign.id}/activate`, { method: "POST" });
+    }
+    onChanged();
+    setBusy(false);
+  };
+
+  const remove = async () => {
+    setBusy(true);
+    await fetch(`/api/campaigns/${campaign.id}`, { method: "DELETE" });
+    onChanged();
+    setBusy(false);
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <button
+        onClick={toggle}
+        disabled={busy}
+        title={campaign.status === "active" ? "Pause campaign" : "Activate campaign"}
+        style={{
+          ...styles.toggle,
+          background: campaign.status === "active" ? "#7c5cfc" : "#e5e7eb",
+          cursor: busy ? "not-allowed" : "pointer",
+        }}
+      >
+        <div
+          style={{
+            ...styles.toggleThumb,
+            left: campaign.status === "active" ? 18 : 2,
+          }}
+        />
+      </button>
+      <button
+        onClick={remove}
+        disabled={busy}
+        title="Remove campaign"
+        style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+      >
+        <TrashIcon />
+      </button>
+    </div>
+  );
+}
+
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+const DEFAULT_LIMITS = { connectionRequests: 5, messages: 5, emails: 20, profileViews: 5 };
+
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("7 days");
+  const [summary, setSummary] = useState(null);
+  const [limits, setLimits] = useState(DEFAULT_LIMITS);
   const tabs = [
     "Today",
     "Yesterday",
@@ -389,6 +450,22 @@ export default function DashboardPage() {
     "90 days",
     "Pick dates",
   ];
+
+  const loadSummary = () => {
+    fetch("/api/dashboard/summary")
+      .then((res) => (res.ok ? res.json() : null))
+      .then(setSummary);
+  };
+
+  useEffect(() => {
+    loadSummary();
+    fetch("/api/settings/limits")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setLimits(data));
+  }, []);
+
+  const stats = summary?.statsToday || { invitesSent: 0, messagesSent: 0, emailsSent: 0, profileViews: 0 };
+  const pct = (value, max) => (max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0);
 
   return (
     <main style={styles.main}>
@@ -409,7 +486,7 @@ export default function DashboardPage() {
               gap: 8,
             }}
           >
-            Good evening, Ridoy! <WaveEmoji />
+            {greeting()}, {summary?.greetingName || "there"}! <WaveEmoji />
           </h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9ca3af" }}>
             Here&apos;s what&apos;s happening with your LinkedIn account today
@@ -438,33 +515,33 @@ export default function DashboardPage() {
             <CircleProgress
               color="#7c5cfc"
               bgColor="rgba(124,92,252,0.1)"
-              value={0}
-              current={0}
-              total={5}
+              value={pct(stats.invitesSent, limits.connectionRequests)}
+              current={stats.invitesSent}
+              total={limits.connectionRequests}
               label="Invites sent"
             />
             <CircleProgress
               color="#f97316"
               bgColor="rgba(249,115,22,0.1)"
-              value={0}
-              current={0}
-              total={5}
+              value={pct(stats.messagesSent, limits.messages)}
+              current={stats.messagesSent}
+              total={limits.messages}
               label="Messages sent"
             />
             <CircleProgress
               color="#f59e0b"
               bgColor="rgba(245,158,11,0.1)"
-              value={0}
-              current={0}
-              total={20}
+              value={pct(stats.emailsSent, limits.emails)}
+              current={stats.emailsSent}
+              total={limits.emails}
               label="Emails sent"
             />
             <CircleProgress
               color="#22c55e"
               bgColor="rgba(34,197,94,0.1)"
-              value={0}
-              current={0}
-              total={5}
+              value={pct(stats.profileViews, limits.profileViews)}
+              current={stats.profileViews}
+              total={limits.profileViews}
               label="Profile viewed"
             />
           </ul>
@@ -479,19 +556,19 @@ export default function DashboardPage() {
                   marginTop: 6,
                 }}
               >
-                <span style={styles.notifyValue}>3</span>
+                <span style={styles.notifyValue}>{summary?.pendingInvitations ?? 0}</span>
                 <button style={styles.withdrawBtn}>Withdraw</button>
               </div>
             </li>
             <li style={styles.notifyItem}>
               <span style={styles.notifyLabel}>UNREAD MESSAGES</span>
-              <span style={styles.notifyValue}>0</span>
+              <span style={styles.notifyValue}>{summary?.unreadMessages ?? 0}</span>
             </li>
             <li style={{ ...styles.notifyItem, borderRight: "none" }}>
               <span style={styles.notifyLabel}>
                 PROFILE VIEWS SINCE LAST WEEK
               </span>
-              <span style={styles.notifyValue}>0 %</span>
+              <span style={styles.notifyValue}>{summary?.profileViewsChangePct ?? 0} %</span>
             </li>
           </ul>
         </section>
@@ -500,24 +577,8 @@ export default function DashboardPage() {
         <section style={styles.card}>
           <h3 style={styles.cardTitle}>Recent activity</h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {[
-              {
-                name: "Allan Kramer",
-                time: "May 1, 12:47 pm",
-                campaign: "Test new 5 ca",
-              },
-              {
-                name: "Anne Degheest",
-                time: "May 1, 12:44 pm",
-                campaign: "Test new 5 ca",
-              },
-              {
-                name: "Aymeric Sallin",
-                time: "May 1, 12:42 pm",
-                campaign: "Test new 5 ca",
-              },
-            ].map((item, i) => (
-              <li key={i} style={styles.activityItem}>
+            {(summary?.recentActivity?.length ? summary.recentActivity : []).map((item) => (
+              <li key={item.id} style={styles.activityItem}>
                 <span style={styles.activityIcon}>
                   <LinkedInIcon />
                 </span>
@@ -530,9 +591,9 @@ export default function DashboardPage() {
                       lineHeight: 1.5,
                     }}
                   >
-                    Connection request was sent to{" "}
-                    <a href="#" style={styles.link}>
-                      {item.name}
+                    {item.label}{" "}
+                    <a href="/dashboard/leads" style={styles.link}>
+                      {item.leadName}
                     </a>
                   </p>
                   <div
@@ -545,15 +606,20 @@ export default function DashboardPage() {
                       flexWrap: "wrap",
                     }}
                   >
-                    <time>{item.time}</time>
+                    <time>{new Date(item.occurredAt).toLocaleString()}</time>
                     <span>•</span>
-                    <a href="#" style={styles.link}>
-                      {item.campaign}
+                    <a href="/dashboard/campaigns" style={styles.link}>
+                      {item.campaignName}
                     </a>
                   </div>
                 </div>
               </li>
             ))}
+            {summary && summary.recentActivity.length === 0 && (
+              <li style={{ padding: "16px 0", fontSize: 13, color: "#9ca3af" }}>
+                No activity yet — activate a campaign to see it here.
+              </li>
+            )}
           </ul>
         </section>
       </div>
@@ -573,17 +639,18 @@ export default function DashboardPage() {
             <a href="/dashboard/campaigns" style={styles.outlineBtn}>
               All campaigns
             </a>
-            <button
-              disabled
-              style={{
-                ...styles.outlineBtn,
-                opacity: 0.5,
-                cursor: "not-allowed",
-                background: "#f3f4f6",
-              }}
-            >
-              New campaign
-            </button>
+
+            <Link href="/dashboard/new-campaign">
+              <button
+                className="transition text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm"
+                style={{
+                  background:
+                    "linear-gradient(to right, rgb(127, 100, 245), rgb(174, 121, 248))",
+                }}
+              >
+                New campaign
+              </button>
+            </Link>
           </div>
         </div>
         <div style={styles.campaignGrid}>
@@ -592,139 +659,127 @@ export default function DashboardPage() {
           <span style={styles.colHead}>LinkedIn</span>
           <span style={styles.colHead}>Status</span>
         </div>
-        {/* Campaign item */}
-        <div style={styles.campaignItem}>
-          <div style={{ gridArea: "main" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                marginBottom: 8,
-              }}
-            >
-              <a
-                href="/campaigns/1903548"
+        {/* Campaign items */}
+        {(summary?.recentCampaigns?.length ? summary.recentCampaigns : []).map((c) => (
+          <div key={c.id} style={styles.campaignItem}>
+            <div style={{ gridArea: "main" }}>
+              <div
                 style={{
-                  ...styles.link,
-                  fontWeight: 600,
-                  fontSize: 14,
                   display: "flex",
                   alignItems: "center",
-                  gap: 4,
+                  gap: 6,
+                  marginBottom: 8,
                 }}
               >
-                Test new 5 ca <ChevronRight />
-              </a>
-              <InfoIcon size={16} />
-            </div>
-            {/* Progress bar */}
-            <div
-              style={{
-                display: "flex",
-                height: 6,
-                borderRadius: 4,
-                overflow: "hidden",
-                background: "#f3f4f6",
-                gap: 2,
-              }}
-            >
-              <div
-                style={{ flex: 3, background: "#f97316", borderRadius: 4 }}
-                title="In progress: 3"
-              />
-              <div
-                style={{ flex: 1, background: "#fcd9c0", borderRadius: 4 }}
-                title="Remaining: 1"
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                marginTop: 4,
-                fontSize: 12,
-                color: "#9ca3af",
-              }}
-            >
-              <span style={{ color: "#f97316", fontWeight: 700 }}>3</span>
-              <span style={{ color: "#fcd9c0", fontWeight: 700 }}>1</span>
-            </div>
-          </div>
-          <div style={{ gridArea: "leads" }}>
-            <p style={styles.statCaption}>Leads</p>
-            <div style={styles.statRow}>
-              <span style={{ fontSize: 13, color: "#6b7280" }}>All leads</span>
-              <a href="#" style={styles.link}>
-                4
-              </a>
-            </div>
-            <div style={styles.statRow}>
-              <span style={{ fontSize: 13, color: "#6b7280" }}>
-                Lists of leads
-              </span>
-              <a href="#" style={styles.link}>
-                1
-              </a>
-            </div>
-          </div>
-          <div style={{ gridArea: "linkedin" }}>
-            <p style={styles.statCaption}>LinkedIn</p>
-            <div style={styles.statRow}>
-              <span style={{ fontSize: 13, color: "#6b7280" }}>
-                Acceptance rate
-              </span>
-              <span style={{ fontWeight: 600 }}>0%</span>
-            </div>
-            <div style={styles.statRow}>
-              <span
-                style={{
-                  fontSize: 13,
-                  color: "#6b7280",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                Response rate <InfoIcon />
-              </span>
-              <span style={{ fontWeight: 600 }}>0%</span>
-            </div>
-          </div>
-          <div
-            style={{
-              gridArea: "status",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              {/* Toggle */}
-              <div style={styles.toggle}>
-                <div style={{ ...styles.toggleThumb, left: 2 }} />
+                <a
+                  href={`/dashboard/new-campaign?id=${c.id}`}
+                  style={{
+                    ...styles.link,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {c.name} <ChevronRight />
+                </a>
+                <InfoIcon size={16} />
               </div>
-              <button
-                title="Remove campaign"
+              {/* Progress bar */}
+              <div
                 style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 4,
+                  display: "flex",
+                  height: 6,
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  background: "#f3f4f6",
+                  gap: 2,
                 }}
               >
-                <TrashIcon />
-              </button>
+                <div
+                  style={{ flex: c.inProgress || 1, background: "#f97316", borderRadius: 4 }}
+                  title={`In progress: ${c.inProgress}`}
+                />
+                <div
+                  style={{ flex: c.remaining || 1, background: "#fcd9c0", borderRadius: 4 }}
+                  title={`Remaining: ${c.remaining}`}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: "#9ca3af",
+                }}
+              >
+                <span style={{ color: "#f97316", fontWeight: 700 }}>{c.inProgress}</span>
+                <span style={{ color: "#fcd9c0", fontWeight: 700 }}>{c.remaining}</span>
+              </div>
             </div>
-            <time style={{ fontSize: 12, color: "#9ca3af" }}>May 1, 2026</time>
+            <div style={{ gridArea: "leads" }}>
+              <p style={styles.statCaption}>Leads</p>
+              <div style={styles.statRow}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>All leads</span>
+                <a href="/dashboard/leads" style={styles.link}>
+                  {c.totalLeads}
+                </a>
+              </div>
+              <div style={styles.statRow}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>Status</span>
+                <span style={{ fontWeight: 600, textTransform: "capitalize" }}>{c.status}</span>
+              </div>
+            </div>
+            <div style={{ gridArea: "linkedin" }}>
+              <p style={styles.statCaption}>LinkedIn</p>
+              <div style={styles.statRow}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>
+                  Acceptance rate
+                </span>
+                <span style={{ fontWeight: 600 }} title="Not trackable in mock mode: the LinkedIn connector doesn't simulate a separate async acceptance event">
+                  —
+                </span>
+              </div>
+              <div style={styles.statRow}>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: "#6b7280",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  Response rate <InfoIcon />
+                </span>
+                <span style={{ fontWeight: 600 }}>
+                  {c.totalLeads > 0 ? `${Math.round((c.repliedCount / c.totalLeads) * 100)}%` : "0%"}
+                </span>
+              </div>
+            </div>
+            <div
+              style={{
+                gridArea: "status",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                alignItems: "flex-end",
+              }}
+            >
+              <CampaignRowActions campaign={c} onChanged={loadSummary} />
+              <time style={{ fontSize: 12, color: "#9ca3af" }}>
+                {new Date(c.createdAt).toLocaleDateString()}
+              </time>
+            </div>
           </div>
-        </div>
+        ))}
+        {summary && summary.recentCampaigns.length === 0 && (
+          <p style={{ padding: "24px 0", textAlign: "center", fontSize: 13, color: "#9ca3af" }}>
+            No campaigns yet — create your first one to get started.
+          </p>
+        )}
       </section>
 
       {/* Teams + Chart */}
@@ -742,11 +797,12 @@ export default function DashboardPage() {
                   <div
                     style={{ fontWeight: 600, fontSize: 14, color: "#7c5cfc" }}
                   >
-                    Default
+                    {summary?.team?.name || "Default"}
                   </div>
                 </div>
               </div>
-              <button
+              <a
+                href="/dashboard/teams"
                 style={{
                   background: "none",
                   border: "none",
@@ -757,18 +813,20 @@ export default function DashboardPage() {
                   alignItems: "center",
                   gap: 4,
                   padding: "4px 0",
+                  textDecoration: "none",
                 }}
               >
-                1 member <ChevronDown rotated />
-              </button>
+                {summary?.team?.memberCount ?? 1} member{(summary?.team?.memberCount ?? 1) === 1 ? "" : "s"}{" "}
+                <ChevronDown rotated />
+              </a>
             </div>
             <div style={styles.memberItem}>
-              <div style={styles.avatar}>R</div>
+              <div style={styles.avatar}>{summary?.team?.firstMember?.initial || "?"}</div>
               <div>
                 <div
                   style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}
                 >
-                  Redoy Al Hasan
+                  {summary?.team?.firstMember?.name || "..."}
                 </div>
                 <div style={{ fontSize: 11, color: "#9ca3af" }}>Owner</div>
               </div>
@@ -819,7 +877,7 @@ export default function DashboardPage() {
               Default
             </div>
 
-            <BarChart />
+            <BarChart chartData={summary?.weeklyChart || []} />
 
             {/* Legend */}
             <div

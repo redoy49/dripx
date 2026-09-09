@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Mail,
@@ -9,6 +9,7 @@ import {
   Settings,
   Megaphone,
   Database,
+  LogOut,
 } from "lucide-react";
 
 const menu = [
@@ -22,6 +23,13 @@ const menu = [
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   // smarter active checker
   const isActive = (href) => {
@@ -68,6 +76,14 @@ export default function DashboardLayout({ children }) {
             Upgrade
           </button>
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="mt-3 flex items-center gap-2 p-2 rounded-md text-sm text-gray-500 hover:bg-gray-100 transition"
+        >
+          <LogOut size={16} />
+          Log out
+        </button>
       </aside>
 
       {/* Main Content */}

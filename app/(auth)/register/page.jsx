@@ -1,10 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const invite = searchParams.get("invite");
+
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, invite }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Could not create account");
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#eef2ff]">
@@ -79,16 +114,20 @@ export default function RegisterPage() {
           </div>
 
           {/* form */}
-          <form className="space-y-3">
+          <form onSubmit={handleRegister} className="space-y-3">
             <input
               type="text"
               placeholder="Full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="h-12 w-full rounded-lg border border-gray-200 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             />
 
             <input
               type="email"
               placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="h-12 w-full rounded-lg border border-gray-200 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             />
 
@@ -96,6 +135,8 @@ export default function RegisterPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Create password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="h-12 w-full rounded-lg border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
               />
 
@@ -110,9 +151,10 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="h-12 w-full cursor-pointer rounded-lg bg-gradient-to-r from-[#7f64f5] to-[#ae79f8] px-4 text-sm font-semibold text-white transition hover:opacity-95 hover:shadow-lg"
+              disabled={loading}
+              className="h-12 w-full cursor-pointer rounded-lg bg-gradient-to-r from-[#7f64f5] to-[#ae79f8] px-4 text-sm font-semibold text-white transition hover:opacity-95 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Create account
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
@@ -139,6 +181,14 @@ export default function RegisterPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }
 

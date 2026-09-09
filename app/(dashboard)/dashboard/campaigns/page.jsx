@@ -1,193 +1,10 @@
 "use client";
 
-import { useState } from "react";
-
-const campaigns = [
-  {
-    id: 1,
-    name: "CMO - United States",
-    allLeads: 0,
-    listsOfLeads: 1,
-    acceptanceRate: "0%",
-    acceptanceCount: null,
-    responseRate: "0%",
-    responseCount: null,
-    active: true,
-    date: "Dec 19, 2024",
-    totalSlots: 1000,
-    progress: [{ color: "bg-purple-400", value: 100 }],
-    progressLabels: [{ value: 1000, color: "text-gray-400" }],
-  },
-  {
-    id: 2,
-    name: "Engagement with Dripify - Marketing",
-    allLeads: 1217,
-    listsOfLeads: 3,
-    acceptanceRate: "40.7%",
-    acceptanceCount: 48,
-    responseRate: "0.8%",
-    responseCount: 1,
-    active: true,
-    date: "Aug 29, 2024",
-    progress: [
-      { color: "bg-green-500", value: 25 },
-      { color: "bg-yellow-400", value: 6 },
-      { color: "bg-red-400", value: 1 },
-      { color: "bg-red-300", value: 68 },
-    ],
-    progressLabels: [
-      { value: 304, color: "text-green-600" },
-      { value: 70, color: "text-yellow-500" },
-      { value: 11, color: "text-red-500" },
-      { value: 832, color: "text-red-300" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Engagement with Dripify - Sales",
-    allLeads: 2500,
-    listsOfLeads: 3,
-    acceptanceRate: "6.3%",
-    acceptanceCount: 13,
-    responseRate: "0%",
-    responseCount: null,
-    active: true,
-    date: "Aug 23, 2024",
-    progress: [
-      { color: "bg-green-500", value: 54 },
-      { color: "bg-red-400", value: 3 },
-      { color: "bg-red-300", value: 43 },
-    ],
-    progressLabels: [
-      { value: 1345, color: "text-green-600" },
-      { value: 75, color: "text-red-500" },
-      { value: 1080, color: "text-red-300" },
-    ],
-  },
-  {
-    id: 4,
-    name: "Lead Generation - United States",
-    allLeads: 1969,
-    listsOfLeads: 23,
-    acceptanceRate: "41.2%",
-    acceptanceCount: 28,
-    responseRate: "17.2%",
-    responseCount: 15,
-    active: true,
-    date: "Aug 23, 2024",
-    progress: [
-      { color: "bg-green-500", value: 71 },
-      { color: "bg-yellow-400", value: 1 },
-      { color: "bg-orange-400", value: 14 },
-      { color: "bg-orange-200", value: 13 },
-      { color: "bg-red-300", value: 2 },
-    ],
-    progressLabels: [
-      { value: 1407, color: "text-green-600" },
-      { value: 15, color: "text-yellow-500" },
-      { value: 283, color: "text-orange-500" },
-      { value: 264, color: "text-orange-300" },
-      { value: 35, color: "text-red-400" },
-    ],
-  },
-  {
-    id: 5,
-    name: "Head of Marketing - United States",
-    allLeads: 1098,
-    listsOfLeads: 2,
-    acceptanceRate: "10%",
-    acceptanceCount: 2,
-    responseRate: "0%",
-    responseCount: null,
-    active: true,
-    date: "Aug 23, 2024",
-    progress: [
-      { color: "bg-green-500", value: 14 },
-      { color: "bg-red-400", value: 1 },
-      { color: "bg-red-300", value: 85 },
-    ],
-    progressLabels: [
-      { value: 151, color: "text-green-600" },
-      { value: 15, color: "text-red-500" },
-      { value: 932, color: "text-red-300" },
-    ],
-  },
-  {
-    id: 6,
-    name: "Startup Outreach - Europe",
-    allLeads: 842,
-    listsOfLeads: 4,
-    acceptanceRate: "22%",
-    acceptanceCount: 18,
-    responseRate: "5.4%",
-    responseCount: 5,
-    active: true,
-    date: "Jan 10, 2025",
-    progress: [
-      { color: "bg-green-500", value: 40 },
-      { color: "bg-yellow-400", value: 10 },
-      { color: "bg-red-300", value: 50 },
-    ],
-    progressLabels: [
-      { value: 336, color: "text-green-600" },
-      { value: 84, color: "text-yellow-500" },
-      { value: 422, color: "text-red-300" },
-    ],
-  },
-  {
-    id: 7,
-    name: "Startup Outreach - Europe",
-    allLeads: 842,
-    listsOfLeads: 4,
-    acceptanceRate: "22%",
-    acceptanceCount: 18,
-    responseRate: "5.4%",
-    responseCount: 5,
-    active: true,
-    date: "Jan 10, 2025",
-    progress: [
-      { color: "bg-green-500", value: 40 },
-      { color: "bg-yellow-400", value: 10 },
-      { color: "bg-red-300", value: 50 },
-    ],
-    progressLabels: [
-      { value: 336, color: "text-green-600" },
-      { value: 84, color: "text-yellow-500" },
-      { value: 422, color: "text-red-300" },
-    ],
-  },
-];
-
-function ProgressBar({ segments }) {
-  return (
-    <div className="flex w-full h-1.5 rounded-full overflow-hidden gap-px">
-      {segments.map((seg, i) => (
-        <div
-          key={i}
-          className={`${seg.color} h-full`}
-          style={{ width: `${seg.value}%` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function Toggle({ active, onChange }) {
-  return (
-    <button
-      onClick={onChange}
-      className={`relative inline-flex h-5.5 w-11 items-center rounded-full transition-colors duration-200 ${
-        active ? "bg-violet-500" : "bg-gray-200"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-          active ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-  );
-}
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import BellIcon from "@/app/components/ui/BellIcon";
+import ProgressBar from "@/app/components/ui/ProgressBar";
+import { ToggleViolet } from "@/app/components/ui/Toggle";
 
 function TrashIcon({ onClick }) {
   return (
@@ -208,41 +25,9 @@ function TrashIcon({ onClick }) {
   );
 }
 
-function BellIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="text-gray-500"
-    >
-      <path
-        d="M13.6 20H10.4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M17 10V10C17 7.239 14.761 5 12 5 9.239 5 7 7.239 7 10V12.504C7 12.828 6.817 13.123 6.528 13.268L6.025 13.519C5.397 13.834 5 14.476 5 15.178 5 16.202 5.83 17.032 6.854 17.032H17.146C18.17 17.032 19 16.202 19 15.178 19 14.476 18.603 13.834 17.975 13.52L17.472 13.269C17.183 13.123 17 12.828 17 12.504V10Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 function SearchIcon() {
   return (
-    <svg
-      className="w-4 h-4 text-gray-400"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
+    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -253,26 +38,72 @@ function SearchIcon() {
   );
 }
 
+function campaignProgress(breakdown, leadCount) {
+  if (!leadCount) return [{ color: "bg-gray-200", value: 100 }];
+
+  const segments = [];
+  if (breakdown.completed) segments.push({ color: "bg-green-500", value: (breakdown.completed / leadCount) * 100 });
+  if (breakdown.replied) segments.push({ color: "bg-cyan-400", value: (breakdown.replied / leadCount) * 100 });
+  if (breakdown.inProgress) segments.push({ color: "bg-orange-400", value: (breakdown.inProgress / leadCount) * 100 });
+  if (breakdown.pending) segments.push({ color: "bg-gray-200", value: (breakdown.pending / leadCount) * 100 });
+
+  return segments.length ? segments : [{ color: "bg-gray-200", value: 100 }];
+}
+
 export default function CampaignPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
-  const [campaignList, setCampaignList] = useState(campaigns);
+  const [campaignList, setCampaignList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
-  const toggleCampaign = (id) => {
-    setCampaignList((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, active: !c.active } : c)),
-    );
+  const load = useCallback(() => {
+    fetch("/api/campaigns")
+      .then((res) => res.json())
+      .then((data) => {
+        setCampaignList(data.items || []);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const toggleCampaign = async (campaign) => {
+    if (campaign.status === "active") {
+      await fetch(`/api/campaigns/${campaign.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "paused" }),
+      });
+    } else {
+      await fetch(`/api/campaigns/${campaign.id}/activate`, { method: "POST" });
+    }
+    load();
   };
 
-  const deleteCampaign = (id) => {
+  const deleteCampaign = async (id) => {
     setCampaignList((prev) => prev.filter((c) => c.id !== id));
+    await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+  };
+
+  const createCampaign = async () => {
+    setCreating(true);
+    const res = await fetch("/api/campaigns", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Untitled Campaign" }),
+    });
+    const data = await res.json();
+    setCreating(false);
+    if (res.ok) router.push(`/dashboard/new-campaign?id=${data.id}`);
   };
 
   const filtered = campaignList.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
-
-    const matchesActive = activeOnly ? c.active : true;
-
+    const matchesActive = activeOnly ? c.status === "active" : true;
     return matchesSearch && matchesActive;
   });
 
@@ -330,12 +161,14 @@ export default function CampaignPage() {
 
           {/* Button */}
           <button
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 shadow-xs"
+            onClick={createCampaign}
+            disabled={creating}
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 shadow-xs disabled:opacity-60"
             style={{
               background: "linear-gradient(to right, #7f64f5, #ae79f8)",
             }}
           >
-            New campaign
+            {creating ? "Creating..." : "New campaign"}
           </button>
         </div>
 
@@ -345,7 +178,7 @@ export default function CampaignPage() {
 
           <span className="text-sm font-medium text-gray-500">Leads</span>
 
-          <span className="text-sm font-medium text-gray-500">LinkedIn</span>
+          <span className="text-sm font-medium text-gray-500">Progress</span>
 
           <span className="text-sm font-medium text-gray-500 text-right">
             Status
@@ -353,7 +186,9 @@ export default function CampaignPage() {
         </div>
 
         {/* Rows */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center text-sm text-gray-400">Loading campaigns...</div>
+        ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-sm text-gray-400">
             No campaigns found.
           </div>
@@ -367,21 +202,18 @@ export default function CampaignPage() {
             >
               {/* Overview */}
               <div className="pr-8">
-                <div className="text-[15px] font-semibold text-gray-600 mb-2">
+                <button
+                  onClick={() => router.push(`/dashboard/new-campaign?id=${campaign.id}`)}
+                  className="text-[15px] font-semibold text-gray-600 mb-2 hover:text-[#6367FF] transition-colors text-left"
+                >
                   {campaign.name}
-                </div>
+                </button>
 
-                <ProgressBar segments={campaign.progress} />
+                <ProgressBar segments={campaignProgress(campaign.statusBreakdown, campaign.leadCount)} />
 
-                <div className="flex gap-3 mt-2 flex-wrap">
-                  {campaign.progressLabels.map((lbl, i) => (
-                    <span
-                      key={i}
-                      className={`text-xs font-medium ${lbl.color}`}
-                    >
-                      {lbl.value}
-                    </span>
-                  ))}
+                <div className="flex gap-3 mt-2 flex-wrap text-xs text-gray-400">
+                  <span>{campaign.statusBreakdown.completed} completed</span>
+                  <span>{campaign.statusBreakdown.inProgress} in progress</span>
                 </div>
               </div>
 
@@ -389,70 +221,38 @@ export default function CampaignPage() {
               <div className="pr-8 space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-gray-500">All leads</span>
-
-                  <span className="text-[15px] font-medium text-violet-500">
-                    {campaign.allLeads === 0
-                      ? "0"
-                      : campaign.allLeads.toLocaleString()}
-                  </span>
+                  <span className="text-[15px] font-medium text-violet-500">{campaign.leadCount}</span>
                 </div>
-
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm text-gray-500">Lists of leads</span>
-
-                  <span className="text-[15px] font-medium text-violet-500">
-                    {campaign.listsOfLeads}
+                  <span className="text-sm text-gray-500">Channels</span>
+                  <span className="text-sm font-medium text-gray-600 capitalize">
+                    {campaign.channels.join(", ")}
                   </span>
                 </div>
               </div>
 
-              {/* LinkedIn */}
+              {/* Progress detail */}
               <div className="pr-8 space-y-3">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm text-gray-500">Acceptance rate</span>
-
-                  <div className="flex items-center gap-4">
-                    <span className="text-[15px] font-medium text-gray-600">
-                      {campaign.acceptanceRate}
-                    </span>
-
-                    {campaign.acceptanceCount && (
-                      <span className="text-sm font-medium text-violet-500">
-                        {campaign.acceptanceCount}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm text-gray-500">Replied</span>
+                  <span className="text-[15px] font-medium text-gray-600">{campaign.repliedCount}</span>
                 </div>
-
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm text-gray-500">Response rate</span>
-
-                  <div className="flex items-center gap-4">
-                    <span className="text-[15px] font-medium text-gray-600">
-                      {campaign.responseRate}
-                    </span>
-
-                    {campaign.responseCount && (
-                      <span className="text-sm font-medium text-violet-500">
-                        {campaign.responseCount}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm text-gray-500">Completed</span>
+                  <span className="text-[15px] font-medium text-gray-600">
+                    {campaign.statusBreakdown.completed}
+                  </span>
                 </div>
               </div>
 
               {/* Status */}
               <div className="flex flex-col items-end gap-3">
                 <div className="flex items-center gap-3">
-                  <Toggle
-                    active={campaign.active}
-                    onChange={() => toggleCampaign(campaign.id)}
-                  />
-
+                  <ToggleViolet active={campaign.status === "active"} onChange={() => toggleCampaign(campaign)} />
                   <TrashIcon onClick={() => deleteCampaign(campaign.id)} />
                 </div>
 
-                <span className="text-xs text-gray-400">{campaign.date}</span>
+                <span className="text-xs text-gray-400 capitalize">{campaign.status}</span>
               </div>
             </div>
           ))

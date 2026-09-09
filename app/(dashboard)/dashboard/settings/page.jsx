@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Clock, FileText, ShieldCheck, Tag, Plug } from "lucide-react";
+import { DAILY_LIMIT_MAX } from "@/app/lib/limits.constants";
+import IntegrationsTab from "@/app/(dashboard)/dashboard/settings/IntegrationsTab";
 
 const TABS = [
   "Limits & Activity control",
@@ -8,17 +11,18 @@ const TABS = [
   "Sequence templates",
   "Data scrubber",
   "Lead tagging",
+  "Integrations",
 ];
 
-const SLIDERS = [
-  { label: "Connection requests", value: 5, max: 75 },
-  { label: "Messages", value: 5, max: 100 },
-  { label: "InMails", value: 5, max: 25 },
-  { label: "Profile views", value: 5, max: 200 },
-  { label: "Endorsements", value: 5, max: 50 },
-  { label: "Likes", value: 5, max: 50 },
-  { label: "Followings", value: 5, max: 50 },
-  { label: "Emails", value: 20, max: 200 },
+const SLIDER_META = [
+  { key: "connectionRequests", label: "Connection requests" },
+  { key: "messages", label: "Messages" },
+  { key: "inmails", label: "InMails" },
+  { key: "profileViews", label: "Profile views" },
+  { key: "endorsements", label: "Endorsements" },
+  { key: "likes", label: "Likes" },
+  { key: "followings", label: "Followings" },
+  { key: "emails", label: "Emails" },
 ];
 
 function BellIcon() {
@@ -116,15 +120,41 @@ function GlobeSVG() {
   );
 }
 
-function SliderRow({ label, value, max }) {
+function SliderRow({ label, value, max, onChange }) {
+  const trackRef = useRef(null);
   const pct = `${(value / max) * 100}%`;
+
+  const valueFromClientX = (clientX) => {
+    const track = trackRef.current;
+    if (!track) return value;
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.round(ratio * max);
+  };
+
+  const startDrag = (e) => {
+    e.preventDefault();
+    onChange(valueFromClientX(e.clientX));
+
+    const handleMove = (moveEvent) => onChange(valueFromClientX(moveEvent.clientX));
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  };
 
   return (
     <li className="grid grid-cols-[150px_1fr_48px] items-center gap-4 py-4 border-b border-gray-100 last:border-0">
       <span className="text-[15px] font-medium text-gray-800">{label}</span>
-      <div className="relative py-4 flex-1">
+      <div
+        ref={trackRef}
+        onPointerDown={startDrag}
+        className="relative py-4 flex-1 cursor-pointer touch-none"
+      >
         <span
-          className="absolute -top-5 bg-white border border-gray-200 rounded-sm px-2.5 py-0.5 text-[12px] font-mono font-semibold text-gray-600 shadow-sm z-10"
+          className="absolute -top-5 bg-white border border-gray-200 rounded-sm px-2.5 py-0.5 text-[12px] font-mono font-semibold text-gray-600 shadow-sm z-10 pointer-events-none"
           style={{ left: `calc(${pct} - 12px)` }}
         >
           {value}
@@ -166,10 +196,61 @@ function Toggle({ checked, onChange }) {
   );
 }
 
+function ComingSoonPanel({ icon: Icon, title, description }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+        <Icon className="h-7 w-7 text-gray-400" strokeWidth={1.7} />
+      </div>
+      <h3 className="text-base font-semibold text-gray-700">{title}</h3>
+      <p className="max-w-sm text-sm text-gray-400">{description}</p>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState(0);
-  const [activityOn, setActivityOn] = useState(true);
-  const [range, setRange] = useState("3");
+  const [limits, setLimits] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const saveTimeout = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/settings/limits")
+      .then((res) => res.json())
+      .then((data) => {
+        setLimits(data);
+        setLoading(false);
+      });
+  }, []);
+
+  const persist = (patch) => {
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(() => {
+      fetch("/api/settings/limits", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      }).catch(() => {});
+    }, 400);
+  };
+
+  const updateSlider = (key, value) => {
+    setLimits((prev) => ({ ...prev, [key]: value }));
+    persist({ [key]: value });
+  };
+
+  const updateActivityOn = () => {
+    setLimits((prev) => {
+      const next = { ...prev, activityControlOn: !prev.activityControlOn };
+      persist({ activityControlOn: next.activityControlOn });
+      return next;
+    });
+  };
+
+  const updateRange = (value) => {
+    setLimits((prev) => ({ ...prev, range: value }));
+    persist({ range: value });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 font-sans">
@@ -210,80 +291,118 @@ export default function SettingsPage() {
             ))}
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_320px] gap-0 p-8">
-            {/* Left: Sliders */}
-            <div className="min-w-0">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
-                  Maximum actions per day:
-                </h2>
-                <div className="flex items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1 font-medium">
-                    Range
-                    <span
-                      className="flex items-center justify-center w-4 h-4 text-[10px] border border-gray-400 rounded-full cursor-help"
-                      title="Natural behavior help text"
-                    >
-                      i
-                    </span>
-                  </span>
-                  <select
-                    value={range}
-                    onChange={(e) => setRange(e.target.value)}
-                    className="appearance-none bg-gray-100 border border-gray-200 rounded-lg px-4 py-1.5 pr-8 font-bold text-gray-800 cursor-pointer focus:outline-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M8 10L12 14L16 10' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 8px center",
-                    }}
-                  >
-                    {["1", "3", "5", "7", "10"].map((v) => (
-                      <option key={v} value={v}>
-                        {v}
-                      </option>
+          {activeTab === 0 &&
+            (loading || !limits ? (
+              <div className="py-20 text-center text-sm text-gray-400">Loading limits...</div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_320px] gap-0 p-8">
+                {/* Left: Sliders */}
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                      Maximum actions per day:
+                    </h2>
+                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                      <span className="flex items-center gap-1 font-medium">
+                        Range
+                        <span
+                          className="flex items-center justify-center w-4 h-4 text-[10px] border border-gray-400 rounded-full cursor-help"
+                          title="How many actions vary day to day around your target, so activity looks natural"
+                        >
+                          i
+                        </span>
+                      </span>
+                      <select
+                        value={limits.range}
+                        onChange={(e) => updateRange(e.target.value)}
+                        className="appearance-none bg-gray-100 border border-gray-200 rounded-lg px-4 py-1.5 pr-8 font-bold text-gray-800 cursor-pointer focus:outline-none"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M8 10L12 14L16 10' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: "no-repeat",
+                          backgroundPosition: "right 8px center",
+                        }}
+                      >
+                        {["1", "3", "5", "7", "10"].map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-1">
+                    {SLIDER_META.map((s) => (
+                      <SliderRow
+                        key={s.key}
+                        label={s.label}
+                        value={limits[s.key] ?? 0}
+                        max={DAILY_LIMIT_MAX[s.key]}
+                        onChange={(v) => updateSlider(s.key, v)}
+                      />
                     ))}
-                  </select>
+                  </ul>
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="hidden lg:block w-[1px] bg-gray-100 mx-8 self-stretch" />
+
+                {/* Right: Activity Control */}
+                <div className="flex flex-col items-center text-center gap-4 pt-4">
+                  <GlobeSVG />
+                  <h3 className="text-base font-bold">Activity control</h3>
+                  <p className="text-xs leading-relaxed text-gray-500">
+                    Advanced safety feature that ensures gradual growth and adjusts
+                    limits to prevent accounts from being flagged.
+                  </p>
+
+                  <div
+                    className={`flex items-center justify-between w-full p-3 mt-4 border rounded-xl transition-all ${
+                      limits.activityControlOn
+                        ? "bg-green-50 border-green-200"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-bold ${limits.activityControlOn ? "text-green-600" : "text-gray-500"}`}
+                    >
+                      {limits.activityControlOn ? "Activated" : "Deactivated"}
+                    </span>
+                    <Toggle checked={limits.activityControlOn} onChange={updateActivityOn} />
+                  </div>
                 </div>
               </div>
+            ))}
 
-              <ul className="space-y-1">
-                {SLIDERS.map((s) => (
-                  <SliderRow key={s.label} {...s} />
-                ))}
-              </ul>
-            </div>
-
-            {/* Vertical Divider */}
-            <div className="hidden lg:block w-[1px] bg-gray-100 mx-8 self-stretch" />
-
-            {/* Right: Activity Control */}
-            <div className="flex flex-col items-center text-center gap-4 pt-4">
-              <GlobeSVG />
-              <h3 className="text-base font-bold">Activity control</h3>
-              <p className="text-xs leading-relaxed text-gray-500">
-                Advanced safety feature that ensures gradual growth and adjusts
-                limits to prevent accounts from being flagged.
-              </p>
-
-              <div
-                className={`flex items-center justify-between w-full p-3 mt-4 border rounded-xl transition-all ${
-                  activityOn
-                    ? "bg-green-50 border-green-200"
-                    : "bg-gray-50 border-gray-200"
-                }`}
-              >
-                <span
-                  className={`text-sm font-bold ${activityOn ? "text-green-600" : "text-gray-500"}`}
-                >
-                  {activityOn ? "Activated" : "Deactivated"}
-                </span>
-                <Toggle
-                  checked={activityOn}
-                  onChange={() => setActivityOn(!activityOn)}
-                />
-              </div>
-            </div>
-          </div>
+          {activeTab === 1 && (
+            <ComingSoonPanel
+              icon={Clock}
+              title="Working hours"
+              description="Scheduling campaigns to only run during your leads' local working hours is on the roadmap."
+            />
+          )}
+          {activeTab === 2 && (
+            <ComingSoonPanel
+              icon={FileText}
+              title="Sequence templates"
+              description="Save and reuse sequence templates across campaigns — coming soon."
+            />
+          )}
+          {activeTab === 3 && (
+            <ComingSoonPanel
+              icon={ShieldCheck}
+              title="Data scrubber"
+              description="Automatic PII cleanup rules for imported lead data are on the roadmap."
+            />
+          )}
+          {activeTab === 4 && (
+            <ComingSoonPanel
+              icon={Tag}
+              title="Lead tagging"
+              description="Manage workspace-wide tag presets here — for now, tag leads directly from the Leads page."
+            />
+          )}
+          {activeTab === 5 && <IntegrationsTab />}
         </div>
       </main>
 

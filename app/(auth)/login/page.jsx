@@ -10,14 +10,31 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (password === "admin") {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Invalid email or password");
+        return;
+      }
+
       router.push("/dashboard");
-    } else {
-      alert("Invalid password");
+      router.refresh();
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,15 +181,16 @@ export default function LoginPage() {
             {/* login button */}
             <button
               type="submit"
+              disabled={loading}
               className="
                 h-12 w-full cursor-pointer rounded-lg
                 bg-gradient-to-r from-[#7f64f5] to-[#ae79f8]
                 px-4 text-sm font-semibold text-white transition
-                hover:shadow-lg
+                hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed
                 focus:outline-none focus:ring-4 focus:ring-indigo-100
               "
             >
-              Log in
+              {loading ? "Logging in..." : "Log in"}
             </button>
           </form>
 
