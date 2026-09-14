@@ -3,7 +3,7 @@ import { getLinkedInConnector } from "@/app/lib/connectors";
 import { sendEmail } from "@/app/lib/email/resend";
 import { renderTemplate } from "@/app/lib/personalization";
 import { isUnderLimit } from "@/app/lib/limits";
-import { resolveNextExecutableStep } from "@/app/lib/sequenceEngine";
+import { resolveStepAfter } from "@/app/lib/sequenceEngine";
 import { dispatchWebhookEvent } from "@/app/lib/webhooks";
 
 // Finds/creates the unified-inbox conversation for a lead+channel and appends a message to it.
@@ -218,7 +218,7 @@ export async function processJob(job) {
 
     // Resolve what happens next in the sequence (walking through any delay/condition steps).
     const allSteps = await sequenceStepsCol.find({ campaignId: job.campaignId }).toArray();
-    const { nextStep, delayMs } = await resolveNextExecutableStep(allSteps, step, (conditionStep) =>
+    const { nextStep, delayMs } = await resolveStepAfter(allSteps, step, (conditionStep) =>
       evaluateHasReplied(lead._id, campaignLead.enrolledAt),
     );
 

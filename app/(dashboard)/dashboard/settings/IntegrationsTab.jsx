@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Webhook, Database, Sheet, Plus, Trash2, Copy } from "lucide-react";
+import { FiLinkedin } from "react-icons/fi";
 import Badge from "@/app/components/ui/Badge";
 import GradientButton from "@/app/components/ui/GradientButton";
 
@@ -156,6 +157,69 @@ function WebhooksCard() {
   );
 }
 
+function LinkedInCard() {
+  const [status, setStatus] = useState("disconnected");
+  const [lastError, setLastError] = useState(null);
+  const [configured, setConfigured] = useState(true);
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  const load = () => {
+    fetch("/api/integrations/unipile")
+      .then((res) => res.json())
+      .then((data) => {
+        setStatus(data.status);
+        setLastError(data.lastError);
+        setConfigured(data.serverConfigured);
+      });
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const disconnect = async () => {
+    setDisconnecting(true);
+    await fetch("/api/integrations/unipile", { method: "DELETE" });
+    load();
+    setDisconnecting(false);
+  };
+
+  return (
+    <IntegrationCard
+      icon={FiLinkedin}
+      title="LinkedIn (via Unipile)"
+      description="Connect a real LinkedIn account to run live campaigns"
+      status={status === "connected" ? "connected" : "disconnected"}
+    >
+      <div className="mt-4">
+        {!configured && (
+          <p className="mb-3 text-xs text-amber-600">
+            Add UNIPILE_DSN / UNIPILE_API_KEY to .env.local to enable this.
+          </p>
+        )}
+        {status === "error" && lastError && (
+          <p className="mb-3 text-xs text-red-500">{lastError}</p>
+        )}
+
+        {configured && status !== "connected" && (
+          <a href="/api/integrations/unipile/connect">
+            <GradientButton>{status === "connecting" ? "Finish connecting..." : "Connect LinkedIn"}</GradientButton>
+          </a>
+        )}
+        {status === "connected" && (
+          <button
+            onClick={disconnect}
+            disabled={disconnecting}
+            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+          >
+            {disconnecting ? "Disconnecting..." : "Disconnect"}
+          </button>
+        )}
+      </div>
+    </IntegrationCard>
+  );
+}
+
 function HubSpotCard() {
   const [status, setStatus] = useState("disconnected");
   const [configured, setConfigured] = useState(true);
@@ -247,6 +311,7 @@ function GoogleSheetsCard() {
 export default function IntegrationsTab() {
   return (
     <div className="grid grid-cols-1 gap-4 p-8 lg:grid-cols-3">
+      <LinkedInCard />
       <WebhooksCard />
       <HubSpotCard />
       <GoogleSheetsCard />

@@ -2,6 +2,11 @@
 // builder API (validation) and the job processor (execution), so the two never disagree
 // about how a sequence flows.
 
+// Explicit "stop here" marker, distinct from `null` (= "fall through to whatever's
+// next in step order"). Lets a branch terminate without inheriting whatever gets
+// appended after it later.
+export const BRANCH_END = "__end__";
+
 export const STEP_TYPES = {
   connection_request: { label: "Connection Request", action: true, channel: "linkedin" },
   message: { label: "Message", action: true, channel: "linkedin" },
@@ -29,15 +34,19 @@ function nextInOrder(steps, currentStep) {
   return idx >= 0 && idx < sorted.length - 1 ? sorted[idx + 1] : null;
 }
 
-/**
- * Walks forward from `currentStep` through any chain of delay/condition steps
- * (which resolve instantly) until it lands on an action step or the sequence ends.
- *
- * `evaluateCondition(step)` is an async predicate the caller supplies (it needs DB access
- * to check e.g. whether the lead has replied) — kept out of this pure-logic module.
- *
- * Returns { nextStep: sequenceStepDoc|null, delayMs: number }.
- */
+// Any step can carry an explicit `next` (a step id, or BRANCH_END), making its
+// continuation position-independent. Unset falls through to whatever's positionally
+// next, unchanged from pre-existing saved sequences.
+function resolveContinuation(steps, cursor) {
+  if (cursor.next === BRANCH_END) return null;
+  if (cursor.next) return findStepById(steps, cursor.next);
+  return nextInOrder(steps, cursor);
+}
+
+// Walks forward from `currentStep` through any delay/condition chain until it lands on
+// an action step or the sequence ends. `evaluateCondition(step)` is an async predicate
+// the caller supplies (needs DB access, kept out of this pure-logic module). Returns
+// { nextStep: sequenceStepDoc|null, delayMs: number }.
 export async function resolveNextExecutableStep(steps, currentStep, evaluateCondition) {
   let delayMs = 0;
   let cursor = currentStep;
@@ -56,7 +65,7 @@ export async function resolveNextExecutableStep(steps, currentStep, evaluateCond
       const multiplier = unit === "days" ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
       delayMs += amount * multiplier;
 
-      const next = nextInOrder(steps, cursor);
+      const next = resolveContinuation(steps, cursor);
       if (!next) return { nextStep: null, delayMs };
       cursor = next;
       continue;
@@ -65,6 +74,11 @@ export async function resolveNextExecutableStep(steps, currentStep, evaluateCond
     if (cursor.type === "condition") {
       const passed = await evaluateCondition(cursor);
       const targetId = passed ? cursor.branches?.yes : cursor.branches?.no;
+
+      if (targetId === BRANCH_END) {
+        return { nextStep: null, delayMs };
+      }
+
       const target = findStepById(steps, targetId);
 
       if (target) {
@@ -73,7 +87,7 @@ export async function resolveNextExecutableStep(steps, currentStep, evaluateCond
       }
 
       // No explicit branch target configured: fall through to the next step in order.
-      const next = nextInOrder(steps, cursor);
+      const next = resolveContinuation(steps, cursor);
       if (!next) return { nextStep: null, delayMs };
       cursor = next;
       continue;
@@ -84,6 +98,17 @@ export async function resolveNextExecutableStep(steps, currentStep, evaluateCond
   }
 
   return { nextStep: null, delayMs };
+}
+
+// Resolves what runs after `justRanStep` has already executed: advances past it first,
+// then walks any delay/condition chain. Call this (not resolveNextExecutableStep
+// directly) once a step's action has been dispatched — resolveNextExecutableStep treats
+// its `currentStep` as something to evaluate, not skip past, so passing it an
+// already-executed action step would just return that same step again.
+export async function resolveStepAfter(steps, justRanStep, evaluateCondition) {
+  const next = resolveContinuation(steps, justRanStep);
+  if (!next) return { nextStep: null, delayMs: 0 };
+  return resolveNextExecutableStep(steps, next, evaluateCondition);
 }
 
 // Resolves the very first executable step when a campaign is activated (mirrors the

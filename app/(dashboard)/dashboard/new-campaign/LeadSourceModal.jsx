@@ -176,6 +176,15 @@ export default function LeadSourceModal({ open, onClose, campaignId, onImported 
         return;
       }
 
+      if (data.imported === 0) {
+        setError(
+          source.kind === "csv"
+            ? "No leads found in that file — check it has a LinkedIn URL or email column with a recognized header (e.g. \"LinkedIn URL\", \"Email\", \"First Name\")."
+            : "None of those could be imported.",
+        );
+        return;
+      }
+
       onImported?.(data);
       handleClose();
     } catch {

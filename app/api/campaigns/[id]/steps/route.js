@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
-import { STEP_TYPES } from "@/app/lib/sequenceEngine";
+import { STEP_TYPES, BRANCH_END } from "@/app/lib/sequenceEngine";
 
 function serializeStep(step) {
   return {
@@ -15,6 +15,14 @@ function serializeStep(step) {
           no: step.branches.no ? step.branches.no.toString() : null,
         }
       : null,
+    // Explicit continuation (see sequenceEngine.js resolveContinuation); falls back to
+    // positional order when unset.
+    next: step.next ? step.next.toString() : null,
+    // Canvas node position — cosmetic only, never read by the execution engine.
+    position:
+      step.position && typeof step.position.x === "number" && typeof step.position.y === "number"
+        ? { x: step.position.x, y: step.position.y }
+        : null,
   };
 }
 
@@ -82,6 +90,15 @@ export async function PUT(req, { params }) {
       idMap.set(step.clientId, new ObjectId());
     }
 
+    // A branch/next target is either BRANCH_END (explicit stop), a temp clientId
+    // resolved via idMap, or absent/unrecognized (treated as null — falls through to
+    // the next step in order).
+    function resolveTarget(value) {
+      if (value === BRANCH_END) return BRANCH_END;
+      if (value) return idMap.get(value) || null;
+      return null;
+    }
+
     const docs = incoming.map((step, index) => ({
       _id: idMap.get(step.clientId),
       campaignId: campaign._id,
@@ -91,9 +108,14 @@ export async function PUT(req, { params }) {
       branches:
         step.type === "condition"
           ? {
-              yes: step.branches?.yes ? idMap.get(step.branches.yes) || null : null,
-              no: step.branches?.no ? idMap.get(step.branches.no) || null : null,
+              yes: resolveTarget(step.branches?.yes),
+              no: resolveTarget(step.branches?.no),
             }
+          : null,
+      next: resolveTarget(step.next),
+      position:
+        step.position && typeof step.position.x === "number" && typeof step.position.y === "number"
+          ? { x: step.position.x, y: step.position.y }
           : null,
     }));
 

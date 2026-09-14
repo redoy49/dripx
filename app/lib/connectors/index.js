@@ -1,21 +1,27 @@
 import { MockLinkedInConnector } from "@/app/lib/connectors/MockLinkedInConnector";
+import { UnipileConnector } from "@/app/lib/connectors/UnipileConnector";
 
 let cachedConnector = null;
+let cachedProvider = null;
 
 // Factory / swap point: reads LINKEDIN_PROVIDER from env (defaults to the safe mock).
-// To go live with a real provider, add a new class implementing LinkedInConnector and
-// return it here — no other file in the app needs to change.
+// Re-reads the env var each call (cheap) so switching providers doesn't need a server
+// restart to take effect in dev.
 export function getLinkedInConnector() {
-  if (cachedConnector) return cachedConnector;
-
   const provider = process.env.LINKEDIN_PROVIDER || "mock";
 
+  if (cachedConnector && cachedProvider === provider) return cachedConnector;
+
   switch (provider) {
+    case "unipile":
+      cachedConnector = new UnipileConnector();
+      break;
     case "mock":
     default:
       cachedConnector = new MockLinkedInConnector();
       break;
   }
 
+  cachedProvider = provider;
   return cachedConnector;
 }

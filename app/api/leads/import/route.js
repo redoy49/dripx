@@ -4,7 +4,12 @@ import { requireAuth } from "@/app/lib/session";
 import { serializeLead } from "@/app/api/leads/route";
 import { parseCsv, mapCsvRowToLead } from "@/app/lib/csv";
 import { getLinkedInConnector } from "@/app/lib/connectors";
+import { previewLinkedInProfile } from "@/app/lib/connectors/UnipileConnector";
 import { enrollLeads } from "@/app/lib/campaignEnrollment";
+
+// Looking up every row would be slow and could hit Unipile's rate limits on a large
+// CSV — cap it to a size where a synchronous per-row lookup during import stays fast.
+const MAX_ENRICHED_ROWS = 20;
 
 const SCRAPE_SOURCES = [
   "basic_search",
@@ -15,24 +20,44 @@ const SCRAPE_SOURCES = [
   "my_network",
 ];
 
-// Inserts leads for a workspace, skipping ones that already exist by linkedinUrl or email.
 async function insertLeads(workspaceId, rawLeads, source) {
   const leads = await dbConnect("leads");
+  const enrichable = process.env.LINKEDIN_PROVIDER === "unipile" && rawLeads.length <= MAX_ENRICHED_ROWS;
+
+  const candidates = rawLeads
+    .map((raw) => ({
+      linkedinUrl: (raw.linkedinUrl || "").trim(),
+      email: (raw.email || "").trim().toLowerCase(),
+      raw,
+    }))
+    .filter((c) => c.linkedinUrl || c.email || c.raw.firstName);
+
+  // One query for existing matches instead of N sequential findOnes.
+  const linkedinUrls = [...new Set(candidates.filter((c) => c.linkedinUrl).map((c) => c.linkedinUrl))];
+  const emails = [...new Set(candidates.filter((c) => c.email).map((c) => c.email))];
+
+  const existingDocs =
+    linkedinUrls.length || emails.length
+      ? await leads
+          .find({
+            workspaceId,
+            $or: [
+              ...(linkedinUrls.length ? [{ linkedinUrl: { $in: linkedinUrls } }] : []),
+              ...(emails.length ? [{ email: { $in: emails } }] : []),
+            ],
+          })
+          .toArray()
+      : [];
+  const existingByUrl = new Map(existingDocs.filter((d) => d.linkedinUrl).map((d) => [d.linkedinUrl, d]));
+  const existingByEmail = new Map(existingDocs.filter((d) => d.email).map((d) => [d.email, d]));
+
   const inserted = [];
+  const toInsert = [];
 
-  for (const raw of rawLeads) {
-    const linkedinUrl = (raw.linkedinUrl || "").trim();
-    const email = (raw.email || "").trim().toLowerCase();
+  for (const { linkedinUrl, email, raw } of candidates) {
+    if (!linkedinUrl && !email) continue;
 
-    if (!linkedinUrl && !email && !raw.firstName) continue;
-
-    const dedupeQuery = { workspaceId };
-    if (linkedinUrl) dedupeQuery.linkedinUrl = linkedinUrl;
-    else if (email) dedupeQuery.email = email;
-    else continue;
-
-    const existing = linkedinUrl || email ? await leads.findOne(dedupeQuery) : null;
-
+    const existing = (linkedinUrl && existingByUrl.get(linkedinUrl)) || (email && existingByEmail.get(email));
     if (existing) {
       inserted.push(existing);
       continue;
@@ -52,8 +77,23 @@ async function insertLeads(workspaceId, rawLeads, source) {
       source,
       createdAt: new Date(),
     };
-    const result = await leads.insertOne(doc);
-    inserted.push({ ...doc, _id: result.insertedId });
+
+    if (enrichable && linkedinUrl && !doc.firstName) {
+      const preview = await previewLinkedInProfile(workspaceId, linkedinUrl);
+      if (preview) {
+        doc.firstName = preview.firstName || doc.firstName;
+        doc.lastName = preview.lastName || doc.lastName;
+        doc.headline = preview.headline || doc.headline;
+        if (preview.providerId) doc.unipile = { providerId: preview.providerId };
+      }
+    }
+
+    toInsert.push(doc);
+  }
+
+  if (toInsert.length > 0) {
+    const result = await leads.insertMany(toInsert);
+    toInsert.forEach((doc, i) => inserted.push({ ...doc, _id: result.insertedIds[i] }));
   }
 
   return inserted;

@@ -4,7 +4,7 @@ import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
 import { requireRole } from "@/app/lib/rbac";
 
-const WEBHOOK_EVENTS = ["connection.requested", "lead.replied", "lead.sequence_completed"];
+const WEBHOOK_EVENTS = ["connection.requested", "connection.accepted", "lead.replied", "lead.sequence_completed"];
 
 function serialize(w) {
   return {

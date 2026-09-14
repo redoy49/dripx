@@ -1,6 +1,11 @@
 // Minimal dependency-free CSV parser: handles quoted fields (with escaped "" quotes)
 // and commas/newlines inside quotes. Returns an array of row objects keyed by header.
 export function parseCsv(text) {
+  // Strip a leading UTF-8 BOM (common in CSVs exported from Excel on Windows) — left in
+  // place, it silently attaches to the first header, so that column never matches any
+  // known field and its data gets dropped from every row.
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
   const rows = [];
   let row = [];
   let field = "";
