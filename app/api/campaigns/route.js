@@ -16,6 +16,7 @@ export async function serializeCampaign(campaign, campaignLeadsCollection) {
     name: campaign.name,
     status: campaign.status,
     channels: campaign.channels || [],
+    senderEmailAccountId: campaign.senderEmailAccountId ? campaign.senderEmailAccountId.toString() : null,
     createdAt: campaign.createdAt,
     stats: campaign.stats || {},
     dailyLimitsOverride: campaign.dailyLimitsOverride || null,

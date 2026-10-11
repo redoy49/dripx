@@ -29,6 +29,8 @@ const STATUS_BADGE = {
 export default function CampaignSettingsTab({ campaignId, campaign, onCampaignChange }) {
   const [name, setName] = useState(campaign.name);
   const [channels, setChannels] = useState(campaign.channels);
+  const [senderEmailAccountId, setSenderEmailAccountId] = useState(campaign.senderEmailAccountId || "");
+  const [emailAccounts, setEmailAccounts] = useState([]);
   const [overrideOn, setOverrideOn] = useState(!!campaign.dailyLimitsOverride);
   const [overrideValues, setOverrideValues] = useState(
     campaign.dailyLimitsOverride || { connectionRequests: 5, messages: 5, inmails: 5, profileViews: 5, likes: 5, emails: 20 },
@@ -36,6 +38,19 @@ export default function CampaignSettingsTab({ campaignId, campaign, onCampaignCh
   const [saving, setSaving] = useState(false);
   const [activating, setActivating] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/email-accounts")
+      .then((res) => res.json())
+      .then((data) => {
+        const items = data.items || [];
+        setEmailAccounts(items);
+        if (!campaign.senderEmailAccountId && items.length > 0) {
+          setSenderEmailAccountId(items[0].id);
+        }
+      })
+      .catch(() => {});
+  }, [campaign.senderEmailAccountId]);
 
   const patchCampaign = async (body) => {
     const res = await fetch(`/api/campaigns/${campaignId}`, {
@@ -53,6 +68,7 @@ export default function CampaignSettingsTab({ campaignId, campaign, onCampaignCh
     await patchCampaign({
       name,
       channels,
+      senderEmailAccountId: channels.includes("email") ? senderEmailAccountId || null : null,
       dailyLimitsOverride: overrideOn ? overrideValues : null,
     });
     setSaving(false);
@@ -143,6 +159,41 @@ export default function CampaignSettingsTab({ campaignId, campaign, onCampaignCh
             ))}
           </div>
         </div>
+
+        {channels.includes("email") && (
+          <div className="rounded-2xl border border-gray-200 p-5 bg-gray-50/30">
+            <label className="mb-1 block text-sm font-semibold text-gray-800">
+              Email Sender Account
+            </label>
+            <p className="mb-3 text-xs text-gray-400">
+              Outreach emails in this sequence will be dispatched from this mailbox.
+            </p>
+
+            {emailAccounts.length === 0 ? (
+              <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                <span>No connected email accounts found for this workspace.</span>
+                <a
+                  href="/dashboard/settings?tab=Email%20Accounts"
+                  className="font-bold text-[#6367FF] hover:underline shrink-0 ml-2"
+                >
+                  Connect Mailbox →
+                </a>
+              </div>
+            ) : (
+              <select
+                value={senderEmailAccountId}
+                onChange={(e) => setSenderEmailAccountId(e.target.value)}
+                className="w-full max-w-md rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 outline-none focus:border-[#6367FF]"
+              >
+                {emailAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.email} ({acc.provider.toUpperCase()}) — {acc.name || "Default Sender"}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
 
         <div className="rounded-2xl border border-gray-200 p-5">
           <div className="mb-4 flex items-center justify-between">

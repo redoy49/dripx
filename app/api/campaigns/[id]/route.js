@@ -4,7 +4,13 @@ import { requireAuth } from "@/app/lib/session";
 import { requireRole } from "@/app/lib/rbac";
 import { serializeCampaign } from "@/app/api/campaigns/route";
 
-const EDITABLE_FIELDS = ["name", "status", "channels", "dailyLimitsOverride"];
+const EDITABLE_FIELDS = [
+  "name",
+  "status",
+  "channels",
+  "dailyLimitsOverride",
+  "senderEmailAccountId",
+];
 
 export async function GET(req, { params }) {
   try {
