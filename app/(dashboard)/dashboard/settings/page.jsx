@@ -6,6 +6,7 @@ import { Clock, FileText, ShieldCheck, Tag, Plug, Mail } from "lucide-react";
 import { DAILY_LIMIT_MAX } from "@/app/lib/limits.constants";
 import IntegrationsTab from "@/app/(dashboard)/dashboard/settings/IntegrationsTab";
 import EmailAccountsTab from "@/app/(dashboard)/dashboard/settings/EmailAccountsTab";
+import WorkingHoursTab from "@/app/(dashboard)/dashboard/settings/WorkingHoursTab";
 
 const TABS = [
   "Limits & Activity control",
@@ -386,13 +387,7 @@ function SettingsPageContent() {
             </div>
           )}
           {activeTab === 2 && <IntegrationsTab />}
-          {activeTab === 3 && (
-            <ComingSoonPanel
-              icon={Clock}
-              title="Working hours"
-              description="Scheduling campaigns to only run during your leads' local working hours is on the roadmap."
-            />
-          )}
+          {activeTab === 3 && <WorkingHoursTab />}
           {activeTab === 4 && (
             <ComingSoonPanel
               icon={FileText}

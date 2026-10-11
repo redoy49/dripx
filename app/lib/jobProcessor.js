@@ -6,6 +6,12 @@ import { renderTemplate } from "@/app/lib/personalization";
 import { isUnderLimit } from "@/app/lib/limits";
 import { resolveStepAfter } from "@/app/lib/sequenceEngine";
 import { dispatchWebhookEvent } from "@/app/lib/webhooks";
+import {
+  isWithinSendingWindow,
+  getNextWindowStart,
+  calculateScheduledRunTime,
+  resolveEffectiveSchedule,
+} from "@/app/lib/scheduleEngine";
 
 /**
  * Automatically pauses sequence outreach for a lead when they reply.
@@ -230,6 +236,41 @@ export async function processJob(job) {
       return { status: "failed" };
     }
 
+    // Check Working Hours & Sending Window
+    const sendingSchedulesCol = await dbConnect("sending_schedules");
+    const workspaceScheduleDoc = await sendingSchedulesCol.findOne({
+      workspaceId: job.workspaceId,
+    });
+    const effectiveSchedule = resolveEffectiveSchedule(
+      workspaceScheduleDoc,
+      campaign.scheduleOverride,
+      lead,
+    );
+    const now = new Date();
+
+    if (!isWithinSendingWindow(effectiveSchedule, now)) {
+      const nextWindow = getNextWindowStart(effectiveSchedule, now);
+      await jobsCol.updateOne(
+        { _id: job._id },
+        {
+          $set: {
+            status: "queued",
+            runAfter: nextWindow,
+            lastError: `Postponed: Outside sending window (${effectiveSchedule.startTime}-${effectiveSchedule.endTime} ${effectiveSchedule.timezone}). Rescheduled to ${nextWindow.toISOString()}`,
+          },
+        },
+      );
+      const leadDisplayName = `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || lead.email || "Lead";
+      return {
+        status: "outside_working_hours",
+        leadName: leadDisplayName,
+        stepTitle: step.type,
+        channel: step.type,
+        nextWindow: nextWindow.toISOString(),
+        timezone: effectiveSchedule.timezone,
+      };
+    }
+
     // Enforce the workspace's daily action caps (+ warm-up ramp, + campaign override) before dispatching.
     const underLimit = await isUnderLimit(job.workspaceId, step.type, null, campaign.dailyLimitsOverride);
     if (!underLimit) {
@@ -343,13 +384,20 @@ export async function processJob(job) {
     );
 
     if (nextStep) {
+      const scheduledRunAfter = calculateScheduledRunTime(
+        new Date(),
+        delayMs,
+        effectiveSchedule,
+        lead,
+      );
+
       await jobsCol.insertOne({
         workspaceId: job.workspaceId,
         campaignId: job.campaignId,
         campaignLeadId: campaignLead._id,
         stepId: nextStep._id,
         type: nextStep.type,
-        runAfter: new Date(Date.now() + delayMs),
+        runAfter: scheduledRunAfter,
         status: "queued",
         attempts: 0,
         lastError: null,
@@ -486,6 +534,7 @@ export async function runDueJobs(batchSize = 50, campaignId = null, forceDue = f
     else if (outcome.status === "skipped") results.skipped++;
     else if (outcome.status === "rate_limited") results.rateLimited++;
     else if (outcome.status === "paused") results.paused++;
+    else if (outcome.status === "outside_working_hours") results.outsideWorkingHours = (results.outsideWorkingHours || 0) + 1;
 
     results.logs.push({
       jobId: job._id.toString(),

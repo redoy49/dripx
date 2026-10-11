@@ -10,6 +10,7 @@ const EDITABLE_FIELDS = [
   "channels",
   "dailyLimitsOverride",
   "senderEmailAccountId",
+  "scheduleOverride",
 ];
 
 export async function GET(req, { params }) {

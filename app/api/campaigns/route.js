@@ -20,6 +20,7 @@ export async function serializeCampaign(campaign, campaignLeadsCollection) {
     createdAt: campaign.createdAt,
     stats: campaign.stats || {},
     dailyLimitsOverride: campaign.dailyLimitsOverride || null,
+    scheduleOverride: campaign.scheduleOverride || null,
     leadCount,
     repliedCount,
     statusBreakdown: {

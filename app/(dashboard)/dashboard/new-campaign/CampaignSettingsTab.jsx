@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Play, Pause } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Play, Pause, Clock, Globe2, Sparkles } from "lucide-react";
 import { ToggleGreen } from "@/app/components/ui/Toggle";
 import Badge from "@/app/components/ui/Badge";
+import { POPULAR_TIMEZONES, WEEKDAYS } from "@/app/lib/scheduleEngine";
 
 const CHANNELS = [
   { key: "linkedin", label: "LinkedIn" },
@@ -35,6 +36,16 @@ export default function CampaignSettingsTab({ campaignId, campaign, onCampaignCh
   const [overrideValues, setOverrideValues] = useState(
     campaign.dailyLimitsOverride || { connectionRequests: 5, messages: 5, inmails: 5, profileViews: 5, likes: 5, emails: 20 },
   );
+  const [customScheduleOn, setCustomScheduleOn] = useState(
+    campaign.scheduleOverride ? campaign.scheduleOverride.useWorkspaceSchedule === false : false,
+  );
+  const [scheduleValues, setScheduleValues] = useState({
+    timezone: campaign.scheduleOverride?.timezone || "America/New_York",
+    days: campaign.scheduleOverride?.days || [1, 2, 3, 4, 5],
+    startTime: campaign.scheduleOverride?.startTime || "09:00",
+    endTime: campaign.scheduleOverride?.endTime || "17:00",
+    leadTimezoneOptimization: Boolean(campaign.scheduleOverride?.leadTimezoneOptimization),
+  });
   const [saving, setSaving] = useState(false);
   const [activating, setActivating] = useState(false);
   const [error, setError] = useState("");
@@ -70,6 +81,9 @@ export default function CampaignSettingsTab({ campaignId, campaign, onCampaignCh
       channels,
       senderEmailAccountId: channels.includes("email") ? senderEmailAccountId || null : null,
       dailyLimitsOverride: overrideOn ? overrideValues : null,
+      scheduleOverride: customScheduleOn
+        ? { useWorkspaceSchedule: false, ...scheduleValues }
+        : { useWorkspaceSchedule: true },
     });
     setSaving(false);
   };
@@ -222,6 +236,125 @@ export default function CampaignSettingsTab({ campaignId, campaign, onCampaignCh
                   />
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sending Schedule Card */}
+        <div className="rounded-2xl border border-gray-200 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-[#6367FF]">
+                <Clock size={16} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Sending Schedule & Working Hours</p>
+                <p className="text-xs text-gray-400">
+                  {customScheduleOn
+                    ? "Custom schedule configured for this campaign."
+                    : "Inheriting workspace default sending schedule (Settings > Working hours)."}
+                </p>
+              </div>
+            </div>
+            <ToggleGreen checked={customScheduleOn} onChange={() => setCustomScheduleOn((v) => !v)} />
+          </div>
+
+          {customScheduleOn && (
+            <div className="space-y-4 border-t border-gray-100 pt-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700">Timezone</label>
+                  <select
+                    value={scheduleValues.timezone}
+                    onChange={(e) =>
+                      setScheduleValues((prev) => ({ ...prev, timezone: e.target.value }))
+                    }
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 outline-none focus:border-[#6367FF]"
+                  >
+                    {POPULAR_TIMEZONES.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">Start Time</label>
+                    <input
+                      type="time"
+                      value={scheduleValues.startTime}
+                      onChange={(e) =>
+                        setScheduleValues((prev) => ({ ...prev, startTime: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 outline-none focus:border-[#6367FF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-700">End Time</label>
+                    <input
+                      type="time"
+                      value={scheduleValues.endTime}
+                      onChange={(e) =>
+                        setScheduleValues((prev) => ({ ...prev, endTime: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 outline-none focus:border-[#6367FF]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-700">Active Sending Days</label>
+                <div className="flex gap-1.5">
+                  {WEEKDAYS.map((wd) => {
+                    const isActive = scheduleValues.days.includes(wd.day);
+                    return (
+                      <button
+                        key={wd.day}
+                        type="button"
+                        onClick={() => {
+                          setScheduleValues((prev) => {
+                            const cur = new Set(prev.days);
+                            if (cur.has(wd.day)) {
+                              if (cur.size > 1) cur.delete(wd.day);
+                            } else {
+                              cur.add(wd.day);
+                            }
+                            return { ...prev, days: Array.from(cur).sort((a, b) => a - b) };
+                          });
+                        }}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                          isActive
+                            ? "bg-[#6367FF] text-white shadow-sm"
+                            : "border border-gray-200 bg-gray-50 text-gray-400 hover:text-gray-700"
+                        }`}
+                      >
+                        {wd.short}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  id="leadTzOpt"
+                  checked={scheduleValues.leadTimezoneOptimization}
+                  onChange={(e) =>
+                    setScheduleValues((prev) => ({
+                      ...prev,
+                      leadTimezoneOptimization: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-gray-300 text-[#6367FF] focus:ring-[#6367FF]"
+                />
+                <label htmlFor="leadTzOpt" className="cursor-pointer">
+                  Smart Send: optimize dispatch window according to lead&apos;s local location/country
+                </label>
+              </div>
             </div>
           )}
         </div>

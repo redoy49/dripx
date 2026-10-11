@@ -8,6 +8,7 @@ import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { renderTemplate } from "@/app/lib/personalization";
 import { resolveFirstExecutableStep, resolveStepAfter, STEP_TYPES } from "@/app/lib/sequenceEngine";
+import { calculateScheduledRunTime, resolveEffectiveSchedule } from "@/app/lib/scheduleEngine";
 
 function formatDelay(delayMs) {
   if (!delayMs || delayMs <= 0) return "Immediate (0m)";
@@ -56,6 +57,10 @@ export async function simulateLeadJourney(campaignId, leadId, options = {}) {
   if (campaign.senderEmailAccountId) {
     senderAccount = await emailAccountsCol.findOne({ _id: new ObjectId(campaign.senderEmailAccountId) });
   }
+
+  const sendingSchedulesCol = await dbConnect("sending_schedules");
+  const workspaceSchedule = await sendingSchedulesCol.findOne({ workspaceId: campaign.workspaceId });
+  const effectiveSchedule = resolveEffectiveSchedule(workspaceSchedule, campaign.scheduleOverride, lead);
 
   const timeline = [];
   const allWarnings = [];
@@ -148,7 +153,7 @@ export async function simulateLeadJourney(campaignId, leadId, options = {}) {
       renderedSubject,
       renderedBody,
       delayBefore: formatDelay(current.delayMs),
-      estimatedRunAfter: new Date(Date.now() + cumulativeDelayMs).toISOString(),
+      estimatedRunAfter: calculateScheduledRunTime(new Date(), cumulativeDelayMs, effectiveSchedule, lead).toISOString(),
       warnings: stepWarnings,
       status: stepWarnings.length === 0 ? "VALID" : "WARNING",
     });
@@ -168,6 +173,12 @@ export async function simulateLeadJourney(campaignId, leadId, options = {}) {
       name: campaign.name,
       status: campaign.status,
       senderEmail: senderAccount?.email || "Platform Default",
+      schedule: {
+        timezone: effectiveSchedule.timezone,
+        startTime: effectiveSchedule.startTime,
+        endTime: effectiveSchedule.endTime,
+        isLeadTimezoneApplied: Boolean(effectiveSchedule.isLeadTimezoneApplied),
+      },
     },
     lead: {
       id: lead._id.toString(),
