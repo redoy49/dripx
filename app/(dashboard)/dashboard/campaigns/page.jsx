@@ -203,17 +203,31 @@ export default function CampaignPage() {
               {/* Overview */}
               <div className="pr-8">
                 <button
-                  onClick={() => router.push(`/dashboard/new-campaign?id=${campaign.id}`)}
-                  className="text-[15px] font-semibold text-gray-600 mb-2 hover:text-[#6367FF] transition-colors text-left"
+                  onClick={() =>
+                    router.push(
+                      campaign.status === "draft"
+                        ? `/dashboard/new-campaign?id=${campaign.id}`
+                        : `/dashboard/campaigns/${campaign.id}`,
+                    )
+                  }
+                  className="text-[15px] font-semibold text-gray-800 mb-2 hover:text-[#6367FF] transition-colors text-left"
                 >
                   {campaign.name}
                 </button>
 
                 <ProgressBar segments={campaignProgress(campaign.statusBreakdown, campaign.leadCount)} />
 
-                <div className="flex gap-3 mt-2 flex-wrap text-xs text-gray-400">
+                <div className="flex gap-2.5 mt-2.5 flex-wrap text-xs text-gray-400 items-center">
                   <span>{campaign.statusBreakdown.completed} completed</span>
+                  <span>·</span>
                   <span>{campaign.statusBreakdown.inProgress} in progress</span>
+                  <span>·</span>
+                  <button
+                    onClick={() => router.push(`/dashboard/campaigns/${campaign.id}`)}
+                    className="text-violet-600 hover:text-violet-700 font-semibold transition"
+                  >
+                    View Analytics →
+                  </button>
                 </div>
               </div>
 
@@ -252,7 +266,17 @@ export default function CampaignPage() {
                   <TrashIcon onClick={() => deleteCampaign(campaign.id)} />
                 </div>
 
-                <span className="text-xs text-gray-400 capitalize">{campaign.status}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 capitalize">{campaign.status}</span>
+                  <span className="text-gray-300">·</span>
+                  <button
+                    onClick={() => router.push(`/dashboard/new-campaign?id=${campaign.id}&tab=2`)}
+                    className="text-xs text-gray-400 hover:text-gray-700 transition"
+                    title="Edit campaign sequence in canvas"
+                  >
+                    Edit
+                  </button>
+                </div>
               </div>
             </div>
           ))
