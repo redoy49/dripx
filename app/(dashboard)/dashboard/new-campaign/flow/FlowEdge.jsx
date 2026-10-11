@@ -22,10 +22,11 @@ export function StepEdge({
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 14,
+    borderRadius: 16,
   });
 
-  const color = data?.color === "green" ? "#16a34a" : data?.color === "red" ? "#dc2626" : "#d1d5db";
+  const strokeColor =
+    data?.color === "green" ? "#10b981" : data?.color === "red" ? "#f43f5e" : "#cbd5e1";
   const delayLabel = formatDelay(data?.delayMs || 0);
 
   return (
@@ -34,7 +35,11 @@ export function StepEdge({
         id={id}
         path={path}
         markerEnd={markerEnd}
-        style={{ stroke: color, strokeWidth: 1.6, strokeDasharray: "4 4" }}
+        style={{
+          stroke: strokeColor,
+          strokeWidth: 2,
+          strokeDasharray: "4 4",
+        }}
       />
       <EdgeLabelRenderer>
         <div
@@ -47,8 +52,10 @@ export function StepEdge({
         >
           {data?.label && (
             <span
-              className={`text-[11px] font-semibold ${
-                data.color === "green" ? "text-green-600" : "text-red-500"
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-2xs border ${
+                data.color === "green"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-rose-200 bg-rose-50 text-rose-700"
               }`}
             >
               {data.label}
@@ -59,9 +66,11 @@ export function StepEdge({
               e.stopPropagation();
               data?.onEditDelay?.(id);
             }}
-            className="flex items-center gap-1 rounded-full border border-[#6367FF]/25 bg-[#F3F2FF] px-2.5 py-1 text-[11px] font-medium text-[#6367FF] shadow-sm transition hover:bg-[#6367FF]/10"
+            title="Click to edit step delay"
+            className="group flex items-center gap-1.5 rounded-full border border-[#6367FF]/30 bg-[#F3F2FF] px-2.5 py-1 text-[11px] font-semibold text-[#6367FF] shadow-xs transition hover:bg-[#6367FF] hover:text-white"
           >
-            <Clock size={11} /> {delayLabel}
+            <Clock size={11} className="transition group-hover:rotate-45" />
+            <span>{delayLabel}</span>
           </button>
         </div>
       </EdgeLabelRenderer>

@@ -52,6 +52,31 @@ export async function POST(req, { params }) {
       );
     }
 
+    for (const step of steps) {
+      if (
+        (step.type === "email" || step.type === "inmail") &&
+        (!step.config?.template?.trim() || !step.config?.subject?.trim())
+      ) {
+        return Response.json(
+          {
+            message: `Configure the subject line and message body for your ${step.type} step before activating`,
+          },
+          { status: 400 },
+        );
+      }
+      if (
+        (step.type === "message" || step.type === "follow_up") &&
+        !step.config?.template?.trim()
+      ) {
+        return Response.json(
+          {
+            message: `Configure the message template for your ${step.type} step before activating`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const campaignLeadsCol = await dbConnect("campaign_leads");
     const pendingLeads = await campaignLeadsCol
       .find({ campaignId: campaign._id, status: "pending" })
