@@ -134,6 +134,30 @@ export function sanitizeEmailAccount(account) {
     todaySentCount: account.todaySentCount ?? 0,
     lastSentAt: account.lastSentAt || null,
     lastError: account.lastError || null,
+    rampUp: account.rampUp
+      ? {
+          enabled: account.rampUp.enabled !== false,
+          startingLimit: account.rampUp.startingLimit ?? 10,
+          dailyIncrement: account.rampUp.dailyIncrement ?? 3,
+          targetLimit: account.rampUp.targetLimit ?? account.dailyLimit ?? 40,
+          startedAt: account.rampUp.startedAt || account.createdAt,
+          customDkimSelector: account.rampUp.customDkimSelector || null,
+        }
+      : {
+          enabled: true,
+          startingLimit: 10,
+          dailyIncrement: 3,
+          targetLimit: account.dailyLimit ?? 40,
+          startedAt: account.createdAt,
+          customDkimSelector: null,
+        },
+    dnsHealth: account.dnsHealth
+      ? {
+          score: account.dnsHealth.score,
+          rating: account.dnsHealth.rating,
+          evaluatedAt: account.dnsHealth.evaluatedAt,
+        }
+      : null,
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
   };

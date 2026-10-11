@@ -240,6 +240,34 @@ export async function processJob(job) {
       return { status: "rate_limited" };
     }
 
+    // For email actions, also enforce the specific sender mailbox's ramp-up cap
+    if (step.type === "email") {
+      const emailAccountsCol = await dbConnect("email_accounts");
+      const targetQuery = campaign.senderEmailAccountId
+        ? { _id: campaign.senderEmailAccountId }
+        : { workspaceId: job.workspaceId, status: "connected" };
+
+      const senderDoc = await emailAccountsCol.findOne(targetQuery);
+      if (senderDoc) {
+        const { canAccountSendToday } = await import("@/app/lib/rampUpEngine");
+        const quota = canAccountSendToday(senderDoc);
+
+        if (!quota.canSend) {
+          await jobsCol.updateOne(
+            { _id: job._id },
+            {
+              $set: {
+                status: "queued",
+                runAfter: nextMidnightUTC(),
+                lastError: `Sender mailbox ${senderDoc.email} reached daily ramp-up limit (${quota.currentCount}/${quota.effectiveLimit}). Postponed to next day.`,
+              },
+            },
+          );
+          return { status: "rate_limited", reason: "sender_quota_reached" };
+        }
+      }
+    }
+
     const result = await dispatchAction(step, lead, campaign);
 
     if (!result.success) {
@@ -284,6 +312,28 @@ export async function processJob(job) {
     if (MESSAGE_STEP_TYPES.has(step.type) && result.body) {
       await recordOutboundMessage(job.workspaceId, lead._id, result.channel, result.body, result.subject);
       await maybeSimulateReply(job.workspaceId, job.campaignId, lead._id, result.channel);
+    }
+
+    // Atomically increment sender mailbox todaySentCount
+    if (step.type === "email") {
+      const emailAccountsCol = await dbConnect("email_accounts");
+      const targetQuery = campaign.senderEmailAccountId
+        ? { _id: campaign.senderEmailAccountId }
+        : { workspaceId: job.workspaceId, status: "connected" };
+
+      const senderDoc = await emailAccountsCol.findOne(targetQuery);
+      if (senderDoc) {
+        const { shouldResetDailyCount } = await import("@/app/lib/rampUpEngine");
+        const isNewDay = shouldResetDailyCount(senderDoc.lastSentAt, senderDoc.todaySentResetAt);
+        const now = new Date();
+
+        await emailAccountsCol.updateOne(
+          { _id: senderDoc._id },
+          isNewDay
+            ? { $set: { todaySentCount: 1, lastSentAt: now, todaySentResetAt: now } }
+            : { $inc: { todaySentCount: 1 }, $set: { lastSentAt: now } },
+        );
+      }
     }
 
     // Resolve what happens next in the sequence (walking through any delay/condition steps).

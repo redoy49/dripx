@@ -38,6 +38,25 @@ export async function PATCH(req, { params }) {
     if (body.name !== undefined) update.name = body.name.trim();
     if (body.dailyLimit !== undefined) update.dailyLimit = Math.max(1, Number(body.dailyLimit));
 
+    if (body.rampUp !== undefined && typeof body.rampUp === "object") {
+      const existing = await (await dbConnect("email_accounts")).findOne({
+        _id: new ObjectId(id),
+        workspaceId: new ObjectId(session.workspaceId),
+      });
+
+      update.rampUp = {
+        enabled: body.rampUp.enabled !== false,
+        startingLimit: Math.max(1, Number(body.rampUp.startingLimit || 10)),
+        dailyIncrement: Math.max(1, Number(body.rampUp.dailyIncrement || 3)),
+        targetLimit: Math.max(1, Number(body.rampUp.targetLimit || body.dailyLimit || 40)),
+        startedAt: body.rampUp.startedAt ? new Date(body.rampUp.startedAt) : existing?.rampUp?.startedAt || existing?.createdAt || new Date(),
+        customDkimSelector: body.rampUp.customDkimSelector ? body.rampUp.customDkimSelector.trim() : null,
+      };
+      if (body.dailyLimit === undefined) {
+        update.dailyLimit = update.rampUp.targetLimit;
+      }
+    }
+
     update.updatedAt = new Date();
 
     const emailAccounts = await dbConnect("email_accounts");
