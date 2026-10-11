@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
 import { getLinkedInConnector } from "@/app/lib/connectors";
-import { sendEmail } from "@/app/lib/email/resend";
+import { sendEmail } from "@/app/lib/email";
 
 export async function GET(req, { params }) {
   try {
@@ -36,8 +36,8 @@ export async function GET(req, { params }) {
   }
 }
 
-// Sends a reply from the current user to the lead, through the same connector/email
-// wrapper the automated sequence engine uses, and logs it into the same thread.
+// Sends a reply from the current user to the lead, through the modular EmailConnector
+// or LinkedIn connector, and logs it into the conversation thread.
 export async function POST(req, { params }) {
   try {
     const { session, unauthorized } = await requireAuth();
@@ -63,7 +63,33 @@ export async function POST(req, { params }) {
 
     let result;
     if (conversation.channel === "email") {
-      result = await sendEmail({ to: lead.email, subject: conversation.subject || "Re:", body: text });
+      let accountId = conversation.senderEmailAccountId || null;
+      if (!accountId && conversation.leadId) {
+        const campaignLeads = await dbConnect("campaign_leads");
+        const enrollment = await campaignLeads.findOne({
+          workspaceId: new ObjectId(session.workspaceId),
+          leadId: conversation.leadId,
+        });
+        if (enrollment?.campaignId) {
+          const campaigns = await dbConnect("campaigns");
+          const campaign = await campaigns.findOne({ _id: enrollment.campaignId });
+          if (campaign?.senderEmailAccountId) {
+            accountId = campaign.senderEmailAccountId;
+          }
+        }
+      }
+
+      const subject = conversation.subject?.startsWith("Re:")
+        ? conversation.subject
+        : `Re: ${conversation.subject || "Outreach"}`;
+
+      result = await sendEmail({
+        to: lead.email,
+        subject,
+        body: text,
+        accountId,
+        workspaceId: session.workspaceId,
+      });
     } else {
       const connector = getLinkedInConnector();
       result = await connector.sendMessage(lead, text);
