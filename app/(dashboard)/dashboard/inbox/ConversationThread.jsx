@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, ExternalLink, Archive, Star, Mail, Linkedin, Loader2 } from "lucide-react";
+import { Send, ExternalLink, Archive, Star, Mail, Loader2 } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa";
 
 export default function ConversationThread({ conversationId, onStatusChange, onConversationLoaded }) {
   const [conversation, setConversation] = useState(null);
@@ -138,7 +139,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
               )}
               <span>·</span>
               <span className="inline-flex items-center gap-1 font-medium capitalize text-gray-600">
-                {isEmail ? <Mail className="w-3 h-3 text-blue-500" /> : <Linkedin className="w-3 h-3 text-[#0A66C2]" />}
+                {isEmail ? <Mail className="w-3 h-3 text-blue-500" /> : <FaLinkedin className="w-3 h-3 text-[#0A66C2]" />}
                 {conversation.channel}
               </span>
             </div>
@@ -203,7 +204,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
                   {m.channel === "email" ? (
                     <Mail className="w-2.5 h-2.5" />
                   ) : (
-                    <Linkedin className="w-2.5 h-2.5" />
+                    <FaLinkedin className="w-2.5 h-2.5" />
                   )}
                   <span>{new Date(m.sentAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
                 </div>
@@ -225,7 +226,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-[#0A66C2] bg-blue-50 px-2 py-0.5 rounded-full">
-                <Linkedin className="w-3 h-3" />
+                <FaLinkedin className="w-3 h-3" />
                 Replying via LinkedIn
               </span>
             )}

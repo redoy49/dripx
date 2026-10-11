@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Info, Search, Mail, Linkedin, RefreshCw } from "lucide-react";
+import { Info, Search, Mail, RefreshCw } from "lucide-react";
 import ConversationThread from "@/app/(dashboard)/dashboard/inbox/ConversationThread";
 import LeadDetailPanel from "@/app/(dashboard)/dashboard/inbox/LeadDetailPanel";
+import { FaLinkedin } from "react-icons/fa";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -15,7 +16,7 @@ const TABS = [
 const CHANNELS = [
   { key: "all", label: "All Channels" },
   { key: "email", label: "Email", icon: Mail },
-  { key: "linkedin", label: "LinkedIn", icon: Linkedin },
+  { key: "linkedin", label: "LinkedIn", icon: FaLinkedin },
 ];
 
 function formatMessageTime(dateString) {
@@ -270,7 +271,7 @@ export default function InboxPage() {
                         }`}
                         title={isEmail ? "Email conversation" : "LinkedIn conversation"}
                       >
-                        {isEmail ? <Mail className="w-2.5 h-2.5" /> : <Linkedin className="w-2.5 h-2.5" />}
+                        {isEmail ? <Mail className="w-2.5 h-2.5" /> : <FaLinkedin className="w-2.5 h-2.5" />}
                       </span>
                     </div>
 

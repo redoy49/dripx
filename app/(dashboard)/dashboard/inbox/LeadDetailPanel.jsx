@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Mail,
   Phone,
-  Linkedin,
   Copy,
   Check,
   Building,
@@ -16,6 +15,7 @@ import {
   Tag,
   ExternalLink,
 } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa";
 
 export default function LeadDetailPanel({
   conversation,
@@ -112,7 +112,7 @@ export default function LeadDetailPanel({
               {conversation.channel === "email" ? (
                 <Mail className="w-3 h-3" />
               ) : (
-                <Linkedin className="w-3 h-3" />
+                <FaLinkedin className="w-3 h-3" />
               )}
             </span>
           )}
@@ -232,7 +232,7 @@ export default function LeadDetailPanel({
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#0A66C2]/5 hover:bg-[#0A66C2]/10 text-[#0A66C2] text-xs font-medium transition-colors"
               >
-                <Linkedin className="w-3.5 h-3.5" />
+                <FaLinkedin className="w-3.5 h-3.5" />
                 <span>View LinkedIn Profile</span>
                 <ExternalLink className="w-3 h-3 ml-auto opacity-70" />
               </a>
