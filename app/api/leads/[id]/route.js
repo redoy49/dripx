@@ -31,9 +31,76 @@ export async function GET(req, { params }) {
     if (!lead) return Response.json({ message: "Lead not found" }, { status: 404 });
 
     const campaignLeads = await dbConnect("campaign_leads");
-    const enrollments = await campaignLeads.find({ leadId: lead._id }).toArray();
+    const campaignsCol = await dbConnect("campaigns");
+    const sequenceStepsCol = await dbConnect("sequence_steps");
+    const conversationsCol = await dbConnect("conversations");
 
-    return Response.json({ ...serializeLead(lead), campaignCount: enrollments.length });
+    const [enrollments, conversation] = await Promise.all([
+      campaignLeads.find({ leadId: lead._id }).toArray(),
+      conversationsCol.findOne({
+        workspaceId: new ObjectId(session.workspaceId),
+        leadId: lead._id,
+      }),
+    ]);
+
+    const campaignIds = enrollments.map((e) => e.campaignId);
+    const stepIds = enrollments.map((e) => e.currentStepId).filter(Boolean);
+
+    const [campaignDocs, stepDocs] = await Promise.all([
+      campaignIds.length > 0
+        ? campaignsCol.find({ _id: { $in: campaignIds } }).project({ name: 1, status: 1 }).toArray()
+        : [],
+      stepIds.length > 0
+        ? sequenceStepsCol.find({ _id: { $in: stepIds } }).project({ order: 1, type: 1, config: 1 }).toArray()
+        : [],
+    ]);
+
+    const campaignMap = new Map(campaignDocs.map((c) => [c._id.toString(), c]));
+    const stepMap = new Map(stepDocs.map((s) => [s._id.toString(), s]));
+
+    const uniqueCampaignsMap = new Map();
+    for (const e of enrollments) {
+      const campIdStr = e.campaignId.toString();
+      if (uniqueCampaignsMap.has(campIdStr)) {
+        const existing = uniqueCampaignsMap.get(campIdStr);
+        if (existing.enrollmentStatus === "replied" || existing.enrollmentStatus === "in_progress") {
+          continue;
+        }
+      }
+
+      const camp = campaignMap.get(campIdStr);
+      const step = e.currentStepId ? stepMap.get(e.currentStepId.toString()) : null;
+      const stepTitle = step?.config?.subject
+        ? `Step ${step.order}: ${step.config.subject.slice(0, 24)}`
+        : step
+          ? `Step ${step.order}: ${step.type.replace("_", " ")}`
+          : e.status === "completed"
+            ? "Completed"
+            : e.status === "replied"
+              ? "Replied"
+              : e.status === "paused"
+                ? "Paused"
+                : "Pending Start";
+
+      uniqueCampaignsMap.set(campIdStr, {
+        id: campIdStr,
+        enrollmentId: e._id.toString(),
+        name: camp?.name || "Campaign",
+        campaignStatus: camp?.status || "draft",
+        enrollmentStatus: e.status,
+        currentStepTitle: stepTitle,
+        enrolledAt: e.enrolledAt,
+      });
+    }
+
+    const enrichedCampaigns = Array.from(uniqueCampaignsMap.values());
+
+    return Response.json({
+      ...serializeLead(lead),
+      campaignCount: enrollments.length,
+      campaigns: enrichedCampaigns,
+      conversationId: conversation ? conversation._id.toString() : null,
+    });
   } catch (error) {
     console.error("Fetching lead failed:", error);
 

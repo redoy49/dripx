@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Tag, Plus } from "lucide-react";
+import { X, Tag, Plus, MessageSquare, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 export default function LeadDetailModal({ leadId, onClose, onChanged }) {
   const [lead, setLead] = useState(null);
@@ -61,26 +62,39 @@ export default function LeadDetailModal({ leadId, onClose, onChanged }) {
             <p className="py-10 text-center text-sm text-gray-400">Loading...</p>
           ) : (
             <>
-              <div className="mb-5 flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-500">
-                  {(lead.firstName?.[0] || "?").toUpperCase()}
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-gray-500">
+                    {(lead.firstName?.[0] || "?").toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-gray-800">
+                      {`${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead"}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {lead.jobTitle}
+                      {lead.jobTitle && lead.company ? " at " : ""}
+                      {lead.company}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-base font-semibold text-gray-800">
-                    {`${lead.firstName} ${lead.lastName}`.trim() || "Unnamed lead"}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {lead.jobTitle}
-                    {lead.jobTitle && lead.company ? " at " : ""}
-                    {lead.company}
-                  </p>
-                </div>
+
+                {lead.conversationId && (
+                  <Link
+                    href={`/dashboard/inbox`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-semibold transition shrink-0"
+                    title="View conversation thread in Unified Inbox"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Open Inbox</span>
+                  </Link>
+                )}
               </div>
 
               <dl className="mb-5 space-y-2 text-sm">
                 <div className="flex justify-between border-b border-gray-50 py-1.5">
                   <dt className="text-gray-400">Email</dt>
-                  <dd className="text-gray-700">{lead.email || "—"}</dd>
+                  <dd className="text-gray-700 font-medium">{lead.email || "—"}</dd>
                 </div>
                 <div className="flex justify-between border-b border-gray-50 py-1.5">
                   <dt className="text-gray-400">LinkedIn</dt>
@@ -98,10 +112,6 @@ export default function LeadDetailModal({ leadId, onClose, onChanged }) {
                   <dt className="text-gray-400">Source</dt>
                   <dd className="capitalize text-gray-700">{lead.source?.replace(/_/g, " ")}</dd>
                 </div>
-                <div className="flex justify-between border-b border-gray-50 py-1.5">
-                  <dt className="text-gray-400">Campaigns</dt>
-                  <dd className="text-gray-700">{lead.campaignCount ?? 0}</dd>
-                </div>
                 {Object.entries(lead.customFields || {}).map(([key, value]) => (
                   <div key={key} className="flex justify-between border-b border-gray-50 py-1.5">
                     <dt className="text-gray-400">{key}</dt>
@@ -109,6 +119,53 @@ export default function LeadDetailModal({ leadId, onClose, onChanged }) {
                   </div>
                 ))}
               </dl>
+
+              {/* Active Campaigns Section */}
+              <div className="mb-5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  Enrolled Campaigns ({lead.campaigns?.length || 0})
+                </p>
+                {lead.campaigns && lead.campaigns.length > 0 ? (
+                  <div className="space-y-2">
+                    {lead.campaigns.map((camp, cIdx) => (
+                      <div
+                        key={camp.enrollmentId || (camp.id ? `${camp.id}-${cIdx}` : cIdx)}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-gray-100 bg-gray-50/70 text-xs"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-800">{camp.name}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
+                              camp.enrollmentStatus === "replied"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : camp.enrollmentStatus === "in_progress"
+                                  ? "bg-violet-50 text-violet-700"
+                                  : camp.enrollmentStatus === "paused"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-gray-100 text-gray-600"
+                            }`}>
+                              {camp.enrollmentStatus}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-400 mt-0.5">{camp.currentStepTitle}</p>
+                        </div>
+
+                        <Link
+                          href={`/dashboard/campaigns/${camp.id}`}
+                          className="p-1.5 text-gray-400 hover:text-violet-600 transition"
+                          title="View campaign analytics"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 italic bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                    Not enrolled in any campaign yet.
+                  </p>
+                )}
+              </div>
 
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-500">

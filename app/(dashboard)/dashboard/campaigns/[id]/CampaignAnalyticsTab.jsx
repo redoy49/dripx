@@ -6,11 +6,11 @@ import {
   MessageSquare,
   CheckCircle,
   Mail,
-  Linkedin,
   TrendingUp,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa";
 
 export default function CampaignAnalyticsTab({ analytics }) {
   if (!analytics) return null;
@@ -61,7 +61,7 @@ export default function CampaignAnalyticsTab({ analytics }) {
             </span>
             <span>·</span>
             <span className="flex items-center gap-1 text-[#0A66C2] font-medium">
-              <Linkedin className="w-3 h-3" /> {channels.linkedin.dispatched}
+              <FaLinkedin className="w-3 h-3" /> {channels.linkedin.dispatched}
             </span>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function CampaignAnalyticsTab({ analytics }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2]">
-                    <Linkedin className="w-4 h-4" />
+                    <FaLinkedin className="w-4 h-4" />
                   </div>
                   <span className="text-xs font-bold text-gray-800">LinkedIn Outreach</span>
                 </div>

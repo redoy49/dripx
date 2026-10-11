@@ -7,7 +7,6 @@ import {
   Copy,
   Check,
   Mail,
-  Linkedin,
   Pause,
   Play,
   Trash2,
@@ -16,6 +15,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa";
 
 const STATUS_FILTERS = [
   { key: "all", label: "All Leads" },
@@ -266,7 +266,7 @@ export default function CampaignLeadsTab({ campaignId }) {
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-[#0A66C2] text-[11px] hover:underline"
                           >
-                            <Linkedin className="w-3 h-3" />
+                            <FaLinkedin className="w-3 h-3" />
                             <span>LinkedIn Profile</span>
                             <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                           </a>
