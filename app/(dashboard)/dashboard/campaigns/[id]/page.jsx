@@ -13,15 +13,21 @@ import {
   Activity,
   Loader2,
   RefreshCw,
+  Clock,
+  FlaskConical,
+  Zap,
 } from "lucide-react";
 import CampaignAnalyticsTab from "./CampaignAnalyticsTab";
 import CampaignLeadsTab from "./CampaignLeadsTab";
 import CampaignActivityTab from "./CampaignActivityTab";
+import CampaignQueueTab from "./CampaignQueueTab";
+import CampaignSimulatorModal from "./CampaignSimulatorModal";
 
 const TABS = [
   { id: "analytics", label: "Analytics Overview", icon: BarChart3 },
   { id: "leads", label: "Enrolled Leads", icon: Users },
   { id: "activity", label: "Activity Audit", icon: Activity },
+  { id: "queue", label: "Execution Queue", icon: Clock },
 ];
 
 export default function CampaignCommandCenterPage({ params }) {
@@ -33,6 +39,9 @@ export default function CampaignCommandCenterPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [statusToggling, setStatusToggling] = useState(false);
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
+  const [dispatching, setDispatching] = useState(false);
+  const [dispatchToast, setDispatchToast] = useState(null);
 
   const fetchAnalytics = useCallback(async () => {
     try {
@@ -100,6 +109,35 @@ export default function CampaignCommandCenterPage({ params }) {
 
   const downloadCsv = () => {
     window.location.href = `/api/campaigns/${campaignId}/export`;
+  };
+
+  const triggerManualDispatch = async () => {
+    if (dispatching) return;
+    setDispatching(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/dispatch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxJobs: 25 }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDispatchToast(
+          `Dispatched ${data.processed} jobs (${data.succeeded} succeeded, ${data.failed} failed, ${data.rateLimited || 0} rate-limited)`
+        );
+        setTimeout(() => setDispatchToast(null), 6000);
+        fetchAnalytics();
+      } else {
+        setDispatchToast(data.message || "Dispatch failed");
+        setTimeout(() => setDispatchToast(null), 6000);
+      }
+    } catch (err) {
+      console.error("Dispatch error:", err);
+      setDispatchToast("An unexpected error occurred while dispatching jobs.");
+      setTimeout(() => setDispatchToast(null), 6000);
+    } finally {
+      setDispatching(false);
+    }
   };
 
   if (loading) {
@@ -189,6 +227,33 @@ export default function CampaignCommandCenterPage({ params }) {
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-violet-500" : ""}`} />
           </button>
 
+          {/* Simulate Button */}
+          <button
+            onClick={() => setSimulatorOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-semibold shadow-2xs transition"
+            title="Dry-run simulator (zero real sends)"
+          >
+            <FlaskConical className="w-3.5 h-3.5 text-violet-600" />
+            <span>Simulate</span>
+          </button>
+
+          {/* Run Due Jobs Button */}
+          {isActive && (
+            <button
+              onClick={triggerManualDispatch}
+              disabled={dispatching}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-xs transition"
+              title="Execute pending due jobs now"
+            >
+              {dispatching ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Zap className="w-3.5 h-3.5 fill-current" />
+              )}
+              <span>Run Due Jobs</span>
+            </button>
+          )}
+
           {/* Export CSV Button */}
           <button
             onClick={downloadCsv}
@@ -231,6 +296,22 @@ export default function CampaignCommandCenterPage({ params }) {
         </div>
       </div>
 
+      {/* Dispatch Toast Feedback */}
+      {dispatchToast && (
+        <div className="p-3.5 rounded-2xl bg-violet-50 border border-violet-100 text-xs text-violet-800 flex items-center justify-between shadow-2xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-violet-600 shrink-0" />
+            <span>{dispatchToast}</span>
+          </div>
+          <button
+            onClick={() => setDispatchToast(null)}
+            className="text-violet-400 hover:text-violet-600 text-xs font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 2. Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-gray-200 px-1">
         {TABS.map((tab) => {
@@ -266,6 +347,21 @@ export default function CampaignCommandCenterPage({ params }) {
       {activeTab === "activity" && (
         <CampaignActivityTab activities={analytics.recentActivity || []} />
       )}
+
+      {activeTab === "queue" && (
+        <CampaignQueueTab
+          campaignId={campaignId}
+          onTriggerDispatch={triggerManualDispatch}
+          dispatching={dispatching}
+        />
+      )}
+
+      {/* 4. Sequence Dispatch Simulator Modal */}
+      <CampaignSimulatorModal
+        campaignId={campaignId}
+        isOpen={simulatorOpen}
+        onClose={() => setSimulatorOpen(false)}
+      />
     </div>
   );
 }

@@ -329,7 +329,16 @@ export async function processJob(job) {
       });
     }
 
-    return { status: "done" };
+    const leadDisplayName = `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || lead.email || "Lead";
+    const stepTitle = step.config?.subject ? `Step: ${step.config.subject.slice(0, 30)}` : `Step: ${step.type.replace("_", " ")}`;
+
+    return {
+      status: "done",
+      leadId: lead._id.toString(),
+      leadName: leadDisplayName,
+      stepTitle,
+      channel: result.channel || step.type,
+    };
   } catch (error) {
     console.error("processJob failed:", error);
     await jobsCol.updateOne(
@@ -346,24 +355,97 @@ function nextMidnightUTC() {
   return d;
 }
 
-// Pulls and processes a batch of due jobs. Returns a summary for the cron route to report.
-export async function runDueJobs(batchSize = 50) {
+/**
+ * Atomically claims a queued job so that no two concurrent workers
+ * (e.g. manual dispatch and cron scheduler) can process the same job at the same time.
+ */
+export async function claimAndProcessJob(job, workerId = "runner", forceDue = false) {
   const jobsCol = await dbConnect("jobs");
-  const due = await jobsCol
-    .find({ status: "queued", runAfter: { $lte: new Date() } })
-    .limit(batchSize)
-    .toArray();
+  const now = new Date();
+  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 min stale lock threshold
 
-  const results = { processed: 0, succeeded: 0, failed: 0, skipped: 0, rateLimited: 0, paused: 0 };
+  const filter = {
+    _id: job._id,
+    $or: [
+      forceDue
+        ? { status: "queued" }
+        : { status: "queued", runAfter: { $lte: now } },
+      { status: "processing", lockedAt: { $lt: staleThreshold } },
+    ],
+  };
+
+  const claimed = await jobsCol.findOneAndUpdate(
+    filter,
+    {
+      $set: {
+        status: "processing",
+        lockedAt: now,
+        lockedBy: workerId,
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!claimed) {
+    return { status: "already_claimed", skipped: true };
+  }
+
+  return processJob(claimed);
+}
+
+// Pulls and processes a batch of due jobs. Supports filtering by campaignId and forceDue mode.
+export async function runDueJobs(batchSize = 50, campaignId = null, forceDue = false, workerId = "scheduler") {
+  const jobsCol = await dbConnect("jobs");
+  const now = new Date();
+  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000);
+
+  const query = {
+    $or: [
+      forceDue
+        ? { status: "queued" }
+        : { status: "queued", runAfter: { $lte: now } },
+      { status: "processing", lockedAt: { $lt: staleThreshold } },
+    ],
+  };
+
+  if (campaignId) {
+    query.campaignId = new ObjectId(campaignId);
+  }
+
+  const due = await jobsCol.find(query).limit(batchSize).toArray();
+
+  const results = {
+    processed: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0,
+    rateLimited: 0,
+    paused: 0,
+    logs: [],
+  };
 
   for (const job of due) {
-    const outcome = await processJob(job);
+    const outcome = await claimAndProcessJob(job, workerId, forceDue);
+    if (outcome.status === "already_claimed") {
+      continue;
+    }
+
     results.processed++;
     if (outcome.status === "done") results.succeeded++;
     else if (outcome.status === "failed") results.failed++;
     else if (outcome.status === "skipped") results.skipped++;
     else if (outcome.status === "rate_limited") results.rateLimited++;
     else if (outcome.status === "paused") results.paused++;
+
+    results.logs.push({
+      jobId: job._id.toString(),
+      status: outcome.status,
+      leadName: outcome.leadName || "Lead",
+      stepTitle: outcome.stepTitle || job.type,
+      channel: outcome.channel || job.type,
+      error: outcome.error || null,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   return results;
