@@ -66,20 +66,149 @@ export function parseCsv(text) {
   });
 }
 
+// Supported target lead fields with human-readable labels
+export const SUPPORTED_LEAD_FIELDS = [
+  { key: "firstName", label: "First Name" },
+  { key: "lastName", label: "Last Name" },
+  { key: "email", label: "Email Address" },
+  { key: "linkedinUrl", label: "LinkedIn Profile URL" },
+  { key: "company", label: "Company / Organization" },
+  { key: "jobTitle", label: "Job Title / Position" },
+  { key: "phone", label: "Phone Number" },
+  { key: "industry", label: "Industry" },
+  { key: "website", label: "Company Website" },
+  { key: "icebreaker", label: "Icebreaker / Intro" },
+];
+
 // Maps common CSV header variants onto our lead schema.
-const HEADER_ALIASES = {
-  firstName: ["firstname", "first name", "first_name"],
-  lastName: ["lastname", "last name", "last_name"],
-  headline: ["headline", "title"],
-  company: ["company", "company name", "organization"],
-  jobTitle: ["jobtitle", "job title", "job_title", "position"],
-  linkedinUrl: ["linkedinurl", "linkedin url", "linkedin_url", "profileurl", "profile url", "url"],
-  email: ["email", "email address"],
-  phone: ["phone", "phone number", "phone_number", "work phone", "work_phone", "mobile phone", "mobile_phone", "telephone", "mobile", "cell"],
-  industry: ["industry", "sector"],
-  website: ["website", "company website", "company_website", "domain"],
-  icebreaker: ["icebreaker", "ice_breaker", "custom_intro", "intro"],
+export const HEADER_ALIASES = {
+  firstName: ["firstname", "first name", "first_name", "given name", "fname", "first"],
+  lastName: ["lastname", "last name", "last_name", "surname", "family name", "lname", "last"],
+  headline: ["headline", "linkedin headline"],
+  company: ["company", "company name", "company_name", "organization", "organisation", "employer", "account"],
+  jobTitle: ["jobtitle", "job title", "job_title", "position", "role", "designation", "title", "occupation"],
+  linkedinUrl: [
+    "linkedinurl",
+    "linkedin url",
+    "linkedin_url",
+    "linkedin profile",
+    "linkedin profile url",
+    "linkedin_profile",
+    "profileurl",
+    "profile url",
+    "profile_url",
+    "profile",
+    "linkedin link",
+    "linkedin",
+  ],
+  email: ["email", "email address", "work email", "contact email", "primary email", "e-mail", "e-mail address"],
+  phone: [
+    "phone",
+    "phone number",
+    "phone_number",
+    "work phone",
+    "work_phone",
+    "mobile phone",
+    "mobile_phone",
+    "telephone",
+    "mobile",
+    "cell",
+    "contact number",
+  ],
+  industry: ["industry", "sector", "business sector"],
+  website: ["website", "company website", "company_website", "domain", "company domain", "company url"],
+  icebreaker: ["icebreaker", "ice_breaker", "custom_intro", "intro", "personalization", "custom note", "notes"],
 };
+
+/**
+ * Automatically suggests a mapping from CSV header names to target lead fields based on aliases.
+ * Returns an object: { [csvHeader]: targetFieldKey | "custom" }
+ */
+export function detectColumnMapping(headers) {
+  const mapping = {};
+  const usedFields = new Set();
+
+  for (const header of headers) {
+    const normalized = header.trim().toLowerCase();
+    let matchedField = null;
+
+    for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
+      if (!usedFields.has(field) && aliases.includes(normalized)) {
+        matchedField = field;
+        break;
+      }
+    }
+
+    if (matchedField) {
+      mapping[header] = matchedField;
+      usedFields.add(matchedField);
+    } else {
+      mapping[header] = "custom";
+    }
+  }
+
+  return mapping;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LINKEDIN_PROFILE_RE = /linkedin\.com\/in\/[^/?#]+/i;
+
+/**
+ * Validates a lead record for outreach readiness.
+ * Returns { valid: boolean, errors: string[] }
+ */
+export function validateLeadRecord(lead) {
+  const errors = [];
+  const linkedinUrl = (lead.linkedinUrl || "").trim();
+  const email = (lead.email || "").trim();
+
+  // Must have at least one identifier
+  if (!linkedinUrl && !email) {
+    errors.push("Missing both email and LinkedIn profile URL");
+  }
+
+  // Validate email format if provided
+  if (email && !EMAIL_RE.test(email)) {
+    errors.push(`Invalid email format: "${email}"`);
+  }
+
+  // Validate LinkedIn URL if provided
+  if (linkedinUrl && !linkedinUrl.toLowerCase().includes("linkedin.com")) {
+    errors.push(`Not a valid LinkedIn URL: "${linkedinUrl}"`);
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
+ * Maps a single CSV row object using a user-specified column mapping.
+ * @param {Object} row - Key-value pair from CSV
+ * @param {Object} mapping - { [csvHeader]: targetFieldKey | "custom" | "skip" }
+ */
+export function mapRowWithCustomMapping(row, mapping) {
+  const lead = { customFields: {} };
+
+  for (const [header, val] of Object.entries(row)) {
+    const value = (val || "").trim();
+    if (!value) continue;
+
+    const target = mapping?.[header];
+
+    if (!target || target === "custom") {
+      lead.customFields[header] = value;
+    } else if (target === "skip") {
+      // Explicitly skipped by user, do not store
+      continue;
+    } else {
+      lead[target] = value;
+    }
+  }
+
+  return lead;
+}
 
 export function mapCsvRowToLead(row) {
   const lead = { customFields: {} };

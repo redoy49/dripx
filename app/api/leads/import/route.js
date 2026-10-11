@@ -2,7 +2,12 @@ import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
 import { serializeLead } from "@/app/api/leads/route";
-import { parseCsv, mapCsvRowToLead } from "@/app/lib/csv";
+import {
+  parseCsv,
+  mapCsvRowToLead,
+  mapRowWithCustomMapping,
+  validateLeadRecord,
+} from "@/app/lib/csv";
 import { getLinkedInConnector } from "@/app/lib/connectors";
 import { previewLinkedInProfile } from "@/app/lib/connectors/UnipileConnector";
 import { enrollLeads } from "@/app/lib/campaignEnrollment";
@@ -20,11 +25,12 @@ const SCRAPE_SOURCES = [
   "my_network",
 ];
 
-async function insertLeads(workspaceId, rawLeads, source) {
+async function insertLeads(workspaceId, validLeads, source, duplicateStrategy = "skip") {
   const leads = await dbConnect("leads");
-  const enrichable = process.env.LINKEDIN_PROVIDER === "unipile" && rawLeads.length <= MAX_ENRICHED_ROWS;
+  const enrichable =
+    process.env.LINKEDIN_PROVIDER === "unipile" && validLeads.length <= MAX_ENRICHED_ROWS;
 
-  const candidates = rawLeads
+  const candidates = validLeads
     .map((raw) => ({
       linkedinUrl: (raw.linkedinUrl || "").trim(),
       email: (raw.email || "").trim().toLowerCase(),
@@ -32,8 +38,10 @@ async function insertLeads(workspaceId, rawLeads, source) {
     }))
     .filter((c) => c.linkedinUrl || c.email || c.raw.firstName);
 
-  // One query for existing matches instead of N sequential findOnes.
-  const linkedinUrls = [...new Set(candidates.filter((c) => c.linkedinUrl).map((c) => c.linkedinUrl))];
+  // One query for existing matches in this workspace instead of N sequential findOnes.
+  const linkedinUrls = [
+    ...new Set(candidates.filter((c) => c.linkedinUrl).map((c) => c.linkedinUrl)),
+  ];
   const emails = [...new Set(candidates.filter((c) => c.email).map((c) => c.email))];
 
   const existingDocs =
@@ -48,18 +56,72 @@ async function insertLeads(workspaceId, rawLeads, source) {
           })
           .toArray()
       : [];
-  const existingByUrl = new Map(existingDocs.filter((d) => d.linkedinUrl).map((d) => [d.linkedinUrl, d]));
-  const existingByEmail = new Map(existingDocs.filter((d) => d.email).map((d) => [d.email, d]));
 
-  const inserted = [];
+  const existingByUrl = new Map(
+    existingDocs.filter((d) => d.linkedinUrl).map((d) => [d.linkedinUrl, d]),
+  );
+  const existingByEmail = new Map(
+    existingDocs.filter((d) => d.email).map((d) => [d.email.toLowerCase(), d]),
+  );
+
+  const allLeads = [];
   const toInsert = [];
+  let newCount = 0;
+  let updatedCount = 0;
+  let duplicateCount = 0;
+  let skippedCount = 0;
 
   for (const { linkedinUrl, email, raw } of candidates) {
     if (!linkedinUrl && !email) continue;
 
-    const existing = (linkedinUrl && existingByUrl.get(linkedinUrl)) || (email && existingByEmail.get(email));
+    const existing =
+      (linkedinUrl && existingByUrl.get(linkedinUrl)) ||
+      (email && existingByEmail.get(email));
+
     if (existing) {
-      inserted.push(existing);
+      duplicateCount++;
+
+      if (duplicateStrategy === "update") {
+        const updateFields = {};
+        const stringFields = [
+          "firstName",
+          "lastName",
+          "headline",
+          "company",
+          "jobTitle",
+          "phone",
+          "industry",
+          "website",
+          "icebreaker",
+        ];
+
+        for (const f of stringFields) {
+          if (raw[f] && raw[f].trim() && (!existing[f] || existing[f] !== raw[f].trim())) {
+            updateFields[f] = raw[f].trim();
+          }
+        }
+
+        if (raw.customFields && typeof raw.customFields === "object") {
+          for (const [k, v] of Object.entries(raw.customFields)) {
+            if (v && typeof v === "string" && v.trim()) {
+              updateFields[`customFields.${k}`] = v.trim();
+            }
+          }
+        }
+
+        if (Object.keys(updateFields).length > 0) {
+          updateFields.updatedAt = new Date();
+          await leads.updateOne({ _id: existing._id }, { $set: updateFields });
+          Object.assign(existing, updateFields);
+          updatedCount++;
+        } else {
+          skippedCount++;
+        }
+      } else {
+        skippedCount++;
+      }
+
+      allLeads.push(existing);
       continue;
     }
 
@@ -70,6 +132,10 @@ async function insertLeads(workspaceId, rawLeads, source) {
       headline: raw.headline || "",
       company: raw.company || "",
       jobTitle: raw.jobTitle || "",
+      phone: raw.phone || "",
+      industry: raw.industry || "",
+      website: raw.website || "",
+      icebreaker: raw.icebreaker || "",
       linkedinUrl,
       email,
       customFields: raw.customFields || {},
@@ -88,15 +154,29 @@ async function insertLeads(workspaceId, rawLeads, source) {
       }
     }
 
+    // Register into existing maps so duplicate rows in the same batch don't insert twice
+    if (linkedinUrl) existingByUrl.set(linkedinUrl, doc);
+    if (email) existingByEmail.set(email, doc);
+
     toInsert.push(doc);
   }
 
   if (toInsert.length > 0) {
     const result = await leads.insertMany(toInsert);
-    toInsert.forEach((doc, i) => inserted.push({ ...doc, _id: result.insertedIds[i] }));
+    toInsert.forEach((doc, i) => {
+      const insertedDoc = { ...doc, _id: result.insertedIds[i] };
+      allLeads.push(insertedDoc);
+      newCount++;
+    });
   }
 
-  return inserted;
+  return {
+    allLeads,
+    newCount,
+    duplicateCount,
+    updatedCount,
+    skippedCount,
+  };
 }
 
 export async function POST(req) {
@@ -106,14 +186,29 @@ export async function POST(req) {
 
     const workspaceId = new ObjectId(session.workspaceId);
     const contentType = req.headers.get("content-type") || "";
-    let insertedLeads = [];
     let campaignId = null;
+    let duplicateStrategy = "skip";
+    let validLeads = [];
+    const invalidErrors = [];
+    let totalRows = 0;
+    let source = "csv_upload";
 
     if (contentType.includes("multipart/form-data")) {
-      // CSV upload
+      // CSV upload with optional column mapping & duplicate strategy
       const form = await req.formData();
       const file = form.get("file");
       campaignId = form.get("campaignId") || null;
+      duplicateStrategy = form.get("duplicateStrategy") || "skip";
+      const mappingRaw = form.get("mapping");
+
+      let mapping = null;
+      if (mappingRaw && typeof mappingRaw === "string") {
+        try {
+          mapping = JSON.parse(mappingRaw);
+        } catch {
+          mapping = null;
+        }
+      }
 
       if (!file || typeof file === "string") {
         return Response.json({ message: "CSV file is required" }, { status: 400 });
@@ -121,50 +216,121 @@ export async function POST(req) {
 
       const text = await file.text();
       const rows = parseCsv(text);
+      totalRows = rows.length;
 
       if (rows.length === 0) {
         return Response.json({ message: "CSV file has no data rows" }, { status: 400 });
       }
 
-      const mapped = rows.map(mapCsvRowToLead);
-      insertedLeads = await insertLeads(workspaceId, mapped, "csv_upload");
+      const mappedRows = rows.map((row) =>
+        mapping ? mapRowWithCustomMapping(row, mapping) : mapCsvRowToLead(row),
+      );
+
+      mappedRows.forEach((lead, idx) => {
+        const validation = validateLeadRecord(lead);
+        if (validation.valid) {
+          validLeads.push(lead);
+        } else {
+          invalidErrors.push({
+            rowNumber: idx + 2, // Header is row 1
+            lead,
+            errors: validation.errors,
+          });
+        }
+      });
+
+      source = "csv_upload";
     } else {
       const body = await req.json();
       campaignId = body.campaignId || null;
+      duplicateStrategy = body.duplicateStrategy || "skip";
+      source = body.source;
 
       if (body.source === "paste_urls") {
         const urls = Array.isArray(body.urls) ? body.urls : [];
         const cleaned = urls.map((u) => u.trim()).filter(Boolean);
+        totalRows = cleaned.length;
 
         if (cleaned.length === 0) {
-          return Response.json({ message: "At least one LinkedIn URL is required" }, { status: 400 });
+          return Response.json(
+            { message: "At least one LinkedIn URL is required" },
+            { status: 400 },
+          );
         }
 
-        const mapped = cleaned.map((linkedinUrl) => ({ linkedinUrl }));
-        insertedLeads = await insertLeads(workspaceId, mapped, "paste_urls");
+        cleaned.forEach((linkedinUrl, idx) => {
+          const lead = { linkedinUrl };
+          const validation = validateLeadRecord(lead);
+          if (validation.valid) {
+            validLeads.push(lead);
+          } else {
+            invalidErrors.push({
+              rowNumber: idx + 1,
+              lead,
+              errors: validation.errors,
+            });
+          }
+        });
       } else if (SCRAPE_SOURCES.includes(body.source)) {
         const connector = getLinkedInConnector();
         const profiles = await connector.fetchProfiles(body.source, {
           limit: body.limit || 10,
           query: body.query || "",
         });
-        insertedLeads = await insertLeads(workspaceId, profiles, body.source);
+        totalRows = profiles.length;
+        validLeads = profiles;
       } else {
         return Response.json({ message: "Unknown or unsupported lead source" }, { status: 400 });
       }
     }
 
+    if (validLeads.length === 0) {
+      return Response.json(
+        {
+          success: false,
+          message: "No valid leads found in data. Please check required fields and formatting.",
+          imported: 0,
+          total: totalRows,
+          summary: {
+            total: totalRows,
+            newCount: 0,
+            duplicateCount: 0,
+            updatedCount: 0,
+            skippedCount: 0,
+            invalidCount: invalidErrors.length,
+            invalidErrors,
+          },
+          leads: [],
+        },
+        { status: 400 },
+      );
+    }
+
+    const { allLeads, newCount, duplicateCount, updatedCount, skippedCount } =
+      await insertLeads(workspaceId, validLeads, source, duplicateStrategy);
+
     let enrollment = null;
-    if (campaignId && insertedLeads.length > 0) {
+    if (campaignId && allLeads.length > 0) {
       enrollment = await enrollLeads(
         campaignId,
-        insertedLeads.map((l) => l._id.toString()),
+        allLeads.map((l) => l._id.toString()),
       );
     }
 
     return Response.json({
-      imported: insertedLeads.length,
-      leads: insertedLeads.map(serializeLead),
+      success: true,
+      imported: allLeads.length,
+      total: totalRows,
+      summary: {
+        total: totalRows,
+        newCount,
+        duplicateCount,
+        updatedCount,
+        skippedCount,
+        invalidCount: invalidErrors.length,
+        invalidErrors,
+      },
+      leads: allLeads.map(serializeLead),
       enrollment,
     });
   } catch (error) {
@@ -173,3 +339,4 @@ export async function POST(req) {
     return Response.json({ message: "Failed to import leads" }, { status: 500 });
   }
 }
+
