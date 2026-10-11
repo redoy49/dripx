@@ -75,6 +75,10 @@ const HEADER_ALIASES = {
   jobTitle: ["jobtitle", "job title", "job_title", "position"],
   linkedinUrl: ["linkedinurl", "linkedin url", "linkedin_url", "profileurl", "profile url", "url"],
   email: ["email", "email address"],
+  phone: ["phone", "phone number", "phone_number", "work phone", "work_phone", "mobile phone", "mobile_phone", "telephone", "mobile", "cell"],
+  industry: ["industry", "sector"],
+  website: ["website", "company website", "company_website", "domain"],
+  icebreaker: ["icebreaker", "ice_breaker", "custom_intro", "intro"],
 };
 
 export function mapCsvRowToLead(row) {
