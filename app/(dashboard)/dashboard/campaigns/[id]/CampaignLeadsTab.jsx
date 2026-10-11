@@ -194,7 +194,7 @@ export default function CampaignLeadsTab({ campaignId }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-gray-700">
-              {filteredLeads.map((item) => {
+              {filteredLeads.map((item, idx) => {
                 const lead = item.lead;
                 const fullName = lead
                   ? `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || lead.email
@@ -212,7 +212,10 @@ export default function CampaignLeadsTab({ campaignId }) {
                 const isInProgress = item.status === "in_progress";
 
                 return (
-                  <tr key={item.leadId} className="hover:bg-gray-50/50 transition-colors">
+                  <tr
+                    key={item.enrollmentId || (item.leadId ? `${item.leadId}-${idx}` : idx)}
+                    className="hover:bg-gray-50/50 transition-colors"
+                  >
                     {/* Prospect Info */}
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">

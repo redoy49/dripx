@@ -2,7 +2,6 @@
 
 import {
   Mail,
-  Linkedin,
   MessageSquare,
   PauseCircle,
   Eye,
@@ -10,6 +9,8 @@ import {
   Clock,
   Sparkles,
 } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa";
+
 
 function formatRelativeTime(dateString) {
   if (!dateString) return "";
@@ -35,7 +36,7 @@ function getActivityBadge(type) {
       };
     case "connection_request":
       return {
-        icon: Linkedin,
+        icon: FaLinkedin,
         label: "Connection request sent",
         color: "text-[#0A66C2] bg-blue-50 border-blue-100",
       };
@@ -116,7 +117,7 @@ export default function CampaignActivityTab({ activities = [] }) {
 
           return (
             <div
-              key={item.id || idx}
+              key={item.id ? `${item.id}-${idx}` : idx}
               className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-50/60 transition-colors"
             >
               <div

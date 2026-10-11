@@ -64,7 +64,22 @@ export async function GET(req, { params }) {
       }
     }
 
-    const items = enrollments.map((e) => {
+    // Deduplicate enrollments by leadId (preserving latest/active status)
+    const uniqueEnrollments = new Map();
+    for (const e of enrollments) {
+      const key = e.leadId.toString();
+      if (!uniqueEnrollments.has(key)) {
+        uniqueEnrollments.set(key, e);
+      } else {
+        const existing = uniqueEnrollments.get(key);
+        // Prefer active/replied/in_progress over pending if duplicate exists
+        if (existing.status === "pending" && e.status !== "pending") {
+          uniqueEnrollments.set(key, e);
+        }
+      }
+    }
+
+    const items = Array.from(uniqueEnrollments.values()).map((e) => {
       const stepTitle = e.currentStepId
         ? stepById.get(e.currentStepId.toString()) || "In Sequence"
         : e.status === "completed"
@@ -76,6 +91,8 @@ export async function GET(req, { params }) {
               : "Pending Start";
 
       return {
+        id: e._id.toString(),
+        enrollmentId: e._id.toString(),
         leadId: e.leadId.toString(),
         status: e.status,
         currentStepId: e.currentStepId ? e.currentStepId.toString() : null,

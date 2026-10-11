@@ -276,14 +276,17 @@ export default function CampaignAnalyticsTab({ analytics }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 text-gray-700">
-                {stepMetrics.map((step) => {
+                {stepMetrics.map((step, idx) => {
                   const convPct =
                     step.executedCount > 0
                       ? Math.min(100, Math.round((step.repliedCount / step.executedCount) * 100))
                       : 0;
 
                   return (
-                    <tr key={step.stepId} className="hover:bg-gray-50/50 transition-colors">
+                    <tr
+                      key={step.stepId ? `${step.stepId}-${idx}` : idx}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
                       <td className="py-3.5 px-5 font-semibold text-gray-800">{step.title}</td>
                       <td className="py-3.5 px-5">
                         <span className="capitalize px-2 py-0.5 rounded-md font-medium text-[11px] bg-gray-100 text-gray-600">
