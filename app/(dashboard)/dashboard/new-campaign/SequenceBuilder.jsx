@@ -22,6 +22,11 @@ import {
   AlertTriangle,
   CheckCircle2,
   X,
+  BookmarkPlus,
+  Layers,
+  Sparkles,
+  Plus,
+  CircleSlash,
 } from "lucide-react";
 import {
   ACTION_STEP_OPTIONS,
@@ -42,6 +47,9 @@ import { edgeTypes } from "./flow/FlowEdge";
 import ActionPicker from "./flow/ActionPicker";
 import StepEditorModal from "./flow/StepEditorModal";
 import DelayEditorModal from "./flow/DelayEditorModal";
+import TemplateGalleryModal from "./flow/TemplateGalleryModal";
+import SaveTemplateModal from "./flow/SaveTemplateModal";
+import { instantiateTemplateSteps } from "@/app/lib/sequenceTemplates";
 
 function serverStepsToLocal(items) {
   return (items || []).map((s) => ({
@@ -68,6 +76,8 @@ function FlowCanvasInner({ campaignId }) {
   const [pickerTarget, setPickerTarget] = useState(null); // { fromId, handle }
   const [editingStepId, setEditingStepId] = useState(null);
   const [delayEdit, setDelayEdit] = useState(null);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [saveTemplateModalOpen, setSaveTemplateModalOpen] = useState(false);
 
   const { fitView } = useReactFlow();
   const didInitialFit = useRef(false);
@@ -97,6 +107,23 @@ function FlowCanvasInner({ campaignId }) {
     setSteps((prev) => updater(prev));
     setDirty(true);
   }, []);
+
+  const handleApplyTemplate = useCallback(
+    (template) => {
+      const newSteps = instantiateTemplateSteps(template);
+      setSteps(newSteps);
+      setDirty(true);
+      setSaved(false);
+      setToast({
+        type: "success",
+        message: `Template "${template.name}" applied! Review steps and save changes.`,
+      });
+      setTimeout(() => {
+        fitView({ padding: 0.25, duration: 400 });
+      }, 150);
+    },
+    [fitView],
+  );
 
   // --- Real-time Sequence Validation -----------------------------------
   const sequenceValidation = useMemo(() => validateSequence(steps), [steps]);
@@ -182,7 +209,12 @@ function FlowCanvasInner({ campaignId }) {
             validation: getStepValidationStatus(sequenceValidation, n.id),
             forks: forkSources.has(n.id),
             onEdit: (id) => setEditingStepId(id),
-            onDelete: (id) => mutateSteps((prev) => applyDeleteStep(prev, id)),
+            onDelete: (id) => {
+              mutateSteps((prev) => applyDeleteStep(prev, id));
+              setTimeout(() => {
+                fitView({ padding: 0.25, duration: 400 });
+              }, 120);
+            },
           },
         };
       }
@@ -191,7 +223,11 @@ function FlowCanvasInner({ campaignId }) {
         type: "add",
         position: pos,
         draggable: false,
-        data: { onAdd: openPicker },
+        data: {
+          onAdd: openPicker,
+          isRoot: n.id === "add__root__main",
+          onOpenTemplates: () => setTemplateModalOpen(true),
+        },
       };
     });
   }, [
@@ -202,6 +238,7 @@ function FlowCanvasInner({ campaignId }) {
     sequenceValidation,
     mutateSteps,
     openPicker,
+    fitView,
   ]);
 
   const [rfNodes, setRfNodes] = useState(builtNodes);
@@ -276,13 +313,18 @@ function FlowCanvasInner({ campaignId }) {
       };
       mutateSteps((prev) => applyAddStep(prev, pickerTarget, newStep));
       setPickerTarget(null);
+      setTimeout(() => {
+        fitView({ padding: 0.25, duration: 400 });
+      }, 120);
     },
-    [pickerTarget, mutateSteps],
+    [pickerTarget, mutateSteps, fitView],
   );
 
   const addAtMainTip = useCallback(
     (type) => {
-      const mainTip = graphNodes.find((n) => n.kind === "add" && n.handle === "main");
+      const mainTip =
+        graphNodes.find((n) => n.kind === "add" && n.handle === "main") ||
+        graphNodes.find((n) => n.kind === "add");
       if (!mainTip) return;
       const newStep = {
         clientId: newClientId(),
@@ -293,8 +335,11 @@ function FlowCanvasInner({ campaignId }) {
       mutateSteps((prev) =>
         applyAddStep(prev, { fromId: mainTip.fromId, handle: mainTip.handle }, newStep),
       );
+      setTimeout(() => {
+        fitView({ padding: 0.25, duration: 400 });
+      }, 120);
     },
-    [graphNodes, mutateSteps],
+    [graphNodes, mutateSteps, fitView],
   );
 
   const editingStep = editingStepId ? steps.find((s) => s.clientId === editingStepId) : null;
@@ -375,9 +420,8 @@ function FlowCanvasInner({ campaignId }) {
   return (
     <div className={fullscreen ? "fixed inset-0 z-40 bg-white" : "relative"}>
       <div
-        className={`relative w-full overflow-hidden ${
-          fullscreen ? "h-screen" : "h-[74vh] rounded-b-2xl"
-        } bg-[#FAFAFC]`}
+        className={`relative w-full overflow-hidden ${fullscreen ? "h-screen" : "h-[74vh] rounded-b-2xl"
+          } bg-[#FAFAFC]`}
       >
         <ReactFlow
           nodes={rfNodes}
@@ -396,14 +440,14 @@ function FlowCanvasInner({ campaignId }) {
           <Controls
             position="bottom-right"
             showInteractive={false}
-            className="!rounded-2xl !border !border-gray-100 !bg-white !shadow-lg [&_button]:!border-gray-100 [&_button]:!text-gray-500"
+            className="!rounded-2xl !border !border-gray-100/90 !bg-white !p-1 !shadow-lg [&_button]:!rounded-full [&_button]:!border-0 [&_button]:!text-gray-500 [&_button:hover]:!bg-gray-100"
           />
 
-          {/* Left Sidebar: Step Type Picker */}
-          <Panel position="top-left">
-            <div className="w-56 max-h-[68vh] overflow-y-auto rounded-2xl border border-gray-100 bg-white p-4 shadow-xl">
-              <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                Actions
+          {/* Left Sidebar: Step Type Picker (Matches Reference Image 2) */}
+          <Panel position="top-left" className="!ml-5 !mt-5">
+            <div className="w-56 max-h-[66vh] overflow-y-auto rounded-2xl border border-gray-100/90 bg-white p-4 shadow-xl">
+              <p className="mb-2 px-1 text-xs font-semibold text-gray-500">
+                Actions:
               </p>
               <div className="space-y-0.5">
                 {ACTION_STEP_OPTIONS.map((opt) => {
@@ -412,10 +456,10 @@ function FlowCanvasInner({ campaignId }) {
                     <button
                       key={opt.type}
                       onClick={() => addAtMainTip(opt.type)}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-600 transition hover:bg-gray-50"
+                      className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-[#6367FF]/5 hover:text-[#6367FF]"
                     >
-                      <Icon size={15} strokeWidth={1.8} className="text-gray-400" />
-                      {opt.title}
+                      <Icon size={15} strokeWidth={1.8} className="text-gray-400 group-hover:text-[#6367FF] transition" />
+                      <span>{opt.title}</span>
                     </button>
                   );
                 })}
@@ -425,35 +469,54 @@ function FlowCanvasInner({ campaignId }) {
                     <div
                       key={opt.title}
                       title="Coming soon"
-                      className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] text-gray-300"
+                      className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-[13px] font-medium text-gray-300"
                     >
-                      <Icon size={15} strokeWidth={1.8} />
-                      {opt.title}
+                      <Icon size={15} strokeWidth={1.8} className="text-gray-300" />
+                      <span>{opt.title}</span>
                     </div>
                   );
                 })}
               </div>
 
-              <p className="mb-2 mt-4 px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                Conditions
+              <p className="mb-2 mt-4 px-1 text-xs font-semibold text-gray-500">
+                Conditions:
               </p>
               <button
                 onClick={() => addAtMainTip(CONDITION_OPTION.type)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[13px] text-gray-600 transition hover:bg-gray-50"
+                className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-[#6367FF]/5 hover:text-[#6367FF]"
               >
-                <CONDITION_OPTION.icon size={15} strokeWidth={1.8} className="text-gray-400" />
-                {CONDITION_OPTION.title}
+                <CONDITION_OPTION.icon size={15} strokeWidth={1.8} className="text-gray-400 group-hover:text-[#6367FF] transition" />
+                <span>{CONDITION_OPTION.title}</span>
               </button>
             </div>
           </Panel>
 
-          {/* Top-Right Control Toolbar */}
-          <Panel position="top-right">
-            <div className="flex items-center gap-2">
+          {/* Top-Right Control Toolbar (All buttons rounded-full) */}
+          <Panel position="top-right" className="!mr-5 !mt-5">
+            <div className="flex items-center gap-2 rounded-full border border-gray-100/90 bg-white/95 p-1.5 shadow-lg backdrop-blur-xs">
+              <button
+                onClick={() => setTemplateModalOpen(true)}
+                title="Load pre-built sequence template"
+                className="flex items-center gap-1.5 rounded-full bg-[#6367FF] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#5254e8] active:scale-95 shrink-0"
+              >
+                <Sparkles size={14} />
+                <span>Templates</span>
+              </button>
+
+              <button
+                onClick={() => setSaveTemplateModalOpen(true)}
+                disabled={steps.length === 0}
+                title="Save current sequence as reusable template"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <BookmarkPlus size={14} className="text-gray-500" />
+                <span className="hidden sm:inline">Save as Template</span>
+              </button>
+
               <button
                 onClick={() => fitView({ padding: 0.25, duration: 350 })}
                 title="Center sequence in view"
-                className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50"
               >
                 <Focus size={14} className="text-gray-500" />
                 <span>Center</span>
@@ -462,7 +525,7 @@ function FlowCanvasInner({ campaignId }) {
               <button
                 onClick={handleAutoAlign}
                 title="Automatically organize nodes in hierarchical order"
-                className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50"
               >
                 <LayoutGrid size={14} className="text-gray-500" />
                 <span>Auto-align</span>
@@ -471,7 +534,7 @@ function FlowCanvasInner({ campaignId }) {
               <button
                 onClick={() => setFullscreen((v) => !v)}
                 title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-2 text-gray-500 shadow-sm transition hover:bg-gray-50"
+                className="flex items-center justify-center rounded-full border border-gray-200 bg-white p-2 text-gray-500 shadow-2xs transition hover:bg-gray-50"
               >
                 {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
               </button>
@@ -479,11 +542,10 @@ function FlowCanvasInner({ campaignId }) {
               <button
                 onClick={handleSave}
                 disabled={saving || !dirty}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-md transition ${
-                  dirty
-                    ? "bg-[#6367FF] hover:bg-[#5254e8]"
-                    : "cursor-not-allowed bg-gray-300 text-gray-100"
-                }`}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition ${dirty
+                  ? "bg-[#6367FF] hover:bg-[#5254e8]"
+                  : "cursor-not-allowed bg-gray-300 text-gray-100"
+                  }`}
               >
                 {saving && <Loader2 size={13} className="animate-spin" />}
                 {saved && <Check size={13} strokeWidth={2.5} />}
@@ -503,11 +565,49 @@ function FlowCanvasInner({ campaignId }) {
             </div>
           </Panel>
 
+          {/* Centered Add & End Button and Browse Templates (When sequence is empty) */}
+          {steps.length === 0 && !loading && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center">
+              <div className="pointer-events-auto flex flex-col items-center gap-3.5">
+                {/* Centered Add | End Split Pill */}
+                <div className="flex items-center overflow-hidden rounded-full border border-gray-200/90 bg-white shadow-md transition hover:border-[#6367FF]/50 hover:shadow-lg">
+                  <button
+                    onClick={() => openPicker("add__root__main")}
+                    className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-[#6367FF] transition hover:bg-[#6367FF]/5 active:scale-95"
+                  >
+                    <Plus size={15} className="text-[#6367FF]" />
+                    <span>Add</span>
+                  </button>
+                  <div className="h-4 w-px bg-gray-200" />
+                  <div className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-medium text-gray-400">
+                    <CircleSlash
+                      size={14} className="text-gray-400" />
+                    <span>End</span>
+                  </div>
+                </div>
+
+                {/* Centered Browse Sequence Templates Button */}
+                <button
+                  onClick={() => setTemplateModalOpen(true)}
+                  className="flex items-center gap-2 rounded-full border border-[#6367FF]/30 bg-white px-5 py-2.5 text-xs font-semibold text-[#6367FF] shadow-sm backdrop-blur-xs transition hover:bg-[#6367FF] hover:text-white active:scale-95"
+                >
+                  <Sparkles size={14} />
+                  <span>Browse sequence templates</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Bottom-Left Sequence Health & Readiness Banner */}
-          <Panel position="bottom-left">
+          <Panel position="bottom-left" className="!ml-5 !mb-5">
             <div className="max-w-md">
-              {sequenceValidation.errorCount === 0 &&
-              sequenceValidation.actionStepCount > 0 ? (
+              {steps.length === 0 ? (
+                <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-medium text-gray-600 shadow-md backdrop-blur-xs">
+                  <Sparkles size={14} className="text-[#6367FF] shrink-0" />
+                  <span>Click <strong>+ Add</strong> or <strong>Templates</strong> to begin your sequence</span>
+                </div>
+              ) : sequenceValidation.errorCount === 0 &&
+                sequenceValidation.actionStepCount > 0 ? (
                 <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/95 px-3.5 py-2 text-xs font-semibold text-emerald-800 shadow-lg backdrop-blur-xs">
                   <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
                   <span>
@@ -564,13 +664,12 @@ function FlowCanvasInner({ campaignId }) {
           {toast && (
             <Panel position="top-center">
               <div
-                className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold shadow-xl backdrop-blur-sm ${
-                  toast.type === "success"
-                    ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : toast.type === "warning"
-                      ? "border border-amber-200 bg-amber-50 text-amber-800"
-                      : "border border-rose-200 bg-rose-50 text-rose-800"
-                }`}
+                className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold shadow-xl backdrop-blur-sm ${toast.type === "success"
+                  ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : toast.type === "warning"
+                    ? "border border-amber-200 bg-amber-50 text-amber-800"
+                    : "border border-rose-200 bg-rose-50 text-rose-800"
+                  }`}
               >
                 {toast.type === "success" ? (
                   <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
@@ -608,6 +707,23 @@ function FlowCanvasInner({ campaignId }) {
         initial={delayEdit}
         onClose={() => setDelayEdit(null)}
         onSave={handleDelaySave}
+      />
+      <TemplateGalleryModal
+        open={templateModalOpen}
+        onClose={() => setTemplateModalOpen(false)}
+        onSelectTemplate={handleApplyTemplate}
+        currentStepsCount={steps.length}
+      />
+      <SaveTemplateModal
+        open={saveTemplateModalOpen}
+        onClose={() => setSaveTemplateModalOpen(false)}
+        currentSteps={steps}
+        onSaved={(newTpl) => {
+          setToast({
+            type: "success",
+            message: `Template "${newTpl.name}" saved successfully! Available in your gallery.`,
+          });
+        }}
       />
     </div>
   );

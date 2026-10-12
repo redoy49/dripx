@@ -14,7 +14,7 @@ import {
   MailSearch,
   Ban,
 } from "lucide-react";
-import { BRANCH_END } from "@/app/lib/sequenceEngine";
+import { BRANCH_END } from "../../../../lib/sequenceEngine.js";
 
 export { BRANCH_END };
 
@@ -178,17 +178,17 @@ export function buildGraph(steps) {
         const noIdx = noRaw === BRANCH_END ? steps.length : noRaw ? (indexOf.get(noRaw) ?? steps.length) : idx + 1;
 
         walk(
-          yesIdx, fromId,
-          isFirstFork ? "yes" : handle,
-          isFirstFork ? "Replied" : label,
-          isFirstFork ? "green" : color,
+          noIdx, fromId,
+          isFirstFork ? "no" : handle,
+          isFirstFork ? "Still not accepted" : label,
+          isFirstFork ? "red" : color,
           delayMs, delayStepIds, v2,
         );
         walk(
-          noIdx, fromId,
-          isFirstFork ? "no" : handle,
-          isFirstFork ? "Not replied" : label,
-          isFirstFork ? "red" : color,
+          yesIdx, fromId,
+          isFirstFork ? "yes" : handle,
+          isFirstFork ? "Accepted" : label,
+          isFirstFork ? "green" : color,
           delayMs, delayStepIds, v2,
         );
         return;

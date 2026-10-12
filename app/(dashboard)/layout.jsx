@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }) {
           <p className="text-sm">Free trial</p>
           <p className="text-xs opacity-80">5 days left</p>
 
-          <button className="mt-3 w-full bg-white text-[#6367FF] py-2 rounded-lg text-sm">
+          <button className="mt-3 w-full bg-white text-[#6367FF] py-2 rounded-full text-xs font-bold transition hover:bg-white/90 active:scale-95 shadow-sm">
             Upgrade
           </button>
         </div>

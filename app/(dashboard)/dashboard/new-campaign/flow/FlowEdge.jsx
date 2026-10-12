@@ -52,10 +52,10 @@ export function StepEdge({
         >
           {data?.label && (
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-2xs border ${
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-2xs ${
                 data.color === "green"
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-rose-200 bg-rose-50 text-rose-700"
+                  ? "border border-emerald-300 bg-emerald-50 text-emerald-600"
+                  : "border border-rose-200 bg-rose-50 text-rose-500"
               }`}
             >
               {data.label}
@@ -67,9 +67,9 @@ export function StepEdge({
               data?.onEditDelay?.(id);
             }}
             title="Click to edit step delay"
-            className="group flex items-center gap-1.5 rounded-full border border-[#6367FF]/30 bg-[#F3F2FF] px-2.5 py-1 text-[11px] font-semibold text-[#6367FF] shadow-xs transition hover:bg-[#6367FF] hover:text-white"
+            className="group flex items-center gap-1.5 rounded-full border border-purple-200 bg-[#F4F3FF] px-3 py-1 text-xs font-semibold text-[#6367FF] shadow-xs transition hover:bg-[#6367FF] hover:text-white"
           >
-            <Clock size={11} className="transition group-hover:rotate-45" />
+            <Clock size={12} className="text-[#6367FF] group-hover:text-white transition group-hover:rotate-45" />
             <span>{delayLabel}</span>
           </button>
         </div>

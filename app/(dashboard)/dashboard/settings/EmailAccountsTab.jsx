@@ -203,7 +203,7 @@ export default function EmailAccountsTab() {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#6367FF] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#5254e8]"
+          className="inline-flex items-center gap-2 rounded-full bg-[#6367FF] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#5254e8]"
         >
           <Plus size={15} />
           <span>Connect Email Account</span>
@@ -283,7 +283,7 @@ export default function EmailAccountsTab() {
         </div>
       ) : accounts.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6367FF]/10 text-[#6367FF]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#6367FF]/10 text-[#6367FF]">
             <Mail size={24} />
           </div>
           <h3 className="mt-4 text-sm font-bold text-gray-800">No email accounts connected yet</h3>
@@ -292,7 +292,7 @@ export default function EmailAccountsTab() {
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-[#6367FF] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#5254e8]"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#6367FF] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#5254e8]"
           >
             <Plus size={14} /> Connect your first mailbox
           </button>
