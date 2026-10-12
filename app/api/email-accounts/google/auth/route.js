@@ -2,6 +2,22 @@ import { google } from "googleapis";
 import { requireAuth } from "@/app/lib/session";
 import { generateOAuthState } from "@/app/lib/crypto";
 
+export function getGoogleMailboxRedirectUri(req) {
+  const host =
+    req.headers.get("x-forwarded-host") ||
+    req.headers.get("host");
+  const protocol =
+    req.headers.get("x-forwarded-proto") ||
+    (host && (host.includes("localhost") || host.includes("127.0.0.1"))
+      ? "http"
+      : "https");
+  const baseUrl = host
+    ? `${protocol}://${host}`
+    : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  return `${baseUrl.replace(/\/$/, "")}/api/email-accounts/google/callback`;
+}
+
 export async function GET(req) {
   try {
     const { session, unauthorized } = await requireAuth();
@@ -20,8 +36,7 @@ export async function GET(req) {
       );
     }
 
-    const { origin } = new URL(req.url);
-    const redirectUri = `${origin}/api/email-accounts/google/callback`;
+    const redirectUri = getGoogleMailboxRedirectUri(req);
 
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
     const state = await generateOAuthState({

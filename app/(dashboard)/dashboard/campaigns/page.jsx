@@ -142,7 +142,7 @@ export default function CampaignPage() {
               placeholder="Search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-4 py-2.5 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="w-full pl-8 pr-4 py-2.5 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-violet-200"
             />
           </div>
 
@@ -163,7 +163,7 @@ export default function CampaignPage() {
           <button
             onClick={createCampaign}
             disabled={creating}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 shadow-xs disabled:opacity-60"
+            className="px-5 py-2.5 rounded-full text-sm font-medium text-white transition-all duration-200 shadow-xs disabled:opacity-60"
             style={{
               background: "linear-gradient(to right, #7f64f5, #ae79f8)",
             }}

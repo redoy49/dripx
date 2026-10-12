@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { google } from "googleapis";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { verifyOAuthState, encryptCredentials } from "@/app/lib/crypto";
+import { getGoogleMailboxRedirectUri } from "../auth/route";
 
 export async function GET(req) {
   const { searchParams, origin } = new URL(req.url);
@@ -23,7 +24,7 @@ export async function GET(req) {
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = `${origin}/api/email-accounts/google/callback`;
+    const redirectUri = getGoogleMailboxRedirectUri(req);
 
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
     const { tokens } = await oauth2Client.getToken(code);
