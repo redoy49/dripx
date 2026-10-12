@@ -224,14 +224,14 @@ export default function RampUpSettingsModal({ isOpen, onClose, account, onUpdate
         <div className="border-t border-gray-100 bg-gray-50/50 p-4 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
+            className="rounded-full border border-gray-200 bg-white px-5 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={submitting}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#6367FF] hover:bg-[#5254e8] px-5 py-2 text-xs font-bold text-white transition shadow-sm disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#6367FF] hover:bg-[#5254e8] px-5 py-2 text-xs font-bold text-white transition shadow-sm disabled:opacity-50"
           >
             {submitting && <Loader2 size={13} className="animate-spin" />}
             <span>Save Configuration</span>

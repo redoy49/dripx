@@ -152,9 +152,9 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -211,7 +211,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
                 <button
                   onClick={() => handleManualCheck(customSelector || null)}
                   disabled={loading}
-                  className="flex items-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-xs px-3.5 py-2 text-xs font-bold text-white transition disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xs px-4 py-2 text-xs font-bold text-white transition disabled:opacity-50"
                 >
                   <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
                   <span>Re-check DNS</span>
@@ -267,7 +267,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
                   />
                   <button
                     onClick={() => handleManualCheck(customSelector)}
-                    className="rounded-xl bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200 transition"
+                    className="rounded-full bg-gray-100 px-4 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200 transition"
                   >
                     Test Selector
                   </button>
@@ -334,7 +334,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
                     </div>
                     <button
                       onClick={() => handleCopy(`val-${idx}`, guide.value)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-white border border-gray-200 px-2.5 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition shadow-2xs"
+                      className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-3 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition shadow-2xs"
                     >
                       {copiedKey === `val-${idx}` ? (
                         <>
@@ -375,7 +375,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
           </span>
           <button
             onClick={onClose}
-            className="rounded-xl bg-gray-800 hover:bg-gray-900 px-5 py-2 text-xs font-bold text-white transition shadow-sm"
+            className="rounded-full bg-gray-800 hover:bg-gray-900 px-6 py-2 text-xs font-bold text-white transition shadow-sm"
           >
             Done
           </button>

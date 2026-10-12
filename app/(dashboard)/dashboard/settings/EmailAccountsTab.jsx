@@ -21,6 +21,7 @@ import {
 import ConnectEmailModal from "./ConnectEmailModal";
 import DnsDiagnosticsModal from "./DnsDiagnosticsModal";
 import RampUpSettingsModal from "./RampUpSettingsModal";
+import TestEmailModal from "./TestEmailModal";
 
 const PROVIDER_INFO = {
   google: {
@@ -56,6 +57,7 @@ export default function EmailAccountsTab() {
   // Diagnostics & Settings Modals
   const [dnsModalAccount, setDnsModalAccount] = useState(null);
   const [rampUpModalAccount, setRampUpModalAccount] = useState(null);
+  const [testModalAccount, setTestModalAccount] = useState(null);
 
   const [toast, setToast] = useState(() => {
     const connected = searchParams.get("connected");
@@ -409,7 +411,7 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => setDnsModalAccount(acc)}
                       title="Inspect SPF, DKIM, DMARC, MX"
-                      className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
+                      className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
                     >
                       <ShieldCheck size={13} />
                       <span>DNS</span>
@@ -419,32 +421,27 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => setRampUpModalAccount(acc)}
                       title="Adjust sending ramp-up and daily caps"
-                      className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
+                      className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
                     >
                       <TrendingUp size={13} />
                       <span>Ramp-Up</span>
                     </button>
 
-                    {/* Test Handshake Button */}
+                    {/* Test & Verify Button */}
                     <button
-                      onClick={() => handleTestConnection(acc.id)}
-                      disabled={testingId === acc.id}
-                      title="Test connection handshake"
-                      className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50 disabled:opacity-50"
+                      onClick={() => setTestModalAccount(acc)}
+                      title="Test real outbound and inbound delivery"
+                      className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
                     >
-                      {testingId === acc.id ? (
-                        <Loader2 size={13} className="animate-spin" />
-                      ) : (
-                        <RefreshCw size={13} />
-                      )}
-                      <span>Test</span>
+                      <Zap size={13} className="text-[#6367FF]" />
+                      <span>Test & Verify</span>
                     </button>
 
                     {/* Disconnect Button */}
                     <button
                       onClick={() => handleDeleteAccount(acc.id, acc.email)}
                       title="Disconnect mailbox"
-                      className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-400 transition hover:bg-rose-50 hover:text-rose-600"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-rose-50 hover:text-rose-600"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -483,6 +480,16 @@ export default function EmailAccountsTab() {
           account={rampUpModalAccount}
           onClose={() => setRampUpModalAccount(null)}
           onUpdated={loadData}
+        />
+      )}
+
+      {/* Test & Verification Modal */}
+      {testModalAccount && (
+        <TestEmailModal
+          isOpen={Boolean(testModalAccount)}
+          account={testModalAccount}
+          onClose={() => setTestModalAccount(null)}
+          onVerified={loadData}
         />
       )}
     </div>

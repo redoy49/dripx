@@ -234,7 +234,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(null)}
-                  className="rounded-xl px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                  className="rounded-full px-5 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
                 >
                   ← Back
                 </button>
@@ -242,7 +242,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                   type="button"
                   onClick={() => handleStartOAuth("google")}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-xl bg-[#6367FF] px-5 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-full bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Sign in with Google</span>
@@ -281,7 +281,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(null)}
-                  className="rounded-xl px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                  className="rounded-full px-5 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
                 >
                   ← Back
                 </button>
@@ -289,7 +289,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                   type="button"
                   onClick={() => handleStartOAuth("microsoft")}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-xl bg-[#6367FF] px-5 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-full bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Sign in with Microsoft</span>
@@ -313,7 +313,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                       key={p.label}
                       type="button"
                       onClick={() => handleSelectPreset(i)}
-                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                         presetIndex === i
                           ? "bg-[#6367FF] text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -411,14 +411,14 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(null)}
-                  className="rounded-xl px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                  className="rounded-full px-5 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
                 >
                   ← Back
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-xl bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-full bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
                 >
                   {loading && <Loader2 size={13} className="animate-spin" />}
                   <span>{loading ? "Verifying Handshake..." : "Verify & Save Account"}</span>

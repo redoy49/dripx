@@ -139,6 +139,42 @@ export class MicrosoftGraphConnector extends EmailConnector {
     }
   }
 
+  /**
+   * Searches Outlook inbox for a verification token to verify inbound delivery.
+   */
+  async checkInboxForToken(token) {
+    try {
+      const accessToken = await this.#ensureValidToken();
+      const encodedToken = encodeURIComponent(token);
+      const res = await fetch(
+        `https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$filter=contains(subject,'${encodedToken}')&$top=5`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
+
+      if (!res.ok) {
+        return { success: false, found: false, error: `Graph inbox check failed: ${res.status}` };
+      }
+
+      const data = await res.json();
+      const messages = data.value || [];
+      if (messages.length === 0) {
+        return { success: false, found: false, error: "Token not detected in Outlook inbox." };
+      }
+
+      return {
+        success: true,
+        found: true,
+        messageId: messages[0].id,
+        folder: "INBOX",
+      };
+    } catch (err) {
+      console.error("[MicrosoftGraphConnector] Inbox token check failed:", err.message);
+      return { success: false, found: false, error: err.message };
+    }
+  }
+
   getCapabilities() {
     return {
       canSend: true,

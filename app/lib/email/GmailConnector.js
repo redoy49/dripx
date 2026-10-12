@@ -125,6 +125,48 @@ export class GmailConnector extends EmailConnector {
     }
   }
 
+  /**
+   * Searches the mailbox for a test verification token to confirm inbound delivery.
+   */
+  async checkInboxForToken(token) {
+    try {
+      const res = await this.gmail.users.messages.list({
+        userId: "me",
+        q: `subject:"${token}"`,
+        maxResults: 5,
+      });
+
+      const messages = res.data.messages || [];
+      if (messages.length === 0) {
+        return { success: false, found: false, error: "Verification token not yet detected in inbox." };
+      }
+
+      const detail = await this.gmail.users.messages.get({
+        userId: "me",
+        id: messages[0].id,
+      });
+
+      const labelIds = detail.data.labelIds || [];
+      const isInInbox = labelIds.includes("INBOX");
+      const isInSpam = labelIds.includes("SPAM");
+
+      return {
+        success: true,
+        found: true,
+        messageId: messages[0].id,
+        folder: isInSpam ? "SPAM" : isInInbox ? "INBOX" : "ALL_MAIL",
+        labelIds,
+      };
+    } catch (err) {
+      console.error("[GmailConnector] Inbox token check failed:", err.message);
+      return {
+        success: false,
+        found: false,
+        error: err.message,
+      };
+    }
+  }
+
   getCapabilities() {
     return {
       canSend: true,

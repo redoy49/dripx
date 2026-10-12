@@ -45,6 +45,16 @@ export class MockEmailConnector extends EmailConnector {
     };
   }
 
+  async checkInboxForToken(_token) {
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    return {
+      success: true,
+      found: true,
+      messageId: `mock_verify_msg_${Date.now()}`,
+      folder: "INBOX",
+    };
+  }
+
   getCapabilities() {
     return {
       canSend: true,
