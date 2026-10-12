@@ -61,7 +61,9 @@ export default function BulkEnrollModal({ isOpen, onClose, selectedLeadIds, onEn
     }
   };
 
-  const selectedCampaign = campaigns.find((c) => c.id === selectedCampaignId);
+  const selectedCampaign = Array.isArray(campaigns)
+    ? campaigns.find((c) => c.id === selectedCampaignId) || null
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs animate-in fade-in duration-200">
