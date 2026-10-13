@@ -1,5 +1,12 @@
 import { runDueJobs } from "@/app/lib/jobProcessor";
 import { retryPendingDeliveries } from "@/app/lib/webhooks";
+import { startSchedulerWorker } from "@/app/lib/schedulerWorker";
+import { syncAllConnectedEmailAccounts } from "@/app/lib/email";
+
+// In development, ensure background worker is running if instrumentation wasn't triggered
+if (process.env.NODE_ENV !== "production") {
+  startSchedulerWorker(30000);
+}
 
 /**
  * The entire "cloud execution" queue system: a MongoDB-backed `jobs` collection polled
@@ -15,7 +22,9 @@ import { retryPendingDeliveries } from "@/app/lib/webhooks";
  */
 async function handleRequest(req) {
   const { searchParams } = new URL(req.url);
-  const secret = req.headers.get("x-cron-secret") || searchParams.get("secret");
+  const authHeader = req.headers.get("authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const secret = req.headers.get("x-cron-secret") || bearerToken || searchParams.get("secret");
 
   if (!process.env.CRON_SECRET) {
     return Response.json({ message: "CRON_SECRET is not configured" }, { status: 500 });
@@ -25,9 +34,16 @@ async function handleRequest(req) {
   }
 
   const jobSummary = await runDueJobs();
+  const emailSyncSummary = await syncAllConnectedEmailAccounts().catch((err) => ({
+    error: err.message,
+  }));
   const webhookSummary = await retryPendingDeliveries();
 
-  return Response.json({ jobs: jobSummary, webhookRetries: webhookSummary });
+  return Response.json({
+    jobs: jobSummary,
+    emailSync: emailSyncSummary,
+    webhookRetries: webhookSummary,
+  });
 }
 
 export async function POST(req) {

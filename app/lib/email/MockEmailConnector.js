@@ -15,7 +15,7 @@ export class MockEmailConnector extends EmailConnector {
     };
   }
 
-  async sendEmail({ to, subject, body, from }) {
+  async sendEmail({ to, subject, body, from, threadId, inReplyTo, references }) {
     // Simulated network latency
     await new Promise((resolve) => setTimeout(resolve, 80));
 
@@ -29,6 +29,9 @@ export class MockEmailConnector extends EmailConnector {
     return {
       success: true,
       providerMessageId: messageId,
+      threadId: threadId || `mock_thread_${Date.now()}`,
+      inReplyTo: inReplyTo || null,
+      references: references || null,
       deliveredAt: new Date(),
     };
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -24,6 +25,66 @@ const menu = [
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+    let isFetching = false;
+
+    const checkUnread = () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      if (isFetching) return;
+      isFetching = true;
+
+      fetch("/api/conversations/unread-count")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && !ignore) {
+            setUnreadCount(data.totalUnread || 0);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          isFetching = false;
+        });
+    };
+
+    // Initial check (asynchronous callback avoids react-hooks/set-state-in-effect)
+    fetch("/api/conversations/unread-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !ignore) {
+          setUnreadCount(data.totalUnread || 0);
+        }
+      })
+      .catch(() => {});
+
+    // Auto-poll unread count every 15 seconds across any active section of DripX if visible
+    const interval = setInterval(checkUnread, 15000);
+
+    // Revalidate when user returns to window tab
+    const handleFocus = () => {
+      checkUnread();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    // Real-time synchronization event from Unified Inbox when messages are read or synced
+    const handleUnreadChanged = (event) => {
+      if (typeof event.detail?.totalUnread === "number") {
+        setUnreadCount(event.detail.totalUnread);
+      } else {
+        checkUnread();
+      }
+    };
+    window.addEventListener("dripx:unread-changed", handleUnreadChanged);
+
+    return () => {
+      ignore = true;
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("dripx:unread-changed", handleUnreadChanged);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -61,7 +122,14 @@ export default function DashboardLayout({ children }) {
                 }`}
               >
                 <Icon size={18} />
-                {item.name}
+                <span>{item.name}</span>
+
+                {/* Navigation-wide Unread Message Badge */}
+                {item.name === "Inbox" && unreadCount > 0 && (
+                  <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold text-white bg-[#6367FF] rounded-full shadow-xs animate-in fade-in duration-200">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -79,7 +147,7 @@ export default function DashboardLayout({ children }) {
 
         <button
           onClick={handleLogout}
-          className="mt-3 flex items-center gap-2 p-2 rounded-md text-sm text-gray-500 hover:bg-gray-100 transition"
+          className="mt-3 flex items-center gap-2 px-3 py-2 rounded-full text-sm text-gray-500 hover:bg-gray-100 transition"
         >
           <LogOut size={16} />
           Log out

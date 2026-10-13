@@ -76,14 +76,14 @@ export default function InviteMemberModal({ open, onClose, onInvited }) {
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={onClose}
-              className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+              className="rounded-full border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               onClick={handleInvite}
               disabled={loading || !email}
-              className="rounded-xl bg-[#6367FF] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5254e8] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full bg-[#6367FF] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5254e8] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Sending..." : "Send invite"}
             </button>

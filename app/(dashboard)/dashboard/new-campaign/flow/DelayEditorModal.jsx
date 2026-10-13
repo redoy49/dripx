@@ -12,8 +12,10 @@ export default function DelayEditorModal({ open, initial, onClose, onSave }) {
 
   useEffect(() => {
     if (open) {
-      setAmount(initial?.amount ?? 1);
-      setUnit(initial?.unit ?? "days");
+      Promise.resolve().then(() => {
+        setAmount(initial?.amount ?? 1);
+        setUnit(initial?.unit ?? "days");
+      });
     }
   }, [open, initial]);
 

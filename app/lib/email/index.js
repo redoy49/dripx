@@ -13,6 +13,7 @@ export { ResendConnector } from "./ResendConnector.js";
 export { SmtpConnector } from "./SmtpConnector.js";
 export { GmailConnector } from "./GmailConnector.js";
 export { MicrosoftGraphConnector } from "./MicrosoftGraphConnector.js";
+export { syncAccountReplies, syncAllConnectedEmailAccounts } from "./emailSyncEngine.js";
 
 /**
  * Resolves and instantiates the appropriate EmailConnector for a given account ID,
@@ -23,21 +24,14 @@ export async function getEmailConnector({
   workspaceId = null,
   purpose = "campaign",
 } = {}) {
-  // 1. Transactional platform emails (invites, alerts) prioritize Resend or Mock
-  if (purpose === "transactional") {
-    if (process.env.RESEND_API_KEY) return new ResendConnector();
-    return new MockEmailConnector({
-      email: "system@dripx.dev",
-      name: "DripX Platform",
-      provider: "mock",
-    });
-  }
-
-  // 2. If a specific accountId is provided, resolve from DB
+  // 1. If a specific accountId is provided, ALWAYS resolve from DB first
   if (accountId) {
     const emailAccounts = await dbConnect("email_accounts");
-    const query = { _id: new ObjectId(accountId) };
-    if (workspaceId) query.workspaceId = new ObjectId(workspaceId);
+    const safeAccountId = typeof accountId === "string" ? new ObjectId(accountId) : accountId;
+    const query = { _id: safeAccountId };
+    if (workspaceId) {
+      query.workspaceId = typeof workspaceId === "string" ? new ObjectId(workspaceId) : workspaceId;
+    }
 
     const account = await emailAccounts.findOne(query);
     if (account && account.status !== "disconnected") {
@@ -45,16 +39,26 @@ export async function getEmailConnector({
     }
   }
 
-  // 3. If workspaceId is provided, look for the workspace's default/first active account
-  if (workspaceId) {
+  // 2. If workspaceId is provided and purpose is campaign, look for the workspace's default/first active account
+  if (workspaceId && purpose !== "transactional") {
     const emailAccounts = await dbConnect("email_accounts");
     const account = await emailAccounts.findOne({
-      workspaceId: new ObjectId(workspaceId),
+      workspaceId: typeof workspaceId === "string" ? new ObjectId(workspaceId) : workspaceId,
       status: "connected",
     });
     if (account) {
       return buildConnectorFromAccount(account);
     }
+  }
+
+  // 3. Transactional platform emails (invites, alerts) prioritize Resend or Mock
+  if (purpose === "transactional") {
+    if (process.env.RESEND_API_KEY) return new ResendConnector();
+    return new MockEmailConnector({
+      email: "system@dripx.dev",
+      name: "DripX Platform",
+      provider: "mock",
+    });
   }
 
   // 4. Fallback in dev/demo or unconfigured workspace
@@ -149,10 +153,26 @@ export async function sendEmail({
   html,
   from,
   replyTo,
+  inReplyTo,
+  references,
+  threadId,
+  headers,
   accountId = null,
   workspaceId = null,
   purpose = "transactional",
 }) {
-  const connector = await getEmailConnector({ accountId, workspaceId, purpose });
-  return connector.sendEmail({ to, subject, body, html, from, replyTo });
+  const effectivePurpose = accountId ? "campaign" : purpose;
+  const connector = await getEmailConnector({ accountId, workspaceId, purpose: effectivePurpose });
+  return connector.sendEmail({
+    to,
+    subject,
+    body,
+    html,
+    from,
+    replyTo,
+    inReplyTo,
+    references,
+    threadId,
+    headers,
+  });
 }

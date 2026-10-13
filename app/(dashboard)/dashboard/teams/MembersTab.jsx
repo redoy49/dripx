@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ExternalLink } from "lucide-react";
 import Badge from "@/app/components/ui/Badge";
 import InviteMemberModal from "@/app/(dashboard)/dashboard/teams/InviteMemberModal";
 
@@ -47,7 +48,7 @@ export default function MembersTab({ currentRole }) {
           {canManage && (
             <button
               onClick={() => setInviteOpen(true)}
-              className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-medium text-white shadow-xs"
+              className="flex items-center gap-2 h-11 px-5 rounded-full text-sm font-medium text-white shadow-xs"
               style={{ background: "linear-gradient(to right, #7f64f5, #ae79f8)" }}
             >
               <UserPlus size={16} /> Invite member
@@ -72,11 +73,37 @@ export default function MembersTab({ currentRole }) {
                   idx !== members.length - 1 ? "border-b border-gray-100" : ""
                 }`}
               >
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">
-                    {m.user?.name || m.invitedEmail}
-                  </p>
-                  <p className="text-xs text-gray-400">{m.user?.email || m.invitedEmail}</p>
+                <div className="flex items-center gap-3">
+                  {m.user?.avatarUrl ? (
+                    <img
+                      src={m.user.avatarUrl}
+                      alt={m.user.name || "Member"}
+                      className="w-9 h-9 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">
+                      {(m.user?.name || m.invitedEmail || "U").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-gray-700">
+                        {m.user?.name || m.invitedEmail}
+                      </p>
+                      {m.user?.linkedinUrl && (
+                        <a
+                          href={m.user.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#6367FF] hover:opacity-80"
+                          title="View on LinkedIn"
+                        >
+                          <ExternalLink size={12} />
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400">{m.user?.email || m.invitedEmail}</p>
+                  </div>
                 </div>
 
                 <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Info, Search, Mail, RefreshCw } from "lucide-react";
 import ConversationThread from "@/app/(dashboard)/dashboard/inbox/ConversationThread";
 import LeadDetailPanel from "@/app/(dashboard)/dashboard/inbox/LeadDetailPanel";
@@ -43,53 +43,133 @@ export default function InboxPage() {
   const [activeConversationData, setActiveConversationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const load = useCallback(() => {
-    setRefreshing(true);
-    const query = new URLSearchParams({ filter: tab });
-    if (channel !== "all") query.set("channel", channel);
-
-    return fetch(`/api/conversations?${query.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setConversations(data.items || []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to load conversations:", err);
-        setLoading(false);
-      })
-      .finally(() => {
-        setRefreshing(false);
-      });
-  }, [tab, channel]);
+  const isSyncingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let ignore = false;
-    const query = new URLSearchParams({ filter: tab });
-    if (channel !== "all") query.set("channel", channel);
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    fetch(`/api/conversations?${query.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!ignore) {
-          setConversations(data.items || []);
-          setLoading(false);
+  // Synchronizes external mailbox in the background and reloads conversations
+  const fetchConversations = useCallback(
+    async (triggerSync = false) => {
+      if (triggerSync && !isSyncingRef.current) {
+        isSyncingRef.current = true;
+        try {
+          await fetch("/api/conversations/sync", { method: "POST" });
+        } catch (err) {
+          console.warn("Mailbox sync failed during refresh:", err);
+        } finally {
+          isSyncingRef.current = false;
         }
-      })
-      .catch((err) => {
-        console.error("Failed to load conversations:", err);
-        if (!ignore) setLoading(false);
-      });
+      }
+
+      if (!isMountedRef.current) return;
+
+      const query = new URLSearchParams({ filter: tab });
+      if (channel !== "all") query.set("channel", channel);
+
+      return fetch(`/api/conversations?${query.toString()}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data || !isMountedRef.current) return;
+          const items = data.items || [];
+          setConversations(items);
+
+          // Preserve active conversation only if the user has already explicitly selected one
+          setActiveId((curr) => {
+            if (curr && items.some((item) => item.id === curr)) {
+              return curr;
+            }
+            // Do not auto-select on enter: conversations remain unread until explicitly clicked
+            return null;
+          });
+
+          // Dispatch updated unread count to parent Dashboard layout
+          const unreadSum = items.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+          window.dispatchEvent(
+            new CustomEvent("dripx:unread-changed", { detail: { totalUnread: unreadSum } })
+          );
+        })
+        .catch((err) => {
+          if (isMountedRef.current) {
+            console.error("Failed to load conversations:", err);
+          }
+        })
+        .finally(() => {
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
+        });
+    },
+    [tab, channel]
+  );
+
+  // Stable callback passed to ConversationThread to avoid breaking child effect dependencies
+  const handleThreadStatusChange = useCallback(() => {
+    if (!isMountedRef.current) return;
+    fetchConversations(false);
+  }, [fetchConversations]);
+
+  // Initial load + immediate mailbox sync so incoming replies appear immediately
+  useEffect(() => {
+    let ignore = false;
+
+    const loadInbox = () => {
+      if (!ignore && isMountedRef.current && (typeof document === "undefined" || !document.hidden)) {
+        fetchConversations(true);
+      }
+    };
+
+    loadInbox();
+
+    // Auto-refresh interval (every 15 seconds) while inbox is open and tab is visible
+    const interval = setInterval(loadInbox, 15000);
+
+    // Revalidate when user returns to this browser tab
+    const handleFocus = () => {
+      if (!ignore && isMountedRef.current && (typeof document === "undefined" || !document.hidden)) {
+        loadInbox();
+      }
+    };
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       ignore = true;
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
     };
-  }, [tab, channel]);
+  }, [fetchConversations]);
+
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    fetchConversations(true).finally(() => {
+      if (isMountedRef.current) {
+        setRefreshing(false);
+      }
+    });
+  };
 
   const handleConversationLoaded = useCallback((data) => {
     setActiveConversationData(data);
   }, []);
+
+  const handleSelectConversation = (item) => {
+    setActiveId(item.id);
+    if (item.unreadCount > 0) {
+      setConversations((prev) => {
+        const updated = prev.map((c) => (c.id === item.id ? { ...c, unreadCount: 0 } : c));
+        const newTotal = updated.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        window.dispatchEvent(
+          new CustomEvent("dripx:unread-changed", { detail: { totalUnread: newTotal } })
+        );
+        return updated;
+      });
+    }
+  };
 
   const handleSequenceAction = async (action) => {
     if (!activeId) return;
@@ -103,7 +183,7 @@ export default function InboxPage() {
         // Refresh active conversation details
         const updated = await fetch(`/api/conversations/${activeId}`).then((r) => r.json());
         setActiveConversationData(updated);
-        load();
+        fetchConversations(false);
       }
     } catch (err) {
       console.error("Failed to toggle sequence status:", err);
@@ -146,9 +226,9 @@ export default function InboxPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={load}
+            onClick={handleManualRefresh}
             disabled={refreshing}
-            className="p-2 transition-colors rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-500 hover:text-gray-700"
+            className="p-2 transition-colors rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-500 hover:text-gray-700"
             title="Refresh inbox"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-violet-500" : ""}`} />
@@ -181,7 +261,7 @@ export default function InboxPage() {
             </div>
 
             {/* Channel Badges Selector */}
-            <div className="flex items-center gap-1.5 p-1 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="flex items-center gap-1.5 p-1 bg-gray-50 rounded-full border border-gray-100">
               {CHANNELS.map((ch) => {
                 const Icon = ch.icon;
                 const active = channel === ch.key;
@@ -189,7 +269,7 @@ export default function InboxPage() {
                   <button
                     key={ch.key}
                     onClick={() => setChannel(ch.key)}
-                    className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-medium transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-full text-[11px] font-medium transition-all ${
                       active
                         ? "bg-white text-violet-600 shadow-2xs font-semibold"
                         : "text-gray-500 hover:text-gray-700"
@@ -239,14 +319,7 @@ export default function InboxPage() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      setActiveId(item.id);
-                      if (item.unreadCount > 0) {
-                        setConversations((prev) =>
-                          prev.map((c) => (c.id === item.id ? { ...c, unreadCount: 0 } : c)),
-                        );
-                      }
-                    }}
+                    onClick={() => handleSelectConversation(item)}
                     className={`w-full px-3.5 py-3.5 flex items-start gap-3 text-left transition-colors relative ${
                       isSelected
                         ? "bg-violet-50/60"
@@ -323,7 +396,7 @@ export default function InboxPage() {
           {activeId ? (
             <ConversationThread
               conversationId={activeId}
-              onStatusChange={load}
+              onStatusChange={handleThreadStatusChange}
               onConversationLoaded={handleConversationLoaded}
             />
           ) : (

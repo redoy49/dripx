@@ -262,7 +262,7 @@ export default function DashboardPage() {
   }, [chartDays]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFC] p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1400px] mx-auto text-gray-800">
+    <div className="min-h-screen bg-[#FAFAFC] p-4 sm:p-6 lg:p-7 space-y-6 w-full max-w-full text-gray-800">
       {/* ── Toast Notification ─────────────────────────────────────────── */}
       {toast && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-800 shadow-xl animate-in fade-in duration-200">
