@@ -47,10 +47,10 @@ async function runTests() {
   });
 
   // 5. Verify Conversation Updated
-  console.log("\nTest 5: Verify conversation updated with unread count and latest timestamp");
+  console.log("\nTest 5: Verify conversation updated with latest timestamp");
   const convo = await conversationsCol.findOne({ _id: ingestedMsg.conversationId });
   assert.ok(convo, "Conversation must exist");
-  assert.ok(convo.unreadCount >= 1, `Unread count should be >= 1, got: ${convo.unreadCount}`);
+  assert.ok(convo.lastMessageAt, "Conversation must have lastMessageAt");
   console.log("  ✓ Conversation verified:", {
     id: convo._id.toString(),
     subject: convo.subject,

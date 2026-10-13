@@ -4,11 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import { Send, ExternalLink, Archive, Star, Mail, Loader2 } from "lucide-react";
 import { FaLinkedin } from "react-icons/fa";
 
+function splitQuotedContent(text) {
+  if (!text || typeof text !== "string") return { mainText: "", quotedText: "" };
+  const quoteHeaderRegex = /(?:\r?\n)(?:On\s+[\s\S]+?\s+wrote:|-----Original Message-----|_{20,}|From:\s+.+?\r?\n(?:Sent|Date):|(?=>\s*[\w\s]))/i;
+  const match = text.search(quoteHeaderRegex);
+  if (match !== -1) {
+    const mainText = text.slice(0, match).trim();
+    const quotedText = text.slice(match).trim();
+    if (mainText) return { mainText, quotedText };
+  }
+  return { mainText: text.trim(), quotedText: "" };
+}
+
 export default function ConversationThread({ conversationId, onStatusChange, onConversationLoaded }) {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [expandedQuotes, setExpandedQuotes] = useState({});
   const bottomRef = useRef(null);
 
   // Derived (not stored) so switching conversations never flashes the previous thread's
@@ -186,6 +199,9 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
         )}
         {messages.map((m) => {
           const isOutbound = m.direction === "outbound";
+          const { mainText, quotedText } = splitQuotedContent(m.body);
+          const isExpanded = Boolean(expandedQuotes[m.id]);
+
           return (
             <div key={m.id} className={`flex ${isOutbound ? "justify-end" : "justify-start"}`}>
               <div
@@ -195,7 +211,37 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
                     : "bg-white text-gray-800 border border-gray-100 rounded-bl-xs"
                 }`}
               >
-                <div className="whitespace-pre-wrap leading-relaxed">{m.body}</div>
+                <div className="whitespace-pre-wrap leading-relaxed">{mainText || m.body}</div>
+
+                {quotedText && (
+                  <div className="mt-2 pt-1 border-t border-gray-100/60">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedQuotes((prev) => ({ ...prev, [m.id]: !prev[m.id] }))}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer ${
+                        isOutbound
+                          ? "bg-white/20 text-white/90 hover:bg-white/30"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                      }`}
+                      title={isExpanded ? "Hide quoted thread" : "Show quoted thread"}
+                    >
+                      <span className="tracking-widest font-bold">···</span>
+                      <span>{isExpanded ? "Hide quote" : ""}</span>
+                    </button>
+                    {isExpanded && (
+                      <div
+                        className={`mt-2 p-2 rounded-lg text-xs whitespace-pre-wrap leading-relaxed border-l-2 ${
+                          isOutbound
+                            ? "bg-white/10 border-white/40 text-white/80"
+                            : "bg-gray-50 border-gray-300 text-gray-500"
+                        }`}
+                      >
+                        {quotedText}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div
                   className={`mt-1.5 flex items-center gap-1.5 text-[10px] ${
                     isOutbound ? "text-white/70 justify-end" : "text-gray-400 justify-start"

@@ -139,6 +139,8 @@ export async function syncAccountReplies(account) {
         direction: "inbound",
         channel: "email",
         body: msg.text || msg.snippet || "",
+        rawBody: msg.rawText || msg.text || null,
+        quotedText: msg.quotedText || null,
         html: msg.html || null,
         subject: msg.subject || null,
         from: msg.from,

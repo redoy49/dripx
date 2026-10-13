@@ -22,6 +22,35 @@ function decodeBase64Url(data) {
 }
 
 /**
+ * Splits text into new reply content and historical quoted email thread.
+ */
+export function splitQuotedReply(text) {
+  if (!text || typeof text !== "string") {
+    return { mainText: "", quotedText: "" };
+  }
+
+  const quoteHeaderRegex = /(?:\r?\n)(?:On\s+[\s\S]+?\s+wrote:|-----Original Message-----|_{20,}|From:\s+.+?\r?\n(?:Sent|Date):|(?=>\s*[\w\s]))/i;
+
+  const match = text.search(quoteHeaderRegex);
+  if (match !== -1) {
+    const mainText = text.slice(0, match).trim();
+    const quotedText = text.slice(match).trim();
+    if (mainText) {
+      return { mainText, quotedText };
+    }
+  }
+
+  return { mainText: text.trim(), quotedText: "" };
+}
+
+/**
+ * Strips quoted history from an email body, returning only the actual new response.
+ */
+export function stripQuotedReply(text) {
+  return splitQuotedReply(text).mainText;
+}
+
+/**
  * Parses MIME body payload recursively for text and HTML.
  */
 function extractBodyFromPayload(payload) {
@@ -41,8 +70,13 @@ function extractBodyFromPayload(payload) {
   }
 
   traverse(payload);
+  const rawText = text.trim() || payload?.snippet || "";
+  const { mainText, quotedText } = splitQuotedReply(rawText);
+
   return {
-    text: text.trim() || payload?.snippet || "",
+    text: mainText || rawText,
+    rawText,
+    quotedText,
     html: html.trim() || null,
   };
 }
@@ -248,6 +282,8 @@ export class GmailConnector extends EmailConnector {
         inReplyTo: headers["in-reply-to"] || null,
         references: headers["references"] || null,
         text: body.text,
+        rawText: body.rawText,
+        quotedText: body.quotedText,
         html: body.html,
       };
     } catch (err) {
