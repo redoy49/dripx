@@ -152,24 +152,50 @@ export class GmailConnector extends EmailConnector {
     this.gmail = google.gmail({ version: "v1", auth: this.oauth2Client });
   }
 
-  async sendEmail({ to, subject, body, from, inReplyTo, references, headers }) {
+  async sendEmail({ to, subject, body, from, inReplyTo, references, threadId, headers }) {
     try {
       const senderFrom = from || (this.name ? `"${this.name}" <${this.email}>` : this.email);
+
+      // Sanitize and format In-Reply-To and References according to RFC 5322
+      const formatMessageId = (id) => {
+        if (!id) return null;
+        const trimmed = id.trim();
+        return trimmed.startsWith("<") && trimmed.endsWith(">") ? trimmed : `<${trimmed}>`;
+      };
+
+      const formattedInReplyTo = inReplyTo ? formatMessageId(inReplyTo) : null;
+      let formattedReferences = references ? references.trim() : null;
+
+      if (formattedInReplyTo) {
+        if (formattedReferences) {
+          if (!formattedReferences.includes(formattedInReplyTo)) {
+            formattedReferences = `${formattedReferences} ${formattedInReplyTo}`;
+          }
+        } else {
+          formattedReferences = formattedInReplyTo;
+        }
+      }
+
       const rawMime = buildRawMimeMessage({
         from: senderFrom,
         to,
         subject,
         body,
-        inReplyTo,
-        references,
+        inReplyTo: formattedInReplyTo,
+        references: formattedReferences,
         headers,
       });
 
+      const requestBody = {
+        raw: toBase64Url(rawMime),
+      };
+      if (threadId) {
+        requestBody.threadId = threadId;
+      }
+
       const res = await this.gmail.users.messages.send({
         userId: "me",
-        requestBody: {
-          raw: toBase64Url(rawMime),
-        },
+        requestBody,
       });
 
       return {

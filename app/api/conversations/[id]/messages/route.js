@@ -62,6 +62,10 @@ export async function POST(req, { params }) {
     if (!lead) return Response.json({ message: "Lead not found" }, { status: 404 });
 
     let result;
+    let inReplyTo = null;
+    let references = null;
+    let resolvedThreadId = conversation.threadId || null;
+
     if (conversation.channel === "email") {
       let accountId = conversation.senderEmailAccountId || null;
       if (!accountId && conversation.leadId) {
@@ -89,15 +93,50 @@ export async function POST(req, { params }) {
         }
       }
 
-      const subject = conversation.subject?.startsWith("Re:")
-        ? conversation.subject
-        : `Re: ${conversation.subject || "Outreach"}`;
-
       const messagesCol = await dbConnect("messages");
       const lastInbound = await messagesCol.findOne(
         { conversationId: conversation._id, direction: "inbound" },
         { sort: { sentAt: -1 } }
       );
+
+      // Resolve thread ID from conversation or previous inbound messages
+      resolvedThreadId = conversation.threadId || lastInbound?.threadId || null;
+
+      // Ensure subject stays in thread (Re: original subject)
+      const baseSubject = (conversation.subject || lastInbound?.subject || "Outreach")
+        .replace(/^(?:re:\s*)+/i, "")
+        .trim();
+      const subject = `Re: ${baseSubject}`;
+
+      inReplyTo = lastInbound?.messageIdHeader || null;
+      references = lastInbound?.references || null;
+
+      // If lastInbound does not have messageIdHeader cached, fetch it via the connector
+      if (!inReplyTo && lastInbound?.providerMessageId && accountId) {
+        try {
+          const { getEmailConnector } = await import("@/app/lib/email");
+          const connector = await getEmailConnector({ accountId, workspaceId: session.workspaceId });
+          if (connector && typeof connector.fetchMessage === "function") {
+            const fetched = await connector.fetchMessage(lastInbound.providerMessageId);
+            if (fetched?.messageIdHeader) {
+              inReplyTo = fetched.messageIdHeader;
+              references = fetched.references || inReplyTo;
+              await messagesCol.updateOne(
+                { _id: lastInbound._id },
+                { $set: { messageIdHeader: inReplyTo, references } }
+              );
+            }
+          }
+        } catch (fetchErr) {
+          console.warn("[MessagesRoute] Failed to fetch message headers for threading:", fetchErr.message);
+        }
+      }
+
+      // Fallback: format RFC compliant Message-ID if missing
+      if (!inReplyTo && lastInbound?.providerMessageId) {
+        inReplyTo = `<${lastInbound.providerMessageId}@mail.gmail.com>`;
+        if (!references) references = inReplyTo;
+      }
 
       result = await sendEmail({
         to: lead.email,
@@ -105,7 +144,9 @@ export async function POST(req, { params }) {
         body: text,
         accountId,
         workspaceId: session.workspaceId,
-        inReplyTo: lastInbound?.providerMessageId || null,
+        inReplyTo,
+        references,
+        threadId: resolvedThreadId,
         purpose: "campaign",
       });
     } else {
@@ -117,6 +158,10 @@ export async function POST(req, { params }) {
       return Response.json({ message: result.error || "Failed to send message" }, { status: 502 });
     }
 
+    if (result.threadId) {
+      resolvedThreadId = result.threadId;
+    }
+
     const messages = await dbConnect("messages");
     const messageDoc = {
       conversationId: conversation._id,
@@ -126,13 +171,15 @@ export async function POST(req, { params }) {
       sentByUserId: new ObjectId(session.userId),
       sentAt: new Date(),
       providerMessageId: result.providerMessageId || null,
-      threadId: result.threadId || conversation.threadId || null,
+      threadId: resolvedThreadId,
+      inReplyTo: inReplyTo || null,
+      references: references || null,
     };
     await messages.insertOne(messageDoc);
 
     const convoUpdate = { lastMessageAt: new Date() };
-    if (result.threadId && !conversation.threadId) {
-      convoUpdate.threadId = result.threadId;
+    if (resolvedThreadId && !conversation.threadId) {
+      convoUpdate.threadId = resolvedThreadId;
     }
     if (conversation.channel === "email" && !conversation.senderEmailAccountId) {
       convoUpdate.senderEmailAccountId = conversation.senderEmailAccountId || null;

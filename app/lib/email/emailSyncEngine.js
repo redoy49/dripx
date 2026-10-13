@@ -149,7 +149,9 @@ export async function syncAccountReplies(account) {
         sentAt: msg.date,
         providerMessageId: msg.id,
         threadId: msg.threadId || null,
+        messageIdHeader: msg.messageIdHeader || null,
         inReplyTo: msg.inReplyTo || null,
+        references: msg.references || null,
         createdAt: new Date(),
       });
 

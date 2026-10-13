@@ -153,11 +153,26 @@ export async function sendEmail({
   html,
   from,
   replyTo,
+  inReplyTo,
+  references,
+  threadId,
+  headers,
   accountId = null,
   workspaceId = null,
   purpose = "transactional",
 }) {
   const effectivePurpose = accountId ? "campaign" : purpose;
   const connector = await getEmailConnector({ accountId, workspaceId, purpose: effectivePurpose });
-  return connector.sendEmail({ to, subject, body, html, from, replyTo });
+  return connector.sendEmail({
+    to,
+    subject,
+    body,
+    html,
+    from,
+    replyTo,
+    inReplyTo,
+    references,
+    threadId,
+    headers,
+  });
 }

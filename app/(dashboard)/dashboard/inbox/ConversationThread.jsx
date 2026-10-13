@@ -22,26 +22,17 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
 
-  // Derived (not stored) so switching conversations never flashes the previous thread's
-  // content — as soon as conversationId changes, this is true again until fresh data lands.
+  // Derived so switching conversations never flashes the previous thread's content
   const loading = !conversation || conversation.id !== conversationId;
 
-  const load = async () => {
-    try {
-      const [convoRes, msgRes] = await Promise.all([
-        fetch(`/api/conversations/${conversationId}`),
-        fetch(`/api/conversations/${conversationId}/messages`),
-      ]);
-      const convoData = await convoRes.json();
-      const msgData = await msgRes.json();
+  // Stabilize external callbacks with refs so effect dependencies depend strictly on conversationId
+  const onConversationLoadedRef = useRef(onConversationLoaded);
+  const onStatusChangeRef = useRef(onStatusChange);
 
-      setConversation(convoData);
-      setMessages(msgData.items || []);
-      onConversationLoaded?.(convoData);
-    } catch (err) {
-      console.error("Failed to reload conversation thread:", err);
-    }
-  };
+  useEffect(() => {
+    onConversationLoadedRef.current = onConversationLoaded;
+    onStatusChangeRef.current = onStatusChange;
+  });
 
   useEffect(() => {
     let ignore = false;
@@ -52,29 +43,87 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
       fetch(`/api/conversations/${conversationId}/messages`),
     ])
       .then(async ([convoRes, msgRes]) => {
-        const convoData = await convoRes.json();
-        const msgData = await msgRes.json();
-        if (!ignore) {
+        const convoData = convoRes.ok ? await convoRes.json() : null;
+        const msgData = msgRes.ok ? await msgRes.json() : null;
+        if (!ignore && convoData) {
           setConversation(convoData);
-          setMessages(msgData.items || []);
-          onConversationLoaded?.(convoData);
+          setMessages(msgData?.items || []);
+          onConversationLoadedRef.current?.(convoData);
         }
       })
       .catch((err) => {
         console.error("Failed to load conversation thread:", err);
       });
 
-    // Mark read on open
+    // Mark read on open in the background.
+    // Parent handleSelectConversation already zeroed unreadCount locally and dispatched the layout event,
+    // so we intentionally do NOT trigger onStatusChange here to avoid redundant conversation list refetches.
     fetch(`/api/conversations/${conversationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ markRead: true }),
-    }).then(() => onStatusChange?.());
+    }).catch((err) => {
+      console.error("Failed to mark conversation read:", err);
+    });
 
     return () => {
       ignore = true;
     };
-  }, [conversationId, onConversationLoaded, onStatusChange]);
+  }, [conversationId]);
+
+  // Live auto-polling for new incoming messages in this open thread
+  useEffect(() => {
+    if (!conversationId) return;
+
+    let isPolling = false;
+
+    const checkNewMessages = async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      if (isPolling) return;
+      isPolling = true;
+
+      try {
+        const msgRes = await fetch(`/api/conversations/${conversationId}/messages`);
+        if (msgRes.ok) {
+          const msgData = await msgRes.json();
+          const items = msgData.items || [];
+          setMessages((prev) => {
+            const hasChanged =
+              items.length !== prev.length ||
+              (items.length > 0 && items[items.length - 1].id !== prev[prev.length - 1]?.id);
+
+            if (hasChanged) {
+              // New reply arrived in currently active conversation:
+              // Auto-mark as read and inform parent list so previews/status stay synced
+              fetch(`/api/conversations/${conversationId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ markRead: true }),
+              }).then(() => onStatusChangeRef.current?.());
+
+              return items;
+            }
+            return prev;
+          });
+        }
+      } catch {
+        // Ignore background polling network glitches
+      } finally {
+        isPolling = false;
+      }
+    };
+
+    const interval = setInterval(checkNewMessages, 10000);
+    const handleFocus = () => {
+      checkNewMessages();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -93,7 +142,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
         const msg = await res.json();
         setMessages((prev) => [...prev, msg]);
         setDraft("");
-        onStatusChange?.();
+        onStatusChangeRef.current?.();
       } else {
         const data = await res.json();
         alert(data.message || "Failed to send message");
@@ -113,7 +162,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
       body: JSON.stringify({ status }),
     });
     setConversation((prev) => ({ ...prev, status }));
-    onStatusChange?.();
+    onStatusChangeRef.current?.();
   };
 
   if (loading || !conversation) {
@@ -160,7 +209,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setStatus(conversation.status === "important" ? "open" : "important")}
-            className={`rounded-lg p-2 transition ${
+            className={`rounded-full p-2 transition ${
               conversation.status === "important"
                 ? "bg-amber-50 text-amber-500"
                 : "text-gray-400 hover:bg-gray-100"
@@ -171,7 +220,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
           </button>
           <button
             onClick={() => setStatus(conversation.status === "archived" ? "open" : "archived")}
-            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100"
+            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100"
             title="Archive"
           >
             <Archive size={16} />
@@ -181,7 +230,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
               href={lead.linkedinUrl}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100"
+              className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100"
               title="View on LinkedIn"
             >
               <ExternalLink size={16} />
@@ -271,7 +320,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
           <button
             onClick={send}
             disabled={sending || !draft.trim()}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-xs transition-all disabled:opacity-40 hover:opacity-95"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white shadow-xs transition-all disabled:opacity-40 hover:opacity-95"
             style={{ background: "linear-gradient(to right, #6367FF, #7f64f5)" }}
             title="Send reply (Enter)"
           >

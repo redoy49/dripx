@@ -178,7 +178,7 @@ export default function LeadDetailPanel({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => copyToClipboard(lead.email, "email")}
-                  className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                   title="Copy email"
                 >
                   {copiedField === "email" ? (
@@ -189,7 +189,7 @@ export default function LeadDetailPanel({
                 </button>
                 <a
                   href={`mailto:${lead.email}`}
-                  className="p-1 rounded-md text-gray-400 hover:text-violet-600 hover:bg-gray-100 transition-colors"
+                  className="p-1 rounded-full text-gray-400 hover:text-violet-600 hover:bg-gray-100 transition-colors"
                   title="Send email"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -211,7 +211,7 @@ export default function LeadDetailPanel({
             {lead?.phone && (
               <button
                 onClick={() => copyToClipboard(lead.phone, "phone")}
-                className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
                 title="Copy phone"
               >
                 {copiedField === "phone" ? (
@@ -230,7 +230,7 @@ export default function LeadDetailPanel({
                 href={lead.linkedinUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#0A66C2]/5 hover:bg-[#0A66C2]/10 text-[#0A66C2] text-xs font-medium transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-full bg-[#0A66C2]/5 hover:bg-[#0A66C2]/10 text-[#0A66C2] text-xs font-medium transition-colors"
               >
                 <FaLinkedin className="w-3.5 h-3.5" />
                 <span>View LinkedIn Profile</span>
@@ -272,7 +272,7 @@ export default function LeadDetailPanel({
                     <button
                       onClick={() => handleSequenceToggle("resume_sequence")}
                       disabled={actionPending}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition-colors disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition-colors disabled:opacity-50"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span>{actionPending ? "Resuming..." : "Resume Sequence"}</span>
@@ -281,7 +281,7 @@ export default function LeadDetailPanel({
                     <button
                       onClick={() => handleSequenceToggle("pause_sequence")}
                       disabled={actionPending}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-medium transition-colors disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-medium transition-colors disabled:opacity-50"
                     >
                       <Pause className="w-3.5 h-3.5 fill-current" />
                       <span>{actionPending ? "Pausing..." : "Pause Sequence"}</span>
