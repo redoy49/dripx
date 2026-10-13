@@ -34,7 +34,14 @@ export function splitQuotedReply(text) {
   const match = text.search(quoteHeaderRegex);
   if (match !== -1) {
     const mainText = text.slice(0, match).trim();
-    const quotedText = text.slice(match).trim();
+    let quotedText = text.slice(match).trim();
+    // Strip leading '>' blockquote markers from each line
+    quotedText = quotedText
+      .split("\n")
+      .map((line) => line.replace(/^\s*>+\s?/, ""))
+      .join("\n")
+      .trim();
+
     if (mainText) {
       return { mainText, quotedText };
     }
