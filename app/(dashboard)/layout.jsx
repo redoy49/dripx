@@ -71,11 +71,15 @@ export default function DashboardLayout({ children }) {
 
     // Real-time synchronization event from Unified Inbox when messages are read or synced
     const handleUnreadChanged = (event) => {
-      if (typeof event.detail?.totalUnread === "number") {
-        setUnreadCount(event.detail.totalUnread);
-      } else {
-        checkUnread();
-      }
+      const newTotal = event.detail?.totalUnread;
+      queueMicrotask(() => {
+        if (ignore) return;
+        if (typeof newTotal === "number") {
+          setUnreadCount(newTotal);
+        } else {
+          checkUnread();
+        }
+      });
     };
     window.addEventListener("dripx:unread-changed", handleUnreadChanged);
 

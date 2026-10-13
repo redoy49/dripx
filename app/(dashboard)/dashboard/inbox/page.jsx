@@ -114,9 +114,11 @@ export default function InboxPage() {
 
           // Dispatch updated unread count to parent Dashboard layout
           const unreadSum = items.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
-          window.dispatchEvent(
-            new CustomEvent("dripx:unread-changed", { detail: { totalUnread: unreadSum } })
-          );
+          queueMicrotask(() => {
+            window.dispatchEvent(
+              new CustomEvent("dripx:unread-changed", { detail: { totalUnread: unreadSum } })
+            );
+          });
         })
         .catch((err) => {
           if (isMountedRef.current) {
@@ -184,13 +186,14 @@ export default function InboxPage() {
   const handleSelectConversation = (item) => {
     setActiveId(item.id);
     if (item.unreadCount > 0) {
-      setConversations((prev) => {
-        const updated = prev.map((c) => (c.id === item.id ? { ...c, unreadCount: 0 } : c));
-        const newTotal = updated.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      setConversations((prev) =>
+        prev.map((c) => (c.id === item.id ? { ...c, unreadCount: 0 } : c))
+      );
+      const newTotal = Math.max(0, totalUnread - (item.unreadCount || 0));
+      queueMicrotask(() => {
         window.dispatchEvent(
           new CustomEvent("dripx:unread-changed", { detail: { totalUnread: newTotal } })
         );
-        return updated;
       });
     }
   };
