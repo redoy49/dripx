@@ -331,7 +331,17 @@ export default function InboxPage() {
           {/* Conversation List Items */}
           <div className="overflow-y-auto flex-1 divide-y divide-gray-50">
             {loading ? (
-              <p className="p-8 text-center text-xs text-gray-400">Loading conversations...</p>
+              <div className="p-2 space-y-2 animate-pulse">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-50/70">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3.5 w-28 bg-gray-200 rounded" />
+                      <div className="h-3 w-40 bg-gray-100 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center text-xs text-gray-400 space-y-1">
                 <p className="font-medium text-gray-500">No conversations found</p>

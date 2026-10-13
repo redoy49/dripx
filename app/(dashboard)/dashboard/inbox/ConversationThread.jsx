@@ -167,9 +167,25 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
 
   if (loading || !conversation) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-sm text-gray-400 gap-2">
-        <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
-        <span>Loading conversation...</span>
+      <div className="flex h-full flex-col justify-between p-6 animate-pulse">
+        {/* Thread Header Skeleton */}
+        <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+          <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+          <div className="space-y-1.5 flex-1">
+            <div className="h-4 w-32 bg-gray-200 rounded" />
+            <div className="h-3 w-48 bg-gray-100 rounded" />
+          </div>
+        </div>
+
+        {/* Message Bubbles Skeleton */}
+        <div className="space-y-4 py-8 flex-1">
+          <div className="h-14 w-2/3 bg-gray-100 rounded-2xl" />
+          <div className="h-16 w-3/4 bg-violet-50/70 rounded-2xl ml-auto" />
+          <div className="h-12 w-1/2 bg-gray-100 rounded-2xl" />
+        </div>
+
+        {/* Reply Box Skeleton */}
+        <div className="h-12 w-full bg-gray-100 rounded-xl" />
       </div>
     );
   }

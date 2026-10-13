@@ -199,7 +199,28 @@ export default function CampaignPage() {
 
         {/* Rows */}
         {loading ? (
-          <div className="py-16 text-center text-sm text-gray-400">Loading campaigns...</div>
+          <div className="divide-y divide-gray-100 animate-pulse">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="grid grid-cols-[2fr_1.2fr_1.4fr_0.8fr] px-6 py-5 items-center gap-4">
+                <div className="space-y-1.5 pr-8">
+                  <div className="h-4 w-40 bg-gray-200 rounded" />
+                  <div className="h-3 w-24 bg-gray-100 rounded" />
+                </div>
+                <div className="space-y-2 pr-8">
+                  <div className="h-3 w-20 bg-gray-100 rounded" />
+                  <div className="h-3 w-16 bg-gray-100 rounded" />
+                </div>
+                <div className="space-y-2 pr-8">
+                  <div className="h-3 w-24 bg-gray-100 rounded" />
+                  <div className="h-3 w-20 bg-gray-100 rounded" />
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="h-6 w-11 bg-gray-200 rounded-full" />
+                  <div className="h-3 w-12 bg-gray-100 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-sm text-gray-400">
             No campaigns found.

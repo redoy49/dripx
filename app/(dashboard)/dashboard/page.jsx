@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import DashboardLoading from "./loading";
 import { getCached, setCached } from "@/app/lib/swrCache";
 import {
   Users,
@@ -298,6 +299,10 @@ export default function DashboardPage() {
       )
     );
   }, [chartDays]);
+
+  if (loading && !summary) {
+    return <DashboardLoading />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFC] p-4 sm:p-6 lg:p-7 space-y-6 w-full max-w-full text-gray-800">

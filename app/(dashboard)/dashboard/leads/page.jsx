@@ -472,9 +472,60 @@ export default function LeadsPage() {
       {/* 4. Leads Roster Table */}
       <div className="bg-white rounded-2xl shadow-2xs border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="py-24 flex flex-col items-center justify-center gap-2 text-gray-400">
-            <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-            <span className="text-xs">Loading prospects...</span>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/75 text-gray-400 font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="py-3 px-4 w-10 text-center">
+                    <div className="w-4 h-4 rounded bg-gray-200 mx-auto animate-pulse" />
+                  </th>
+                  <th className="py-3 px-5">Prospect</th>
+                  <th className="py-3 px-5">Source</th>
+                  <th className="py-3 px-5">Tags</th>
+                  <th className="py-3 px-5">Active Campaigns & Steps</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 animate-pulse">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <tr key={i} className="py-3.5">
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="w-4 h-4 rounded bg-gray-200 mx-auto" />
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
+                        <div className="space-y-1.5">
+                          <div className="h-3.5 w-32 bg-gray-200 rounded" />
+                          <div className="h-3 w-44 bg-gray-100 rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="h-5 w-20 bg-gray-100 rounded-full" />
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-5 w-14 bg-gray-100 rounded-md" />
+                        <div className="h-5 w-12 bg-gray-100 rounded-md" />
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="space-y-1">
+                        <div className="h-3.5 w-28 bg-gray-200 rounded" />
+                        <div className="h-2.5 w-20 bg-gray-100 rounded" />
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <div className="w-6 h-6 rounded-md bg-gray-100" />
+                        <div className="w-6 h-6 rounded-md bg-gray-100" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : leads.length === 0 ? (
           <div className="py-24 text-center text-xs text-gray-400 space-y-2">
