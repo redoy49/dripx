@@ -1,57 +1,23 @@
 import { ObjectId } from "mongodb";
-import { dbConnect } from "@/app/lib/mongoDb";
-import { getLinkedInConnector } from "@/app/lib/connectors";
-import { sendEmail } from "@/app/lib/email";
-import { renderTemplate } from "@/app/lib/personalization";
-import { isUnderLimit } from "@/app/lib/limits";
-import { resolveStepAfter } from "@/app/lib/sequenceEngine";
-import { dispatchWebhookEvent } from "@/app/lib/webhooks";
+import { dbConnect } from "./mongoDb.js";
+import { getLinkedInConnector } from "./connectors/index.js";
+import { sendEmail } from "./email/index.js";
+import { renderTemplate } from "./personalization.js";
+import { isUnderLimit } from "./limits.js";
+import { resolveStepAfter } from "./sequenceEngine.js";
+import { dispatchWebhookEvent } from "./webhooks.js";
 import {
   isWithinSendingWindow,
   getNextWindowStart,
   calculateScheduledRunTime,
   resolveEffectiveSchedule,
-} from "@/app/lib/scheduleEngine";
+} from "./scheduleEngine.js";
 
-/**
- * Automatically pauses sequence outreach for a lead when they reply.
- * Updates campaign_leads status to 'replied' and cancels any pending queued jobs.
- */
-export async function handleLeadReplied(workspaceId, leadId, campaignId = null) {
-  const campaignLeadsCol = await dbConnect("campaign_leads");
-  const jobsCol = await dbConnect("jobs");
-  const activityLogsCol = await dbConnect("activity_logs");
-
-  const query = { leadId: new ObjectId(leadId) };
-  if (campaignId) query.campaignId = new ObjectId(campaignId);
-
-  // 1. Mark campaign enrollments as replied
-  await campaignLeadsCol.updateMany(query, {
-    $set: {
-      status: "replied",
-      currentStepId: null,
-      lastActionAt: new Date(),
-    },
-  });
-
-  // 2. Cancel any pending queued jobs for this lead
-  await jobsCol.updateMany(
-    { leadId: new ObjectId(leadId), status: "queued" },
-    { $set: { status: "skipped", lastError: "Sequence paused: Lead replied to outreach" } },
-  );
-
-  // 3. Log audit event
-  await activityLogsCol.insertOne({
-    workspaceId: new ObjectId(workspaceId),
-    actionType: "sequence_paused_reply",
-    leadId: new ObjectId(leadId),
-    campaignId: campaignId ? new ObjectId(campaignId) : null,
-    occurredAt: new Date(),
-  });
-}
+export { handleLeadReplied } from "./leadReplied.js";
 
 // Finds/creates the unified-inbox conversation for a lead+channel and appends a message to it.
-async function recordOutboundMessage(workspaceId, leadId, channel, body, subject) {
+async function recordOutboundMessage(workspaceId, leadId, channel, body, subject, options = {}) {
+  const { providerMessageId = null, threadId = null, senderEmailAccountId = null } = options;
   const conversations = await dbConnect("conversations");
   const messages = await dbConnect("messages");
 
@@ -62,15 +28,22 @@ async function recordOutboundMessage(workspaceId, leadId, channel, body, subject
       leadId,
       channel,
       subject: subject || null,
+      threadId: threadId || null,
+      senderEmailAccountId: senderEmailAccountId || null,
       lastMessageAt: new Date(),
       unreadCount: 0,
       status: "open",
     });
     conversation = { _id: result.insertedId };
   } else {
+    const updateFields = { lastMessageAt: new Date() };
+    if (threadId && !conversation.threadId) updateFields.threadId = threadId;
+    if (senderEmailAccountId && !conversation.senderEmailAccountId) {
+      updateFields.senderEmailAccountId = senderEmailAccountId;
+    }
     await conversations.updateOne(
       { _id: conversation._id },
-      { $set: { lastMessageAt: new Date() } },
+      { $set: updateFields },
     );
   }
 
@@ -81,7 +54,8 @@ async function recordOutboundMessage(workspaceId, leadId, channel, body, subject
     body,
     sentByUserId: null,
     sentAt: new Date(),
-    providerMessageId: null,
+    providerMessageId: providerMessageId || null,
+    threadId: threadId || null,
   });
 }
 
@@ -180,6 +154,7 @@ async function dispatchAction(step, lead, campaign) {
         body,
         accountId: campaign.senderEmailAccountId,
         workspaceId: campaign.workspaceId,
+        purpose: "campaign",
       });
       return { ...result, body, subject, channel: "email" };
     }
@@ -284,9 +259,12 @@ export async function processJob(job) {
     // For email actions, also enforce the specific sender mailbox's ramp-up cap
     if (step.type === "email") {
       const emailAccountsCol = await dbConnect("email_accounts");
-      const targetQuery = campaign.senderEmailAccountId
-        ? { _id: campaign.senderEmailAccountId }
-        : { workspaceId: job.workspaceId, status: "connected" };
+      const senderAccountId = campaign.senderEmailAccountId
+        ? (typeof campaign.senderEmailAccountId === "string" ? new ObjectId(campaign.senderEmailAccountId) : campaign.senderEmailAccountId)
+        : null;
+      const targetQuery = senderAccountId
+        ? { _id: senderAccountId }
+        : { workspaceId: new ObjectId(job.workspaceId), status: "connected" };
 
       const senderDoc = await emailAccountsCol.findOne(targetQuery);
       if (senderDoc) {
@@ -351,16 +329,23 @@ export async function processJob(job) {
     });
 
     if (MESSAGE_STEP_TYPES.has(step.type) && result.body) {
-      await recordOutboundMessage(job.workspaceId, lead._id, result.channel, result.body, result.subject);
+      await recordOutboundMessage(job.workspaceId, lead._id, result.channel, result.body, result.subject, {
+        providerMessageId: result.providerMessageId || null,
+        threadId: result.threadId || null,
+        senderEmailAccountId: campaign.senderEmailAccountId || null,
+      });
       await maybeSimulateReply(job.workspaceId, job.campaignId, lead._id, result.channel);
     }
 
     // Atomically increment sender mailbox todaySentCount
     if (step.type === "email") {
       const emailAccountsCol = await dbConnect("email_accounts");
-      const targetQuery = campaign.senderEmailAccountId
-        ? { _id: campaign.senderEmailAccountId }
-        : { workspaceId: job.workspaceId, status: "connected" };
+      const senderAccountId = campaign.senderEmailAccountId
+        ? (typeof campaign.senderEmailAccountId === "string" ? new ObjectId(campaign.senderEmailAccountId) : campaign.senderEmailAccountId)
+        : null;
+      const targetQuery = senderAccountId
+        ? { _id: senderAccountId }
+        : { workspaceId: new ObjectId(job.workspaceId), status: "connected" };
 
       const senderDoc = await emailAccountsCol.findOne(targetQuery);
       if (senderDoc) {

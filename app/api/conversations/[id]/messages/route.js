@@ -67,8 +67,7 @@ export async function POST(req, { params }) {
       if (!accountId && conversation.leadId) {
         const campaignLeads = await dbConnect("campaign_leads");
         const enrollment = await campaignLeads.findOne({
-          workspaceId: new ObjectId(session.workspaceId),
-          leadId: conversation.leadId,
+          leadId: typeof conversation.leadId === "string" ? new ObjectId(conversation.leadId) : conversation.leadId,
         });
         if (enrollment?.campaignId) {
           const campaigns = await dbConnect("campaigns");
@@ -79,9 +78,26 @@ export async function POST(req, { params }) {
         }
       }
 
+      if (!accountId) {
+        const emailAccounts = await dbConnect("email_accounts");
+        const defaultAcc = await emailAccounts.findOne({
+          workspaceId: new ObjectId(session.workspaceId),
+          status: "connected",
+        });
+        if (defaultAcc) {
+          accountId = defaultAcc._id.toString();
+        }
+      }
+
       const subject = conversation.subject?.startsWith("Re:")
         ? conversation.subject
         : `Re: ${conversation.subject || "Outreach"}`;
+
+      const messagesCol = await dbConnect("messages");
+      const lastInbound = await messagesCol.findOne(
+        { conversationId: conversation._id, direction: "inbound" },
+        { sort: { sentAt: -1 } }
+      );
 
       result = await sendEmail({
         to: lead.email,
@@ -89,6 +105,8 @@ export async function POST(req, { params }) {
         body: text,
         accountId,
         workspaceId: session.workspaceId,
+        inReplyTo: lastInbound?.providerMessageId || null,
+        purpose: "campaign",
       });
     } else {
       const connector = getLinkedInConnector();
@@ -108,9 +126,18 @@ export async function POST(req, { params }) {
       sentByUserId: new ObjectId(session.userId),
       sentAt: new Date(),
       providerMessageId: result.providerMessageId || null,
+      threadId: result.threadId || conversation.threadId || null,
     };
     await messages.insertOne(messageDoc);
-    await conversations.updateOne({ _id: conversation._id }, { $set: { lastMessageAt: new Date() } });
+
+    const convoUpdate = { lastMessageAt: new Date() };
+    if (result.threadId && !conversation.threadId) {
+      convoUpdate.threadId = result.threadId;
+    }
+    if (conversation.channel === "email" && !conversation.senderEmailAccountId) {
+      convoUpdate.senderEmailAccountId = conversation.senderEmailAccountId || null;
+    }
+    await conversations.updateOne({ _id: conversation._id }, { $set: convoUpdate });
 
     return Response.json(
       { ...messageDoc, id: messageDoc._id?.toString(), sentByUserId: session.userId, emailSkipped: !!result.skipped },

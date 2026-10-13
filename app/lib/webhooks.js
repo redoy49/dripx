@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { ObjectId } from "mongodb";
-import { dbConnect } from "@/app/lib/mongoDb";
+import { dbConnect } from "./mongoDb.js";
 
 const DELIVERY_TIMEOUT_MS = 8000;
 const MAX_ATTEMPTS = 5;

@@ -4,6 +4,7 @@ import { requireAuth } from "@/app/lib/session";
 import { requireRole } from "@/app/lib/rbac";
 import { resolveFirstExecutableStep } from "@/app/lib/sequenceEngine";
 import { serializeCampaign } from "@/app/api/campaigns/route";
+import { runDueJobs } from "@/app/lib/jobProcessor";
 
 // Finds the lead's "replied" state for condition steps at activation time (mirrors the
 // same check jobProcessor uses once the campaign is running).
@@ -152,6 +153,11 @@ export async function POST(req, { params }) {
       { _id: campaign._id },
       { $set: { status: "active" } },
       { returnDocument: "after" },
+    );
+
+    // Asynchronously kick off due jobs immediately so active leads dispatch without waiting for cron
+    runDueJobs(25, campaign._id, false, "activation_dispatch").catch((err) =>
+      console.error("[Activation] Background dispatch error:", err)
     );
 
     return Response.json({

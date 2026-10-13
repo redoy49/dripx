@@ -44,8 +44,15 @@ export default function InboxPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
     setRefreshing(true);
+    try {
+      // Trigger instant mailbox sync so new Gmail replies appear immediately
+      await fetch("/api/conversations/sync", { method: "POST" });
+    } catch (err) {
+      console.warn("Mailbox sync failed during refresh:", err);
+    }
+
     const query = new URLSearchParams({ filter: tab });
     if (channel !== "all") query.set("channel", channel);
 

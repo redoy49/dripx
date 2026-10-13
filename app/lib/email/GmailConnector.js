@@ -13,6 +13,51 @@ function toBase64Url(str) {
 }
 
 /**
+ * Decodes Base64URL string into UTF-8.
+ */
+function decodeBase64Url(data) {
+  if (!data) return "";
+  const base64 = data.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(base64, "base64").toString("utf-8");
+}
+
+/**
+ * Parses MIME body payload recursively for text and HTML.
+ */
+function extractBodyFromPayload(payload) {
+  let text = "";
+  let html = "";
+
+  function traverse(part) {
+    if (!part) return;
+    if (part.mimeType === "text/plain" && part.body?.data) {
+      text = decodeBase64Url(part.body.data);
+    } else if (part.mimeType === "text/html" && part.body?.data) {
+      html = decodeBase64Url(part.body.data);
+    }
+    if (part.parts && Array.isArray(part.parts)) {
+      for (const p of part.parts) traverse(p);
+    }
+  }
+
+  traverse(payload);
+  return {
+    text: text.trim() || payload?.snippet || "",
+    html: html.trim() || null,
+  };
+}
+
+/**
+ * Extracts raw email address from header strings like "Name <user@example.com>"
+ */
+function extractEmailAddress(str) {
+  if (!str) return "";
+  const match = str.match(/<([^>]+)>/);
+  if (match) return match[1].trim().toLowerCase();
+  return str.trim().toLowerCase();
+}
+
+/**
  * Builds an RFC 2822 compliant MIME message.
  */
 function buildRawMimeMessage({ from, to, subject, body, inReplyTo, references, headers }) {
@@ -163,6 +208,139 @@ export class GmailConnector extends EmailConnector {
         success: false,
         found: false,
         error: err.message,
+      };
+    }
+  }
+
+  /**
+   * Fetches full details of a specific message by ID and parses headers and body.
+   */
+  async fetchMessage(messageId) {
+    try {
+      const res = await this.gmail.users.messages.get({
+        userId: "me",
+        id: messageId,
+        format: "full",
+      });
+
+      const data = res.data;
+      const headers = {};
+      if (data.payload?.headers) {
+        for (const h of data.payload.headers) {
+          headers[h.name.toLowerCase()] = h.value;
+        }
+      }
+
+      const body = extractBodyFromPayload(data.payload);
+
+      return {
+        id: data.id,
+        threadId: data.threadId,
+        snippet: data.snippet || "",
+        labelIds: data.labelIds || [],
+        from: headers["from"] || "",
+        fromEmail: extractEmailAddress(headers["from"]),
+        to: headers["to"] || "",
+        toEmail: extractEmailAddress(headers["to"]),
+        subject: headers["subject"] || "",
+        date: headers["date"] ? new Date(headers["date"]) : new Date(Number(data.internalDate)),
+        messageIdHeader: headers["message-id"] || null,
+        inReplyTo: headers["in-reply-to"] || null,
+        references: headers["references"] || null,
+        text: body.text,
+        html: body.html,
+      };
+    } catch (err) {
+      console.error(`[GmailConnector] Failed to fetch message ${messageId}:`, err.message);
+      return null;
+    }
+  }
+
+  /**
+   * Fetches recent messages incrementally using historyId or query fallback.
+   */
+  async fetchRecentMessages({ historyId = null, maxResults = 25 } = {}) {
+    try {
+      const messageIdsToFetch = new Set();
+      let newHistoryId = historyId;
+
+      // 1. If historyId provided, try history.list
+      if (historyId) {
+        try {
+          const historyRes = await this.gmail.users.history.list({
+            userId: "me",
+            startHistoryId: historyId,
+            historyTypes: ["messageAdded"],
+            maxResults,
+          });
+
+          if (historyRes.data.history) {
+            for (const record of historyRes.data.history) {
+              if (record.messagesAdded) {
+                for (const item of record.messagesAdded) {
+                  if (item.message?.id) messageIdsToFetch.add(item.message.id);
+                }
+              }
+            }
+          }
+          newHistoryId = historyRes.data.historyId || historyId;
+        } catch (historyErr) {
+          // If historyId is expired or invalid (HTTP 404 or 400), fall back to messages.list
+          console.warn("[GmailConnector] history.list expired or failed, falling back to messages.list:", historyErr.message);
+          historyId = null;
+        }
+      }
+
+      // 2. If no historyId or fallback triggered
+      if (!historyId) {
+        const listRes = await this.gmail.users.messages.list({
+          userId: "me",
+          q: "label:INBOX newer_than:7d",
+          maxResults,
+        });
+
+        if (listRes.data.messages) {
+          for (const m of listRes.data.messages) {
+            if (m.id) messageIdsToFetch.add(m.id);
+          }
+        }
+
+        // Get latest profile historyId for future incremental syncs
+        try {
+          const profile = await this.gmail.users.getProfile({ userId: "me" });
+          if (profile.data.historyId) {
+            newHistoryId = profile.data.historyId;
+          }
+        } catch (profileErr) {
+          console.warn("[GmailConnector] Failed to get profile historyId:", profileErr.message);
+        }
+      }
+
+      // 3. Fetch details for each message
+      const messages = [];
+      for (const id of messageIdsToFetch) {
+        const msg = await this.fetchMessage(id);
+        if (!msg) continue;
+
+        // Skip outbound messages sent by self
+        const isSelf = msg.labelIds.includes("SENT") || (this.email && msg.fromEmail === this.email.toLowerCase());
+        if (isSelf) continue;
+
+        messages.push(msg);
+      }
+
+      return {
+        success: true,
+        messages,
+        newHistoryId,
+      };
+    } catch (err) {
+      console.error("[GmailConnector] fetchRecentMessages error:", err.message);
+      return {
+        success: false,
+        error: err.message,
+        messages: [],
+        newHistoryId: historyId,
       };
     }
   }
