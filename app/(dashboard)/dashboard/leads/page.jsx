@@ -273,7 +273,7 @@ export default function LeadsPage() {
           {/* Export CSV Button */}
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
             title="Download RFC 4180 CSV matching current filters"
           >
             <Download className="w-3.5 h-3.5 text-gray-500" />
@@ -283,7 +283,7 @@ export default function LeadsPage() {
           {/* Import Leads Button */}
           <button
             onClick={() => setOpenImport(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-xs transition bg-violet-600 hover:bg-violet-700"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold text-white shadow-xs transition bg-violet-600 hover:bg-violet-700"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Import Leads</span>
@@ -319,7 +319,7 @@ export default function LeadsPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-9 pr-4 py-2 text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-violet-400 transition"
+              className="w-full pl-9 pr-4 py-2 text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-full focus:outline-hidden focus:ring-2 focus:ring-violet-400 transition"
             />
           </div>
 
@@ -331,7 +331,7 @@ export default function LeadsPage() {
                 setCampaignFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
             >
               <option value="all">All Campaigns</option>
               <option value="unassigned">Unassigned (Not Enrolled)</option>
@@ -351,7 +351,7 @@ export default function LeadsPage() {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -369,7 +369,7 @@ export default function LeadsPage() {
                 setSourceFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
             >
               <option value="all">All Sources</option>
               {Object.entries(SOURCE_LABELS).map(([k, label]) => (
@@ -389,7 +389,7 @@ export default function LeadsPage() {
                   setTagFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
               >
                 <option value="all">All Tags</option>
                 {allTags.map((t) => (
@@ -404,7 +404,7 @@ export default function LeadsPage() {
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-1"
+              className="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-full transition flex items-center gap-1"
             >
               <X className="w-3.5 h-3.5" />
               <span>Clear Filters</span>
@@ -429,7 +429,7 @@ export default function LeadsPage() {
             {/* Bulk Enroll */}
             <button
               onClick={() => setOpenBulkEnroll(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-xs transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-xs transition"
             >
               <Megaphone className="w-3.5 h-3.5" />
               <span>Enroll in Campaign</span>
@@ -438,7 +438,7 @@ export default function LeadsPage() {
             {/* Bulk Tag */}
             <button
               onClick={() => setOpenBulkTag(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition"
             >
               <Tag className="w-3.5 h-3.5 text-gray-400" />
               <span>Manage Tags</span>
@@ -448,7 +448,7 @@ export default function LeadsPage() {
             <button
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-semibold transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-semibold transition disabled:opacity-50"
             >
               {bulkDeleting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -690,7 +690,7 @@ export default function LeadsPage() {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700"
+                className="px-2 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -703,7 +703,7 @@ export default function LeadsPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                className="p-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition"
                 title="Previous page"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -714,7 +714,7 @@ export default function LeadsPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                className="p-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition"
                 title="Next page"
               >
                 <ChevronRight className="w-3.5 h-3.5" />

@@ -221,7 +221,7 @@ export default function CampaignCommandCenterPage({ params }) {
               fetchAnalytics();
             }}
             disabled={refreshing}
-            className="p-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 transition"
+            className="p-2.5 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 transition"
             title="Refresh metrics"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-violet-500" : ""}`} />
@@ -230,7 +230,7 @@ export default function CampaignCommandCenterPage({ params }) {
           {/* Simulate Button */}
           <button
             onClick={() => setSimulatorOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-semibold shadow-2xs transition"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-semibold shadow-2xs transition"
             title="Dry-run simulator (zero real sends)"
           >
             <FlaskConical className="w-3.5 h-3.5 text-violet-600" />
@@ -242,7 +242,7 @@ export default function CampaignCommandCenterPage({ params }) {
             <button
               onClick={triggerManualDispatch}
               disabled={dispatching}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-xs transition"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-xs transition"
               title="Execute pending due jobs now"
             >
               {dispatching ? (
@@ -257,7 +257,7 @@ export default function CampaignCommandCenterPage({ params }) {
           {/* Export CSV Button */}
           <button
             onClick={downloadCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
           >
             <Download className="w-3.5 h-3.5 text-gray-500" />
             <span>Export Leads</span>
@@ -266,7 +266,7 @@ export default function CampaignCommandCenterPage({ params }) {
           {/* Edit Sequence Link */}
           <Link
             href={`/dashboard/new-campaign?id=${campaignId}&tab=2`}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
           >
             <Sliders className="w-3.5 h-3.5 text-gray-500" />
             <span>Edit Sequence</span>
@@ -277,7 +277,7 @@ export default function CampaignCommandCenterPage({ params }) {
             <button
               onClick={toggleCampaignStatus}
               disabled={statusToggling}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold shadow-xs transition ${
                 isActive
                   ? "bg-amber-500 hover:bg-amber-600 text-white"
                   : "bg-emerald-600 hover:bg-emerald-700 text-white"
