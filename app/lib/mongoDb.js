@@ -56,12 +56,36 @@ function getClientPromise() {
   return global._dripxMongoClientPromise;
 }
 
+let indexesEnsured = false;
+
+async function ensureIndexesOnce(db) {
+  if (indexesEnsured) return;
+  indexesEnsured = true;
+  try {
+    await Promise.allSettled([
+      db.collection("leads").createIndex({ workspaceId: 1, createdAt: -1 }),
+      db.collection("leads").createIndex({ workspaceId: 1, status: 1 }),
+      db.collection("campaign_leads").createIndex({ workspaceId: 1, campaignId: 1, status: 1 }),
+      db.collection("campaign_leads").createIndex({ leadId: 1 }),
+      db.collection("activity_logs").createIndex({ workspaceId: 1, actionType: 1, occurredAt: -1 }),
+      db.collection("conversations").createIndex({ workspaceId: 1, updatedAt: -1 }),
+      db.collection("messages").createIndex({ conversationId: 1, createdAt: 1 }),
+    ]);
+  } catch (err) {
+    console.warn("Index setup warning (non-fatal):", err.message);
+  }
+}
+
 // Connect to database and get collection
 export async function dbConnect(collectionName) {
   try {
     const connectedClient = await getClientPromise();
 
     const db = connectedClient.db(process.env.DB_NAME);
+
+    if (!indexesEnsured) {
+      ensureIndexesOnce(db);
+    }
 
     return db.collection(collectionName);
   } catch (error) {

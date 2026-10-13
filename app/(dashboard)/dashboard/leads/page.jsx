@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { getCached, setCached } from "@/app/lib/swrCache";
 import {
   Search,
   Download,
@@ -56,11 +57,19 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
 
-  const [leads, setLeads] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [leads, setLeads] = useState(() => {
+    const cached = getCached("/api/leads?page=1&limit=25");
+    return cached?.items || [];
+  });
+  const [total, setTotal] = useState(() => {
+    const cached = getCached("/api/leads?page=1&limit=25");
+    return cached?.total || 0;
+  });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    return !getCached("/api/leads?page=1&limit=25");
+  });
 
   // Workspace campaigns for filter dropdown
   const [campaignList, setCampaignList] = useState([]);
@@ -108,11 +117,14 @@ export default function LeadsPage() {
     if (sourceFilter !== "all") query.set("source", sourceFilter);
     if (tagFilter !== "all") query.set("tag", tagFilter);
 
-    fetch(`/api/leads?${query.toString()}`)
-      .then((res) => res.json())
+    const url = `/api/leads?${query.toString()}`;
+
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!ignore) {
+        if (!ignore && data) {
           const items = data.items || [];
+          setCached(url, data);
           setLeads(items);
           setTotal(data.total || 0);
 

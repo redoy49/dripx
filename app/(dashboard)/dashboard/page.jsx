@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { getCached, setCached } from "@/app/lib/swrCache";
 import {
   Users,
   Plus,
@@ -105,22 +106,31 @@ function CircularProgressGauge({ percentage = 0, fraction = "0 / 0", label, colo
 
 export default function DashboardPage() {
   const [range, setRange] = useState("7d");
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(() => {
+    return getCached("/api/dashboard/summary?range=7d");
+  });
+  const [loading, setLoading] = useState(() => {
+    return !getCached("/api/dashboard/summary?range=7d");
+  });
   const [refreshing, setRefreshing] = useState(false);
   const [toast, setToast] = useState(null);
 
   // Team & Member view state (100% real data)
   const [selectedMember, setSelectedMember] = useState(null);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamMembers, setTeamMembers] = useState(() => {
+    const cached = getCached("/api/dashboard/summary?range=7d");
+    return cached?.teamMembers || [];
+  });
   const [campaignToggles, setCampaignToggles] = useState({});
 
   const loadSummary = useCallback(async (selectedRange = range) => {
     try {
       const apiRange = selectedRange === "yesterday" || selectedRange === "pick" ? "7d" : selectedRange;
-      const res = await fetch(`/api/dashboard/summary?range=${apiRange}`);
+      const url = `/api/dashboard/summary?range=${apiRange}`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
+        setCached(url, data);
         setSummary(data);
         if (data.teamMembers && data.teamMembers.length > 0) {
           setTeamMembers(data.teamMembers);
@@ -137,10 +147,13 @@ export default function DashboardPage() {
   useEffect(() => {
     let ignore = false;
     const apiRange = range === "yesterday" || range === "pick" ? "7d" : range;
-    fetch(`/api/dashboard/summary?range=${apiRange}`)
-      .then((res) => res.json())
+    const url = `/api/dashboard/summary?range=${apiRange}`;
+
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!ignore) {
+        if (!ignore && data) {
+          setCached(url, data);
           setSummary(data);
           if (data.teamMembers && data.teamMembers.length > 0) {
             setTeamMembers(data.teamMembers);
@@ -275,7 +288,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight sm:text-3xl flex items-center gap-2">
-            <span>{getGreeting()}, {summary?.greetingName || "Nate"}!</span>
+            <span>{getGreeting()}, {summary?.greetingName || "User"}!</span>
             <span className="text-2xl">👋</span>
           </h1>
           <p className="mt-1 text-xs text-gray-400">
