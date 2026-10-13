@@ -14,10 +14,10 @@ import {
   Megaphone,
   Database,
   LogOut,
-  Check,
   ChevronDown,
   ArrowUpRight,
   Bell,
+  BadgeCheck,
 } from "lucide-react";
 
 const menu = [
@@ -191,8 +191,12 @@ export default function DashboardLayout({ children }) {
                   className="w-10 h-10 rounded-full object-cover border border-gray-100 shadow-2xs group-hover:ring-2 group-hover:ring-violet-200 transition"
                 />
                 {/* Verified Green Badge */}
-                <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white shadow-2xs">
-                  <Check size={9} strokeWidth={3.5} />
+                <span className="absolute -bottom-1 -right-1 flex items-center justify-center">
+                  <BadgeCheck
+                    size={18}
+                    className="text-white fill-emerald-500"
+                    strokeWidth={2.4}
+                  />
                 </span>
               </div>
 
