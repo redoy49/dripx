@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err === "google_not_configured") {
+      alert("Google OAuth is not configured yet. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.local");
+    } else if (err === "access_denied") {
+      alert("Google sign-in was canceled.");
+    } else if (err) {
+      alert("Google authentication error: " + err);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -91,6 +103,9 @@ export default function LoginPage() {
           <div className="mt-8 space-y-3">
             <button
               type="button"
+              onClick={() => {
+                window.location.href = "/api/auth/google";
+              }}
               className="
                 flex h-12 w-full cursor-pointer items-center justify-center gap-3
                 rounded-lg border border-gray-200 bg-white px-4

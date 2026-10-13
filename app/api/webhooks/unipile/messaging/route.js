@@ -1,6 +1,7 @@
 import { dbConnect } from "@/app/lib/mongoDb";
 import { unipileWebhookSecret, slugFromLinkedinUrl } from "@/app/lib/integrations/unipile";
 import { dispatchWebhookEvent } from "@/app/lib/webhooks";
+import { handleLeadReplied } from "@/app/lib/jobProcessor";
 
 // Tries the cached unipile.providerId first, falling back to matching the sender's
 // profile URL against the lead's linkedinUrl (covers a reply arriving before we ever
@@ -97,6 +98,7 @@ export async function POST(req) {
     );
 
     const campaignId = await findRecentCampaignId(lead._id);
+    await handleLeadReplied(integration.workspaceId, lead._id, campaignId).catch(() => {});
     await dispatchWebhookEvent(integration.workspaceId, "lead.replied", {
       campaignId: campaignId ? campaignId.toString() : null,
       leadId: lead._id.toString(),

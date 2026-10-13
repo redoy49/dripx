@@ -52,6 +52,68 @@ export async function POST(req, { params }) {
       );
     }
 
+    for (const step of steps) {
+      if (
+        (step.type === "email" || step.type === "inmail") &&
+        (!step.config?.template?.trim() || !step.config?.subject?.trim())
+      ) {
+        return Response.json(
+          {
+            message: `Configure the subject line and message body for your ${step.type} step before activating`,
+          },
+          { status: 400 },
+        );
+      }
+      if (
+        (step.type === "message" || step.type === "follow_up") &&
+        !step.config?.template?.trim()
+      ) {
+        return Response.json(
+          {
+            message: `Configure the message template for your ${step.type} step before activating`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    const hasEmailSteps = steps.some((s) => s.type === "email");
+    if (hasEmailSteps) {
+      const emailAccountsCol = await dbConnect("email_accounts");
+      let senderAccount = null;
+
+      if (campaign.senderEmailAccountId) {
+        senderAccount = await emailAccountsCol.findOne({
+          _id: new ObjectId(campaign.senderEmailAccountId),
+          workspaceId: new ObjectId(session.workspaceId),
+        });
+      } else {
+        senderAccount = await emailAccountsCol.findOne({
+          workspaceId: new ObjectId(session.workspaceId),
+          status: "connected",
+        });
+      }
+
+      if (!senderAccount && !process.env.RESEND_API_KEY) {
+        return Response.json(
+          {
+            message:
+              "Connect and select an active email sender account in Campaign Settings before activating email steps.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (senderAccount && senderAccount.status !== "connected") {
+        return Response.json(
+          {
+            message: `Selected sender account (${senderAccount.email}) requires reconnection. Check Settings > Email Accounts.`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const campaignLeadsCol = await dbConnect("campaign_leads");
     const pendingLeads = await campaignLeadsCol
       .find({ campaignId: campaign._id, status: "pending" })

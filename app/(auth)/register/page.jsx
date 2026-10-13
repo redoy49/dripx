@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -14,6 +14,17 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "google_not_configured") {
+      alert("Google OAuth is not configured yet. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env.local");
+    } else if (err === "access_denied") {
+      alert("Google sign-in was canceled.");
+    } else if (err) {
+      alert("Google registration error: " + err);
+    }
+  }, [searchParams]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -87,6 +98,12 @@ function RegisterForm() {
           <div className="mt-8 space-y-3">
             <button
               type="button"
+              onClick={() => {
+                const target = invite
+                  ? `/api/auth/google?invite=${encodeURIComponent(invite)}`
+                  : "/api/auth/google";
+                window.location.href = target;
+              }}
               className="flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-900 transition hover:border-indigo-300 hover:shadow-md"
             >
               <GoogleIcon />

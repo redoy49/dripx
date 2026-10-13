@@ -1,10 +1,54 @@
+import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { getLinkedInConnector } from "@/app/lib/connectors";
-import { sendEmail } from "@/app/lib/email/resend";
+import { sendEmail } from "@/app/lib/email";
 import { renderTemplate } from "@/app/lib/personalization";
 import { isUnderLimit } from "@/app/lib/limits";
 import { resolveStepAfter } from "@/app/lib/sequenceEngine";
 import { dispatchWebhookEvent } from "@/app/lib/webhooks";
+import {
+  isWithinSendingWindow,
+  getNextWindowStart,
+  calculateScheduledRunTime,
+  resolveEffectiveSchedule,
+} from "@/app/lib/scheduleEngine";
+
+/**
+ * Automatically pauses sequence outreach for a lead when they reply.
+ * Updates campaign_leads status to 'replied' and cancels any pending queued jobs.
+ */
+export async function handleLeadReplied(workspaceId, leadId, campaignId = null) {
+  const campaignLeadsCol = await dbConnect("campaign_leads");
+  const jobsCol = await dbConnect("jobs");
+  const activityLogsCol = await dbConnect("activity_logs");
+
+  const query = { leadId: new ObjectId(leadId) };
+  if (campaignId) query.campaignId = new ObjectId(campaignId);
+
+  // 1. Mark campaign enrollments as replied
+  await campaignLeadsCol.updateMany(query, {
+    $set: {
+      status: "replied",
+      currentStepId: null,
+      lastActionAt: new Date(),
+    },
+  });
+
+  // 2. Cancel any pending queued jobs for this lead
+  await jobsCol.updateMany(
+    { leadId: new ObjectId(leadId), status: "queued" },
+    { $set: { status: "skipped", lastError: "Sequence paused: Lead replied to outreach" } },
+  );
+
+  // 3. Log audit event
+  await activityLogsCol.insertOne({
+    workspaceId: new ObjectId(workspaceId),
+    actionType: "sequence_paused_reply",
+    leadId: new ObjectId(leadId),
+    campaignId: campaignId ? new ObjectId(campaignId) : null,
+    occurredAt: new Date(),
+  });
+}
 
 // Finds/creates the unified-inbox conversation for a lead+channel and appends a message to it.
 async function recordOutboundMessage(workspaceId, leadId, channel, body, subject) {
@@ -75,6 +119,9 @@ async function maybeSimulateReply(workspaceId, campaignId, leadId, channel) {
     { _id: conversation._id },
     { $set: { lastMessageAt: new Date() }, $inc: { unreadCount: 1 } },
   );
+
+  await handleLeadReplied(workspaceId, leadId, campaignId).catch(() => {});
+
   await dispatchWebhookEvent(workspaceId, "lead.replied", {
     campaignId: campaignId.toString(),
     leadId: leadId.toString(),
@@ -127,7 +174,13 @@ async function dispatchAction(step, lead, campaign) {
     case "email": {
       const subject = renderTemplate(step.config?.subject || "", lead);
       const body = renderTemplate(step.config?.template || "", lead);
-      const result = await sendEmail({ to: lead.email, subject, body });
+      const result = await sendEmail({
+        to: lead.email,
+        subject,
+        body,
+        accountId: campaign.senderEmailAccountId,
+        workspaceId: campaign.workspaceId,
+      });
       return { ...result, body, subject, channel: "email" };
     }
     default:
@@ -183,6 +236,41 @@ export async function processJob(job) {
       return { status: "failed" };
     }
 
+    // Check Working Hours & Sending Window
+    const sendingSchedulesCol = await dbConnect("sending_schedules");
+    const workspaceScheduleDoc = await sendingSchedulesCol.findOne({
+      workspaceId: job.workspaceId,
+    });
+    const effectiveSchedule = resolveEffectiveSchedule(
+      workspaceScheduleDoc,
+      campaign.scheduleOverride,
+      lead,
+    );
+    const now = new Date();
+
+    if (!isWithinSendingWindow(effectiveSchedule, now)) {
+      const nextWindow = getNextWindowStart(effectiveSchedule, now);
+      await jobsCol.updateOne(
+        { _id: job._id },
+        {
+          $set: {
+            status: "queued",
+            runAfter: nextWindow,
+            lastError: `Postponed: Outside sending window (${effectiveSchedule.startTime}-${effectiveSchedule.endTime} ${effectiveSchedule.timezone}). Rescheduled to ${nextWindow.toISOString()}`,
+          },
+        },
+      );
+      const leadDisplayName = `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || lead.email || "Lead";
+      return {
+        status: "outside_working_hours",
+        leadName: leadDisplayName,
+        stepTitle: step.type,
+        channel: step.type,
+        nextWindow: nextWindow.toISOString(),
+        timezone: effectiveSchedule.timezone,
+      };
+    }
+
     // Enforce the workspace's daily action caps (+ warm-up ramp, + campaign override) before dispatching.
     const underLimit = await isUnderLimit(job.workspaceId, step.type, null, campaign.dailyLimitsOverride);
     if (!underLimit) {
@@ -193,9 +281,60 @@ export async function processJob(job) {
       return { status: "rate_limited" };
     }
 
+    // For email actions, also enforce the specific sender mailbox's ramp-up cap
+    if (step.type === "email") {
+      const emailAccountsCol = await dbConnect("email_accounts");
+      const targetQuery = campaign.senderEmailAccountId
+        ? { _id: campaign.senderEmailAccountId }
+        : { workspaceId: job.workspaceId, status: "connected" };
+
+      const senderDoc = await emailAccountsCol.findOne(targetQuery);
+      if (senderDoc) {
+        const { canAccountSendToday } = await import("@/app/lib/rampUpEngine");
+        const quota = canAccountSendToday(senderDoc);
+
+        if (!quota.canSend) {
+          await jobsCol.updateOne(
+            { _id: job._id },
+            {
+              $set: {
+                status: "queued",
+                runAfter: nextMidnightUTC(),
+                lastError: `Sender mailbox ${senderDoc.email} reached daily ramp-up limit (${quota.currentCount}/${quota.effectiveLimit}). Postponed to next day.`,
+              },
+            },
+          );
+          return { status: "rate_limited", reason: "sender_quota_reached" };
+        }
+      }
+    }
+
     const result = await dispatchAction(step, lead, campaign);
 
     if (!result.success) {
+      const isTransient =
+        result.error &&
+        /rate limit|timeout|429|503|504|econnreset|etimedout|esocket|temporary/i.test(result.error);
+      const attempts = (job.attempts || 0) + 1;
+
+      if (isTransient && attempts < 3) {
+        const delayMinutes = Math.pow(2, attempts); // 2m, 4m
+        const retryAt = new Date(Date.now() + delayMinutes * 60 * 1000);
+
+        await jobsCol.updateOne(
+          { _id: job._id },
+          {
+            $set: {
+              status: "queued",
+              runAfter: retryAt,
+              lastError: `Attempt ${attempts} failed: ${result.error}. Retrying in ${delayMinutes}m.`,
+            },
+            $inc: { attempts: 1 },
+          },
+        );
+        return { status: "retrying", attempts, runAfter: retryAt, error: result.error };
+      }
+
       await jobsCol.updateOne(
         { _id: job._id },
         { $set: { status: "failed", lastError: result.error || "Unknown error" }, $inc: { attempts: 1 } },
@@ -216,6 +355,28 @@ export async function processJob(job) {
       await maybeSimulateReply(job.workspaceId, job.campaignId, lead._id, result.channel);
     }
 
+    // Atomically increment sender mailbox todaySentCount
+    if (step.type === "email") {
+      const emailAccountsCol = await dbConnect("email_accounts");
+      const targetQuery = campaign.senderEmailAccountId
+        ? { _id: campaign.senderEmailAccountId }
+        : { workspaceId: job.workspaceId, status: "connected" };
+
+      const senderDoc = await emailAccountsCol.findOne(targetQuery);
+      if (senderDoc) {
+        const { shouldResetDailyCount } = await import("@/app/lib/rampUpEngine");
+        const isNewDay = shouldResetDailyCount(senderDoc.lastSentAt, senderDoc.todaySentResetAt);
+        const now = new Date();
+
+        await emailAccountsCol.updateOne(
+          { _id: senderDoc._id },
+          isNewDay
+            ? { $set: { todaySentCount: 1, lastSentAt: now, todaySentResetAt: now } }
+            : { $inc: { todaySentCount: 1 }, $set: { lastSentAt: now } },
+        );
+      }
+    }
+
     // Resolve what happens next in the sequence (walking through any delay/condition steps).
     const allSteps = await sequenceStepsCol.find({ campaignId: job.campaignId }).toArray();
     const { nextStep, delayMs } = await resolveStepAfter(allSteps, step, (conditionStep) =>
@@ -223,13 +384,20 @@ export async function processJob(job) {
     );
 
     if (nextStep) {
+      const scheduledRunAfter = calculateScheduledRunTime(
+        new Date(),
+        delayMs,
+        effectiveSchedule,
+        lead,
+      );
+
       await jobsCol.insertOne({
         workspaceId: job.workspaceId,
         campaignId: job.campaignId,
         campaignLeadId: campaignLead._id,
         stepId: nextStep._id,
         type: nextStep.type,
-        runAfter: new Date(Date.now() + delayMs),
+        runAfter: scheduledRunAfter,
         status: "queued",
         attempts: 0,
         lastError: null,
@@ -259,7 +427,16 @@ export async function processJob(job) {
       });
     }
 
-    return { status: "done" };
+    const leadDisplayName = `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || lead.email || "Lead";
+    const stepTitle = step.config?.subject ? `Step: ${step.config.subject.slice(0, 30)}` : `Step: ${step.type.replace("_", " ")}`;
+
+    return {
+      status: "done",
+      leadId: lead._id.toString(),
+      leadName: leadDisplayName,
+      stepTitle,
+      channel: result.channel || step.type,
+    };
   } catch (error) {
     console.error("processJob failed:", error);
     await jobsCol.updateOne(
@@ -276,24 +453,98 @@ function nextMidnightUTC() {
   return d;
 }
 
-// Pulls and processes a batch of due jobs. Returns a summary for the cron route to report.
-export async function runDueJobs(batchSize = 50) {
+/**
+ * Atomically claims a queued job so that no two concurrent workers
+ * (e.g. manual dispatch and cron scheduler) can process the same job at the same time.
+ */
+export async function claimAndProcessJob(job, workerId = "runner", forceDue = false) {
   const jobsCol = await dbConnect("jobs");
-  const due = await jobsCol
-    .find({ status: "queued", runAfter: { $lte: new Date() } })
-    .limit(batchSize)
-    .toArray();
+  const now = new Date();
+  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 min stale lock threshold
 
-  const results = { processed: 0, succeeded: 0, failed: 0, skipped: 0, rateLimited: 0, paused: 0 };
+  const filter = {
+    _id: job._id,
+    $or: [
+      forceDue
+        ? { status: "queued" }
+        : { status: "queued", runAfter: { $lte: now } },
+      { status: "processing", lockedAt: { $lt: staleThreshold } },
+    ],
+  };
+
+  const claimed = await jobsCol.findOneAndUpdate(
+    filter,
+    {
+      $set: {
+        status: "processing",
+        lockedAt: now,
+        lockedBy: workerId,
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!claimed) {
+    return { status: "already_claimed", skipped: true };
+  }
+
+  return processJob(claimed);
+}
+
+// Pulls and processes a batch of due jobs. Supports filtering by campaignId and forceDue mode.
+export async function runDueJobs(batchSize = 50, campaignId = null, forceDue = false, workerId = "scheduler") {
+  const jobsCol = await dbConnect("jobs");
+  const now = new Date();
+  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000);
+
+  const query = {
+    $or: [
+      forceDue
+        ? { status: "queued" }
+        : { status: "queued", runAfter: { $lte: now } },
+      { status: "processing", lockedAt: { $lt: staleThreshold } },
+    ],
+  };
+
+  if (campaignId) {
+    query.campaignId = new ObjectId(campaignId);
+  }
+
+  const due = await jobsCol.find(query).limit(batchSize).toArray();
+
+  const results = {
+    processed: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0,
+    rateLimited: 0,
+    paused: 0,
+    logs: [],
+  };
 
   for (const job of due) {
-    const outcome = await processJob(job);
+    const outcome = await claimAndProcessJob(job, workerId, forceDue);
+    if (outcome.status === "already_claimed") {
+      continue;
+    }
+
     results.processed++;
     if (outcome.status === "done") results.succeeded++;
     else if (outcome.status === "failed") results.failed++;
     else if (outcome.status === "skipped") results.skipped++;
     else if (outcome.status === "rate_limited") results.rateLimited++;
     else if (outcome.status === "paused") results.paused++;
+    else if (outcome.status === "outside_working_hours") results.outsideWorkingHours = (results.outsideWorkingHours || 0) + 1;
+
+    results.logs.push({
+      jobId: job._id.toString(),
+      status: outcome.status,
+      leadName: outcome.leadName || "Lead",
+      stepTitle: outcome.stepTitle || job.type,
+      channel: outcome.channel || job.type,
+      error: outcome.error || null,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   return results;

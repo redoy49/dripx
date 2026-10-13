@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Clock, FileText, ShieldCheck, Tag, Plug } from "lucide-react";
+import { useEffect, useRef, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Clock, FileText, ShieldCheck, Tag, Plug, Mail } from "lucide-react";
 import { DAILY_LIMIT_MAX } from "@/app/lib/limits.constants";
 import IntegrationsTab from "@/app/(dashboard)/dashboard/settings/IntegrationsTab";
+import EmailAccountsTab from "@/app/(dashboard)/dashboard/settings/EmailAccountsTab";
+import WorkingHoursTab from "@/app/(dashboard)/dashboard/settings/WorkingHoursTab";
+import SequenceTemplatesTab from "@/app/(dashboard)/dashboard/settings/SequenceTemplatesTab";
 
 const TABS = [
   "Limits & Activity control",
+  "Email Accounts",
+  "Integrations",
   "Working hours",
   "Sequence templates",
   "Data scrubber",
   "Lead tagging",
-  "Integrations",
 ];
 
 const SLIDER_META = [
@@ -208,8 +213,11 @@ function ComingSoonPanel({ icon: Icon, title, description }) {
   );
 }
 
-export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState(0);
+function SettingsPageContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams?.get("tab");
+  const shouldOpenEmail = tabParam === "Email Accounts" || searchParams?.get("connected") || searchParams?.get("error");
+  const [activeTab, setActiveTab] = useState(shouldOpenEmail ? 1 : 0);
   const [limits, setLimits] = useState(null);
   const [loading, setLoading] = useState(true);
   const saveTimeout = useRef(null);
@@ -375,34 +383,27 @@ export default function SettingsPage() {
             ))}
 
           {activeTab === 1 && (
-            <ComingSoonPanel
-              icon={Clock}
-              title="Working hours"
-              description="Scheduling campaigns to only run during your leads' local working hours is on the roadmap."
-            />
+            <div className="p-8">
+              <EmailAccountsTab />
+            </div>
           )}
-          {activeTab === 2 && (
-            <ComingSoonPanel
-              icon={FileText}
-              title="Sequence templates"
-              description="Save and reuse sequence templates across campaigns — coming soon."
-            />
-          )}
-          {activeTab === 3 && (
+          {activeTab === 2 && <IntegrationsTab />}
+          {activeTab === 3 && <WorkingHoursTab />}
+          {activeTab === 4 && <SequenceTemplatesTab />}
+          {activeTab === 5 && (
             <ComingSoonPanel
               icon={ShieldCheck}
               title="Data scrubber"
               description="Automatic PII cleanup rules for imported lead data are on the roadmap."
             />
           )}
-          {activeTab === 4 && (
+          {activeTab === 6 && (
             <ComingSoonPanel
               icon={Tag}
               title="Lead tagging"
               description="Manage workspace-wide tag presets here — for now, tag leads directly from the Leads page."
             />
           )}
-          {activeTab === 5 && <IntegrationsTab />}
         </div>
       </main>
 
@@ -411,5 +412,13 @@ export default function SettingsPage() {
         <ChatIcon />
       </button>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-gray-400">Loading settings...</div>}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }

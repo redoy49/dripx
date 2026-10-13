@@ -10,18 +10,60 @@ export const BUILT_IN_VARIABLES = [
   { key: "fullName", label: "Full name" },
   { key: "company", label: "Company" },
   { key: "jobTitle", label: "Job title" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "industry", label: "Industry" },
+  { key: "website", label: "Website" },
+  { key: "icebreaker", label: "Icebreaker" },
 ];
 
 const NAME_LIKE_DEFAULT_FALLBACK = "there";
 
 function resolveVariable(key, lead) {
+  if (!lead) return "";
+
   if (key === "fullName") {
     return [lead.firstName, lead.lastName].filter(Boolean).join(" ");
   }
-  if (["firstName", "lastName", "company", "jobTitle"].includes(key)) {
-    return lead[key] || "";
+
+  const directKeys = [
+    "firstName",
+    "lastName",
+    "company",
+    "jobTitle",
+    "email",
+    "phone",
+    "industry",
+    "website",
+    "icebreaker",
+  ];
+
+  if (directKeys.includes(key) && lead[key] !== undefined && lead[key] !== null) {
+    const val = String(lead[key]).trim();
+    if (val) return val;
   }
-  return lead.customFields?.[key] ?? "";
+
+  // Check customFields directly, or stripped of "customFields." prefix
+  const custom = lead.customFields;
+  if (custom && typeof custom === "object") {
+    if (custom[key] !== undefined && custom[key] !== null) {
+      const val = String(custom[key]).trim();
+      if (val) return val;
+    }
+    const strippedKey = key.replace(/^customFields\./, "");
+    if (custom[strippedKey] !== undefined && custom[strippedKey] !== null) {
+      const val = String(custom[strippedKey]).trim();
+      if (val) return val;
+    }
+  }
+
+  // Fallback to any direct property on lead object
+  if (lead[key] !== undefined && lead[key] !== null) {
+    const val = String(lead[key]).trim();
+    if (val) return val;
+  }
+
+  return "";
 }
 
 // Renders a message template against a lead, substituting {{variable}} tokens.
@@ -32,7 +74,7 @@ export function renderTemplate(template, lead) {
   if (!lead) lead = {};
 
   return template.replace(VARIABLE_RE, (_match, key, fallback) => {
-    const value = resolveVariable(key, lead);
+    const value = resolveVariable(key.trim(), lead);
 
     if (value) return value;
     if (fallback !== undefined) return fallback.trim();
@@ -47,6 +89,12 @@ export const SAMPLE_LEAD = {
   firstName: "Alex",
   lastName: "Morgan",
   company: "Acme Inc",
-  jobTitle: "VP of Marketing",
-  customFields: {},
+  jobTitle: "VP of Growth",
+  email: "alex.morgan@acme.com",
+  phone: "+1 (555) 234-5678",
+  industry: "B2B SaaS",
+  website: "https://acme.com",
+  customFields: {
+    icebreaker: "Loved your recent article on customer retention!",
+  },
 };

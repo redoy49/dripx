@@ -16,24 +16,57 @@ export async function GET(req, { params }) {
     if (!conversation) return Response.json({ message: "Conversation not found" }, { status: 404 });
 
     const leads = await dbConnect("leads");
-    const lead = await leads.findOne({ _id: conversation.leadId });
+    const lead = conversation.leadId ? await leads.findOne({ _id: conversation.leadId }) : null;
+
+    let campaign = null;
+    if (conversation.leadId) {
+      const campaignLeads = await dbConnect("campaign_leads");
+      const campaigns = await dbConnect("campaigns");
+      const enrollment = await campaignLeads.findOne(
+        { workspaceId: new ObjectId(session.workspaceId), leadId: conversation.leadId },
+        { sort: { enrolledAt: -1, lastActionAt: -1 } },
+      );
+
+      if (enrollment) {
+        const campaignDoc = await campaigns.findOne({ _id: enrollment.campaignId });
+        if (campaignDoc) {
+          campaign = {
+            id: campaignDoc._id.toString(),
+            name: campaignDoc.name,
+            status: campaignDoc.status,
+            enrollmentStatus: enrollment.status,
+            enrolledAt: enrollment.enrolledAt,
+            lastActionAt: enrollment.lastActionAt,
+          };
+        }
+      }
+    }
 
     return Response.json({
       id: conversation._id.toString(),
       channel: conversation.channel,
       status: conversation.status,
+      subject: conversation.subject || null,
+      lastMessageAt: conversation.lastMessageAt || null,
       unreadCount: conversation.unreadCount || 0,
+      senderEmailAccountId: conversation.senderEmailAccountId?.toString() || null,
       lead: lead
         ? {
             id: lead._id.toString(),
-            firstName: lead.firstName,
-            lastName: lead.lastName,
-            company: lead.company,
-            jobTitle: lead.jobTitle,
-            email: lead.email,
-            linkedinUrl: lead.linkedinUrl,
+            firstName: lead.firstName || "",
+            lastName: lead.lastName || "",
+            company: lead.company || "",
+            jobTitle: lead.jobTitle || "",
+            headline: lead.headline || lead.jobTitle || "",
+            email: lead.email || "",
+            phone: lead.phone || "",
+            linkedinUrl: lead.linkedinUrl || "",
+            tags: lead.tags || [],
+            customFields: lead.customFields || {},
+            createdAt: lead.createdAt || null,
           }
         : null,
+      campaign,
     });
   } catch (error) {
     console.error("Fetching conversation failed:", error);
@@ -64,6 +97,21 @@ export async function PATCH(req, { params }) {
     );
 
     if (!result) return Response.json({ message: "Conversation not found" }, { status: 404 });
+
+    // Handle sequence pause/resume actions if requested from the lead detail panel
+    if (body.action === "pause_sequence" && result.leadId) {
+      const campaignLeads = await dbConnect("campaign_leads");
+      await campaignLeads.updateMany(
+        { workspaceId: new ObjectId(session.workspaceId), leadId: result.leadId, status: "in_progress" },
+        { $set: { status: "paused", pausedAt: new Date() } },
+      );
+    } else if (body.action === "resume_sequence" && result.leadId) {
+      const campaignLeads = await dbConnect("campaign_leads");
+      await campaignLeads.updateMany(
+        { workspaceId: new ObjectId(session.workspaceId), leadId: result.leadId, status: "paused" },
+        { $set: { status: "in_progress", resumedAt: new Date() } },
+      );
+    }
 
     return Response.json({
       id: result._id.toString(),

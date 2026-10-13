@@ -18,25 +18,93 @@ export async function GET(req, { params }) {
     });
     if (!campaign) return Response.json({ message: "Campaign not found" }, { status: 404 });
 
+    const { searchParams } = new URL(req.url);
+    const filterStatus = searchParams.get("status");
+
+    const query = { campaignId: campaign._id };
+    if (filterStatus && filterStatus !== "all") {
+      query.status = filterStatus;
+    }
+
     const campaignLeads = await dbConnect("campaign_leads");
     const leads = await dbConnect("leads");
+    const sequenceSteps = await dbConnect("sequence_steps");
+    const conversations = await dbConnect("conversations");
 
-    const enrollments = await campaignLeads.find({ campaignId: campaign._id }).toArray();
-    const leadDocs = await leads
-      .find({ _id: { $in: enrollments.map((e) => e.leadId) } })
-      .toArray();
+    const enrollments = await campaignLeads.find(query).toArray();
+    const enrolledLeadIds = enrollments.map((e) => e.leadId);
+
+    const [leadDocs, stepDocs, convoDocs] = await Promise.all([
+      enrolledLeadIds.length > 0
+        ? leads.find({ _id: { $in: enrolledLeadIds } }).toArray()
+        : [],
+      sequenceSteps.find({ campaignId: campaign._id }).toArray(),
+      enrolledLeadIds.length > 0
+        ? conversations
+            .find({ workspaceId: new ObjectId(session.workspaceId), leadId: { $in: enrolledLeadIds } })
+            .toArray()
+        : [],
+    ]);
+
     const leadById = new Map(leadDocs.map((l) => [l._id.toString(), l]));
+    const stepById = new Map(
+      stepDocs.map((s) => [
+        s._id.toString(),
+        s.config?.subject
+          ? `Step ${s.order}: ${s.config.subject.slice(0, 25)}`
+          : `Step ${s.order}: ${s.type.replace("_", " ")}`,
+      ]),
+    );
 
-    const items = enrollments.map((e) => ({
-      leadId: e.leadId.toString(),
-      status: e.status,
-      currentStepId: e.currentStepId ? e.currentStepId.toString() : null,
-      enrolledAt: e.enrolledAt,
-      lastActionAt: e.lastActionAt,
-      lead: leadById.has(e.leadId.toString())
-        ? serializeLead(leadById.get(e.leadId.toString()))
-        : null,
-    }));
+    // Map lead to conversation (if lead has multiple, pick most recent)
+    const convoByLeadId = new Map();
+    for (const c of convoDocs) {
+      if (c.leadId && !convoByLeadId.has(c.leadId.toString())) {
+        convoByLeadId.set(c.leadId.toString(), c._id.toString());
+      }
+    }
+
+    // Deduplicate enrollments by leadId (preserving latest/active status)
+    const uniqueEnrollments = new Map();
+    for (const e of enrollments) {
+      const key = e.leadId.toString();
+      if (!uniqueEnrollments.has(key)) {
+        uniqueEnrollments.set(key, e);
+      } else {
+        const existing = uniqueEnrollments.get(key);
+        // Prefer active/replied/in_progress over pending if duplicate exists
+        if (existing.status === "pending" && e.status !== "pending") {
+          uniqueEnrollments.set(key, e);
+        }
+      }
+    }
+
+    const items = Array.from(uniqueEnrollments.values()).map((e) => {
+      const stepTitle = e.currentStepId
+        ? stepById.get(e.currentStepId.toString()) || "In Sequence"
+        : e.status === "completed"
+          ? "Sequence Completed"
+          : e.status === "replied"
+            ? "Replied (Sequence Paused)"
+            : e.status === "paused"
+              ? "Paused"
+              : "Pending Start";
+
+      return {
+        id: e._id.toString(),
+        enrollmentId: e._id.toString(),
+        leadId: e.leadId.toString(),
+        status: e.status,
+        currentStepId: e.currentStepId ? e.currentStepId.toString() : null,
+        currentStepTitle: stepTitle,
+        enrolledAt: e.enrolledAt,
+        lastActionAt: e.lastActionAt,
+        conversationId: convoByLeadId.get(e.leadId.toString()) || null,
+        lead: leadById.has(e.leadId.toString())
+          ? serializeLead(leadById.get(e.leadId.toString()))
+          : null,
+      };
+    });
 
     return Response.json({ items });
   } catch (error) {

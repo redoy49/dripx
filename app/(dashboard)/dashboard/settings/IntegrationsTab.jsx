@@ -11,7 +11,7 @@ function IntegrationCard({ icon: Icon, title, description, status, children }) {
     <div className="rounded-2xl border border-gray-100 p-5">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
             <Icon size={18} className="text-gray-500" />
           </div>
           <div>
