@@ -28,8 +28,18 @@ export async function GET() {
     }
 
     return Response.json({
-      user: { id: user._id.toString(), name: user.name, email: user.email },
-      workspace: { id: workspace._id.toString(), name: workspace.name, plan: workspace.plan },
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl || user.image || null,
+      },
+      workspace: {
+        id: workspace._id.toString(),
+        name: workspace.name,
+        plan: workspace.plan,
+        createdAt: workspace.createdAt,
+      },
       role: membership?.role || "member",
     });
   } catch (error) {
