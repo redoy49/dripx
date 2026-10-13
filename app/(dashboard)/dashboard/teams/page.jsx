@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 // app/teams/page.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   ChevronDown,
   Download,
@@ -11,23 +12,24 @@ import {
   Pencil,
 } from "lucide-react";
 import MembersTab from "@/app/(dashboard)/dashboard/teams/MembersTab";
+import EditProfileModal from "@/app/(dashboard)/dashboard/teams/EditProfileModal";
 
-const stats = [
+const fallbackStats = [
   {
     title: "Pricing plan",
-    value: "Advanced",
+    value: "Trial",
     badge: "Active",
   },
   {
     title: "Email finder",
     value: "XL - Monthly",
     badge: "Active",
-    right: "Used: 0/10000",
+    right: "Used: 0/1200",
     link: "Upgrade",
   },
   {
     title: "Role",
-    value: "Manager",
+    value: "Owner",
     icon: true,
     dropdown: true,
   },
@@ -37,22 +39,22 @@ const stats = [
   },
 ];
 
-const overview = [
+const fallbackOverview = [
   {
     label: "Unread messages",
     value: "0",
   },
   {
     label: "Active campaigns",
-    value: "4",
+    value: "1",
   },
   {
     label: "Connections",
-    value: "3224",
+    value: "3,224",
   },
   {
     label: "Pending invites\nreceived",
-    value: "62",
+    value: "6",
   },
   {
     label: "Profile views\nsince last week",
@@ -62,16 +64,6 @@ const overview = [
     label: "Weekly search\nappearances",
     value: "23",
   },
-];
-
-const heights = [
-  [48, 62, 104, 4, 40, 40, 116],
-  [58, 70, 118, 32, 42, 34, 124],
-  [70, 84, 116, 30, 44, 42, 122],
-  [54, 94, 121, 20, 64, 38, 116],
-  [58, 90, 112, 32, 38, 44, 120],
-  [62, 66, 114, 32, 42, 42, 114],
-  [44, 60, 120, 50, 50, 42, 130],
 ];
 
 const colors = [
@@ -168,12 +160,61 @@ function OverviewCard({ item, border }) {
 export default function TeamsPage() {
   const [tab, setTab] = useState("profile");
   const [me, setMe] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [activeRange, setActiveRange] = useState("7");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  const loadProfile = useCallback((range = activeRange) => {
+    fetch(`/api/team/profile?range=${range}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setProfile(data);
+      });
+  }, [activeRange]);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : null))
       .then(setMe);
-  }, []);
+
+    loadProfile("7");
+  }, [loadProfile]);
+
+  const handleRangeChange = (rangeKey) => {
+    setActiveRange(rangeKey);
+    loadProfile(rangeKey);
+  };
+
+  const handleExportActivity = () => {
+    if (!profile?.activity?.length) return;
+    const rows = [
+      ["Date", "Connect Requests", "Direct Messages", "InMails", "Profile Visits", "Post Likes", "Follows", "Emails"],
+    ];
+    profile.activity.forEach((act) => {
+      rows.push([
+        act.dateLabel,
+        act.heights[0],
+        act.heights[1],
+        act.heights[2],
+        act.heights[3],
+        act.heights[4],
+        act.heights[5],
+        act.heights[6],
+      ]);
+    });
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `dripx_linkedin_activity_${activeRange}d.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const statsData = profile?.stats || fallbackStats;
+  const overviewData = profile?.overview || fallbackOverview;
+  const activityData = profile?.activity || [];
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -232,15 +273,28 @@ export default function TeamsPage() {
               <img
                 alt="avatar"
                 className="w-14 h-14 rounded-full object-cover"
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200"
+                src={
+                  profile?.user?.avatarUrl ||
+                  me?.user?.avatarUrl ||
+                  "https://lh3.googleusercontent.com/a/ACg8ocIu5efqnnF2BwfGfEdCH5P-uuTyrrlV2bMuJhHpUs5SSFne_zwl=s96-c"
+                }
               />
 
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold text-gray-700 tracking-tight">
-                  {me?.user?.name || "..."}
-                </h1>
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-700 tracking-tight">
+                    {profile?.user?.name || me?.user?.name || "Redoy Al Hasan"}
+                  </h1>
+                  {profile?.user?.headline && (
+                    <p className="text-xs text-gray-400 mt-0.5">{profile.user.headline}</p>
+                  )}
+                </div>
 
-                <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                <button
+                  onClick={() => setEditModalOpen(true)}
+                  title="Edit profile & LinkedIn link"
+                  className="text-gray-400 hover:text-gray-600 transition-colors ml-1"
+                >
                   <Pencil className="w-4 h-4" />
                 </button>
               </div>
@@ -248,36 +302,53 @@ export default function TeamsPage() {
 
             {/* Right */}
             <div className="flex items-center gap-3">
-              <button className="h-11 px-5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-600">
+              <button
+                onClick={() => {
+                  const url = profile?.user?.linkedinUrl;
+                  if (url) {
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  } else {
+                    setEditModalOpen(true);
+                  }
+                }}
+                className="h-11 px-5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-600"
+              >
                 View on LinkedIn
                 <ExternalLink className="w-4 h-4" />
               </button>
 
               <button
-                className="h-11 px-7 rounded-xl text-sm font-medium text-white transition-all duration-200 shadow-xs"
+                onClick={() => {
+                  if (profile?.isLinkedInConnected) {
+                    window.location.href = "/dashboard/settings?tab=Integrations";
+                  } else {
+                    window.location.href = "/api/integrations/unipile/connect";
+                  }
+                }}
+                className="h-11 px-7 rounded-full text-sm font-medium text-white transition-all duration-200 shadow-xs"
                 style={{
                   background: "linear-gradient(to right, #7f64f5, #ae79f8)",
                 }}
               >
-                Sign in →
+                {profile?.isLinkedInConnected ? "Connected ✓" : "Sign in →"}
               </button>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-4 gap-4 mt-6">
-            {stats.map((item, index) => (
+            {statsData.map((item, index) => (
               <StatCard key={index} item={item} />
             ))}
           </div>
 
           {/* Overview */}
           <div className="grid grid-cols-6 border border-gray-100 rounded-xl overflow-hidden mt-4">
-            {overview.map((item, index) => (
+            {overviewData.map((item, index) => (
               <OverviewCard
                 key={index}
                 item={item}
-                border={index !== overview.length - 1}
+                border={index !== overviewData.length - 1}
               />
             ))}
           </div>
@@ -289,42 +360,46 @@ export default function TeamsPage() {
         <div className="p-6">
           {/* Toolbar */}
           <div className="flex items-center justify-between gap-4 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-700 tracking-tight">
+            <h2 className="text-full font-semibold text-gray-700 tracking-tight">
               Activity
             </h2>
 
             <div className="flex items-center gap-3">
               {/* Tabs */}
-              <div className="flex items-center border border-gray-100 rounded-xl overflow-hidden bg-white">
+              <div className="flex items-center border border-gray-100 rounded-full overflow-hidden bg-white">
                 {[
-                  "Today",
-                  "Yesterday",
-                  "7 days",
-                  "30 days",
-                  "90 days",
-                  "Pick dates",
-                ].map((tab, idx) => (
+                  { key: "today", label: "Today" },
+                  { key: "yesterday", label: "Yesterday" },
+                  { key: "7", label: "7 days" },
+                  { key: "30", label: "30 days" },
+                  { key: "90", label: "90 days" },
+                  { key: "pick", label: "Pick dates" },
+                ].map((t) => (
                   <button
-                    key={tab}
+                    key={t.key}
+                    onClick={() => handleRangeChange(t.key)}
                     className={`px-4 h-11 text-sm font-medium transition-colors border-r border-gray-100 last:border-r-0 ${
-                      idx === 2
+                      activeRange === t.key
                         ? "bg-gray-50 text-gray-700"
                         : "text-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    {tab}
+                    {t.label}
                   </button>
                 ))}
               </div>
 
               {/* Filter */}
-              <button className="h-11 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-500">
+              <button className="h-11 px-4 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-500">
                 All campaigns
                 <ChevronDown className="w-4 h-4" />
               </button>
 
               {/* Export */}
-              <button className="h-11 px-5 rounded-xl border border-violet-200 bg-white hover:bg-violet-50 transition-colors flex items-center gap-2 text-sm font-medium text-violet-500">
+              <button
+                onClick={handleExportActivity}
+                className="h-11 px-5 rounded-full border border-violet-200 bg-white hover:bg-violet-50 transition-colors flex items-center gap-2 text-sm font-medium text-violet-500"
+              >
                 Export
                 <Download className="w-4 h-4" />
               </button>
@@ -349,22 +424,22 @@ export default function TeamsPage() {
 
             {/* Bars */}
             <div className="ml-10 min-w-[950px] h-[360px] flex items-end justify-between relative">
-              {heights.map((group, idx) => (
+              {activityData.map((item, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-3">
                   <div className="h-[300px] flex items-end gap-1.5">
-                    {group.map((h, i) => (
+                    {item.heights.map((h, i) => (
                       <div
                         key={i}
                         className={`w-[10px] rounded-full ${colors[i]}`}
                         style={{
-                          height: `${h * 2}px`,
+                          height: `${Math.min(280, h * 2)}px`,
                         }}
                       />
                     ))}
                   </div>
 
                   <span className="text-xs text-gray-400 font-medium">
-                    DEC {13 + idx}, 2024
+                    {item.dateLabel}
                   </span>
                 </div>
               ))}
@@ -388,6 +463,14 @@ export default function TeamsPage() {
           1
         </span>
       </button>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        user={profile?.user}
+        onUpdated={() => loadProfile(activeRange)}
+      />
     </div>
   );
 }

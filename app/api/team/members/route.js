@@ -36,6 +36,8 @@ export async function GET() {
               id: m.userId.toString(),
               name: userById.get(m.userId.toString()).name,
               email: userById.get(m.userId.toString()).email,
+              avatarUrl: userById.get(m.userId.toString()).avatarUrl || null,
+              linkedinUrl: userById.get(m.userId.toString()).linkedinUrl || null,
             }
           : null,
       })),
