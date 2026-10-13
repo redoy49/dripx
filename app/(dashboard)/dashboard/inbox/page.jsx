@@ -19,6 +19,8 @@ const CHANNELS = [
   { key: "linkedin", label: "LinkedIn", icon: FaLinkedin },
 ];
 
+import { getCached, setCached } from "@/app/lib/swrCache";
+
 function formatMessageTime(dateString) {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -38,10 +40,15 @@ export default function InboxPage() {
   const [tab, setTab] = useState("all");
   const [channel, setChannel] = useState("all");
   const [search, setSearch] = useState("");
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState(() => {
+    const cached = getCached("/api/conversations?filter=all");
+    return cached?.items || [];
+  });
   const [activeId, setActiveId] = useState(null);
   const [activeConversationData, setActiveConversationData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    return !getCached("/api/conversations?filter=all");
+  });
   const [refreshing, setRefreshing] = useState(false);
   const isSyncingRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -56,27 +63,44 @@ export default function InboxPage() {
   // Synchronizes external mailbox in the background and reloads conversations
   const fetchConversations = useCallback(
     async (triggerSync = false) => {
+      const query = new URLSearchParams({ filter: tab });
+      if (channel !== "all") query.set("channel", channel);
+      const cacheKey = `/api/conversations?${query.toString()}`;
+
+      // Decoupled Background Mailbox Sync: non-blocking so initial list loads in ~40ms
       if (triggerSync && !isSyncingRef.current) {
         isSyncingRef.current = true;
-        try {
-          await fetch("/api/conversations/sync", { method: "POST" });
-        } catch (err) {
-          console.warn("Mailbox sync failed during refresh:", err);
-        } finally {
-          isSyncingRef.current = false;
-        }
+        fetch("/api/conversations/sync", { method: "POST" })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((syncRes) => {
+            // If new incoming messages were synced, quietly revalidate the list
+            if (syncRes?.syncedCount > 0 && isMountedRef.current) {
+              fetch(cacheKey)
+                .then((r) => (r.ok ? r.json() : null))
+                .then((fresh) => {
+                  if (fresh?.items && isMountedRef.current) {
+                    setCached(cacheKey, fresh);
+                    setConversations(fresh.items);
+                  }
+                });
+            }
+          })
+          .catch((err) => {
+            console.warn("Mailbox sync failed during background refresh:", err);
+          })
+          .finally(() => {
+            isSyncingRef.current = false;
+          });
       }
 
       if (!isMountedRef.current) return;
 
-      const query = new URLSearchParams({ filter: tab });
-      if (channel !== "all") query.set("channel", channel);
-
-      return fetch(`/api/conversations?${query.toString()}`)
+      return fetch(cacheKey)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (!data || !isMountedRef.current) return;
           const items = data.items || [];
+          setCached(cacheKey, data);
           setConversations(items);
 
           // Preserve active conversation only if the user has already explicitly selected one
@@ -90,9 +114,11 @@ export default function InboxPage() {
 
           // Dispatch updated unread count to parent Dashboard layout
           const unreadSum = items.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
-          window.dispatchEvent(
-            new CustomEvent("dripx:unread-changed", { detail: { totalUnread: unreadSum } })
-          );
+          queueMicrotask(() => {
+            window.dispatchEvent(
+              new CustomEvent("dripx:unread-changed", { detail: { totalUnread: unreadSum } })
+            );
+          });
         })
         .catch((err) => {
           if (isMountedRef.current) {
@@ -160,13 +186,14 @@ export default function InboxPage() {
   const handleSelectConversation = (item) => {
     setActiveId(item.id);
     if (item.unreadCount > 0) {
-      setConversations((prev) => {
-        const updated = prev.map((c) => (c.id === item.id ? { ...c, unreadCount: 0 } : c));
-        const newTotal = updated.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      setConversations((prev) =>
+        prev.map((c) => (c.id === item.id ? { ...c, unreadCount: 0 } : c))
+      );
+      const newTotal = Math.max(0, totalUnread - (item.unreadCount || 0));
+      queueMicrotask(() => {
         window.dispatchEvent(
           new CustomEvent("dripx:unread-changed", { detail: { totalUnread: newTotal } })
         );
-        return updated;
       });
     }
   };

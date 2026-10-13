@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { prefetchData } from "@/app/lib/swrCache";
 import {
   LayoutDashboard,
   Mail,
@@ -70,11 +71,15 @@ export default function DashboardLayout({ children }) {
 
     // Real-time synchronization event from Unified Inbox when messages are read or synced
     const handleUnreadChanged = (event) => {
-      if (typeof event.detail?.totalUnread === "number") {
-        setUnreadCount(event.detail.totalUnread);
-      } else {
-        checkUnread();
-      }
+      const newTotal = event.detail?.totalUnread;
+      queueMicrotask(() => {
+        if (ignore) return;
+        if (typeof newTotal === "number") {
+          setUnreadCount(newTotal);
+        } else {
+          checkUnread();
+        }
+      });
     };
     window.addEventListener("dripx:unread-changed", handleUnreadChanged);
 
@@ -100,6 +105,19 @@ export default function DashboardLayout({ children }) {
     return pathname.startsWith(href);
   };
 
+  // Pre-warms in-memory cache on link hover/touch so navigation data is ready before click
+  const handlePrefetch = (href) => {
+    if (href === "/dashboard") {
+      prefetchData("/api/dashboard/summary?range=7d");
+    } else if (href === "/dashboard/campaigns") {
+      prefetchData("/api/campaigns");
+    } else if (href === "/dashboard/leads") {
+      prefetchData("/api/leads?page=1&limit=25");
+    } else if (href === "/dashboard/inbox") {
+      prefetchData("/api/conversations?filter=all");
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#FAF9F6]">
       {/* Sidebar */}
@@ -115,6 +133,8 @@ export default function DashboardLayout({ children }) {
               <Link
                 key={i}
                 href={item.href}
+                onMouseEnter={() => handlePrefetch(item.href)}
+                onTouchStart={() => handlePrefetch(item.href)}
                 className={`flex items-center gap-3 p-2 rounded-md text-[15px] transition ${
                   active
                     ? "bg-[#6367FF]/10 text-[#6367FF]"

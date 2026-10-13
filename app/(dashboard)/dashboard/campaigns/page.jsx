@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { getCached, setCached } from "@/app/lib/swrCache";
 import BellIcon from "@/app/components/ui/BellIcon";
 import ProgressBar from "@/app/components/ui/ProgressBar";
 import { ToggleViolet } from "@/app/components/ui/Toggle";
@@ -54,15 +55,26 @@ export default function CampaignPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
-  const [campaignList, setCampaignList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [campaignList, setCampaignList] = useState(() => {
+    const cached = getCached("/api/campaigns");
+    return cached?.items || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    return !getCached("/api/campaigns");
+  });
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(() => {
     fetch("/api/campaigns")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        setCampaignList(data.items || []);
+        if (data?.items) {
+          setCached("/api/campaigns", data);
+          setCampaignList(data.items);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
         setLoading(false);
       });
   }, []);
