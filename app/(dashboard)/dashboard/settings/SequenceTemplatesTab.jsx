@@ -114,8 +114,49 @@ export default function SequenceTemplatesTab() {
     }
   };
 
-  const handleUseInCampaign = (tpl) => {
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
+
+  const handleUseInCampaign = async (tpl) => {
+    try {
+      const res = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: tpl?.name ? `${tpl.name} Campaign` : "Untitled Campaign",
+          sequence: tpl?.sequence || [],
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.id) {
+        router.push(`/dashboard/new-campaign?id=${data.id}&tab=2`);
+        return;
+      }
+    } catch {
+      // fallback
+    }
     router.push(`/dashboard/new-campaign`);
+  };
+
+  const handleCreateNewCampaign = async () => {
+    if (creatingCampaign) return;
+    setCreatingCampaign(true);
+    try {
+      const res = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Untitled Campaign" }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.id) {
+        router.push(`/dashboard/new-campaign?id=${data.id}`);
+        return;
+      }
+    } catch {
+      // fallback
+    } finally {
+      setCreatingCampaign(false);
+    }
+    router.push("/dashboard/new-campaign");
   };
 
   if (loading) {
@@ -139,11 +180,12 @@ export default function SequenceTemplatesTab() {
         </div>
 
         <button
-          onClick={() => router.push("/dashboard/new-campaign")}
-          className="flex items-center gap-2 rounded-2xl bg-[#6367FF] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#6367FF]/20 transition hover:bg-[#5254e8] active:scale-95 self-start sm:self-auto"
+          onClick={handleCreateNewCampaign}
+          disabled={creatingCampaign}
+          className="flex items-center gap-2 rounded-2xl bg-[#6367FF] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#6367FF]/20 transition hover:bg-[#5254e8] active:scale-95 disabled:opacity-50 self-start sm:self-auto cursor-pointer"
         >
           <Plus size={15} />
-          <span>New Sequence Campaign</span>
+          <span>{creatingCampaign ? "Creating..." : "New Sequence Campaign"}</span>
         </button>
       </div>
 

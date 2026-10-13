@@ -7,6 +7,10 @@ import LeadSourceModal from "@/app/(dashboard)/dashboard/new-campaign/LeadSource
 import SequenceBuilder from "@/app/(dashboard)/dashboard/new-campaign/SequenceBuilder";
 import CampaignSettingsTab from "@/app/(dashboard)/dashboard/new-campaign/CampaignSettingsTab";
 
+// Module-scoped deduplication guard: prevents React StrictMode (double mount) or concurrent renders
+// from firing multiple POST /api/campaigns requests when landing on /dashboard/new-campaign without an ID
+let pendingAutoCreatePromise = null;
+
 function NewCampaignInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,13 +44,30 @@ function NewCampaignInner() {
       let id = idFromUrl;
 
       if (!id) {
-        const res = await fetch("/api/campaigns", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Untitled Campaign" }),
-        });
-        const created = await res.json();
-        if (cancelled) return;
+        if (!pendingAutoCreatePromise) {
+          pendingAutoCreatePromise = fetch("/api/campaigns", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "Untitled Campaign" }),
+          })
+            .then(async (res) => (res.ok ? res.json() : null))
+            .catch((err) => {
+              console.error("Auto-create campaign error:", err);
+              return null;
+            })
+            .finally(() => {
+              // Reset after grace period so future navigation can create new ones if needed
+              setTimeout(() => {
+                pendingAutoCreatePromise = null;
+              }, 1500);
+            });
+        }
+
+        const created = await pendingAutoCreatePromise;
+        if (!created?.id) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
         id = created.id;
         router.replace(`/dashboard/new-campaign?id=${id}`);
       }
