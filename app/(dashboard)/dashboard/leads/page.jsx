@@ -415,13 +415,13 @@ export default function LeadsPage() {
 
       {/* 3. Floating Bulk Actions Bar */}
       {selectedIds.length > 0 && (
-        <div className="sticky top-4 z-30 bg-gray-900 text-white rounded-2xl p-3.5 px-5 shadow-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+        <div className="sticky top-4 z-30 bg-white border border-gray-100 text-white rounded-2xl p-3.5 px-5 shadow-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-2.5">
             <span className="w-6 h-6 rounded-full bg-violet-600 text-white font-bold text-xs flex items-center justify-center">
               {selectedIds.length}
             </span>
-            <span className="text-xs font-semibold">
-              prospect{selectedIds.length > 1 ? "s" : ""} selected
+            <span className="text-xs font-semibold text-gray-700">
+              Prospect{selectedIds.length > 1 ? "s" : ""} Selected
             </span>
           </div>
 
@@ -461,7 +461,7 @@ export default function LeadsPage() {
             {/* Deselect All */}
             <button
               onClick={() => setSelectedIds([])}
-              className="px-2.5 py-1.5 text-xs text-gray-400 hover:text-white transition font-medium"
+              className="px-2.5 py-1.5 text-xs bg-gray-800 rounded-full hover:bg-gray-700 text-white hover:text-white transition font-medium"
             >
               Deselect All
             </button>
