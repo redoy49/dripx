@@ -183,23 +183,50 @@ export default function StepEditorModal({ open, step, onClose, onChange }) {
             </div>
           )}
 
-          {(step.type === "inmail" || step.type === "email") && (
+          {(step.type === "inmail" || step.type === "email" || step.type === "email_followup") && (
             <div className="space-y-4">
               <VariableChips onInsert={handleInsertToken} />
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-700">
-                  Subject Line {activeField === "subject" && <span className="text-[#6367FF]">(focused)</span>}
-                </label>
-                <input
-                  ref={subjectRef}
-                  value={step.config.subject || ""}
-                  onFocus={() => setActiveField("subject")}
-                  onChange={(e) => update({ subject: e.target.value })}
-                  placeholder="e.g. Quick question for {{firstName}} regarding {{company}}"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50/60 px-3.5 py-2.5 text-sm text-gray-700 outline-none transition focus:border-[#6367FF]/40 focus:bg-white"
-                />
-              </div>
+              {step.type === "email_followup" ? (
+                <div className="flex items-start gap-2.5 rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 text-xs text-indigo-900">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-indigo-600 text-white font-bold text-[11px]">
+                    ↩
+                  </div>
+                  <div>
+                    <span className="font-semibold block text-[13px] text-indigo-950">
+                      Threaded Follow-up Reply
+                    </span>
+                    <span className="text-[11.5px] text-indigo-700/90 leading-relaxed block mt-0.5">
+                      This follow-up sends as a reply in the same email thread (<code className="bg-indigo-100/70 px-1 py-0.5 rounded text-[11px]">Re: [Initial Subject]</code>). Subject line is managed automatically.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-gray-700">
+                      Subject Line {activeField === "subject" && <span className="text-[#6367FF]">(focused)</span>}
+                    </label>
+                    {step.type === "email" && (
+                      <span className="text-[11px] text-gray-400">
+                        Initial subject line
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    ref={subjectRef}
+                    value={step.config.subject || ""}
+                    onFocus={() => setActiveField("subject")}
+                    onChange={(e) => update({ subject: e.target.value })}
+                    placeholder={
+                      step.type === "email"
+                        ? "e.g. Quick question for {{firstName}} regarding {{company}}"
+                        : "e.g. Quick question for {{firstName}}"
+                    }
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50/60 px-3.5 py-2.5 text-sm text-gray-700 outline-none transition focus:border-[#6367FF]/40 focus:bg-white"
+                  />
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-gray-700">
@@ -210,7 +237,11 @@ export default function StepEditorModal({ open, step, onClose, onChange }) {
                   value={step.config.template || ""}
                   onFocus={() => setActiveField("template")}
                   onChange={(e) => update({ template: e.target.value })}
-                  placeholder="Hi {{firstName|there}}, ..."
+                  placeholder={
+                    step.type === "email_followup"
+                      ? "Hi {{firstName|there}}, following up on my previous note..."
+                      : "Hi {{firstName|there}}, ..."
+                  }
                   rows={6}
                   className="w-full rounded-xl border border-gray-200 bg-gray-50/60 p-3.5 text-sm text-gray-700 outline-none transition focus:border-[#6367FF]/40 focus:bg-white"
                 />
@@ -228,7 +259,7 @@ export default function StepEditorModal({ open, step, onClose, onChange }) {
           )}
 
           {/* Live Preview Box */}
-          {["connection_request", "message", "follow_up", "inmail", "email"].includes(step.type) && (
+          {["connection_request", "message", "follow_up", "inmail", "email", "email_followup"].includes(step.type) && (
             <div className="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600">
@@ -244,7 +275,14 @@ export default function StepEditorModal({ open, step, onClose, onChange }) {
               </div>
 
               <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 shadow-2xs space-y-2">
-                {step.config.subject && (
+                {step.type === "email_followup" ? (
+                  <div className="border-b border-gray-100 pb-2">
+                    <span className="font-semibold text-gray-400 uppercase text-[10px] block">Subject</span>
+                    <p className="text-indigo-600 font-medium italic text-xs">
+                      Re: [Initial Subject] (Auto-threaded in same conversation)
+                    </p>
+                  </div>
+                ) : step.config.subject ? (
                   <div className="border-b border-gray-100 pb-2">
                     <span className="font-semibold text-gray-400 uppercase text-[10px] block">Subject</span>
                     <p className="text-gray-900 font-medium">
@@ -253,7 +291,7 @@ export default function StepEditorModal({ open, step, onClose, onChange }) {
                       )}
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 <div>
                   <span className="font-semibold text-gray-400 uppercase text-[10px] block">

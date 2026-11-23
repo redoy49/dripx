@@ -22,6 +22,9 @@ export async function handleLeadReplied(workspaceId, leadId, campaignId = null) 
   if (safeCampaignId) query.campaignId = safeCampaignId;
 
   // 1. Mark campaign enrollments as replied
+  const enrollments = await campaignLeadsCol.find(query).project({ _id: 1 }).toArray();
+  const campaignLeadIds = enrollments.map((e) => e._id);
+
   await campaignLeadsCol.updateMany(query, {
     $set: {
       status: "replied",
@@ -30,9 +33,21 @@ export async function handleLeadReplied(workspaceId, leadId, campaignId = null) 
     },
   });
 
-  // 2. Cancel any pending queued jobs for this lead
+  // 2. Cancel any pending queued jobs for this lead or campaign enrollment
+  const campaignLeadIdFilters = [
+    ...campaignLeadIds,
+    ...campaignLeadIds.map((id) => id.toString()),
+  ];
+  const leadIdFilters = [safeLeadId, safeLeadId.toString()];
+
   await jobsCol.updateMany(
-    { leadId: safeLeadId, status: "queued" },
+    {
+      $or: [
+        { leadId: { $in: leadIdFilters } },
+        { campaignLeadId: { $in: campaignLeadIdFilters } },
+      ],
+      status: "queued",
+    },
     { $set: { status: "skipped", lastError: "Sequence paused: Lead replied to outreach" } },
   );
 

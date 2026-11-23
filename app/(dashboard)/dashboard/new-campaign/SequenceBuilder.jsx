@@ -29,6 +29,8 @@ import {
   CircleSlash,
 } from "lucide-react";
 import {
+  EMAIL_ACTION_OPTIONS,
+  LINKEDIN_ACTION_OPTIONS,
   ACTION_STEP_OPTIONS,
   CONDITION_OPTION,
   UNAVAILABLE_ACTIONS,
@@ -443,51 +445,89 @@ function FlowCanvasInner({ campaignId }) {
             className="!rounded-2xl !border !border-gray-100/90 !bg-white !p-1 !shadow-lg [&_button]:!rounded-full [&_button]:!border-0 [&_button]:!text-gray-500 [&_button:hover]:!bg-gray-100"
           />
 
-          {/* Left Sidebar: Step Type Picker (Matches Reference Image 2) */}
+          {/* Left Sidebar: Step Type Picker Organized by Channel */}
           <Panel position="top-left" className="!ml-5 !mt-5">
-            <div className="w-56 max-h-[66vh] overflow-y-auto rounded-2xl border border-gray-100/90 bg-white p-4 shadow-xl">
-              <p className="mb-2 px-1 text-xs font-semibold text-gray-500">
-                Actions:
-              </p>
-              <div className="space-y-0.5">
-                {ACTION_STEP_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  return (
-                    <button
-                      key={opt.type}
-                      onClick={() => addAtMainTip(opt.type)}
-                      className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-[#6367FF]/5 hover:text-[#6367FF]"
-                    >
-                      <Icon size={15} strokeWidth={1.8} className="text-gray-400 group-hover:text-[#6367FF] transition" />
-                      <span>{opt.title}</span>
-                    </button>
-                  );
-                })}
-                {UNAVAILABLE_ACTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  return (
-                    <div
-                      key={opt.title}
-                      title="Coming soon"
-                      className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-[13px] font-medium text-gray-300"
-                    >
-                      <Icon size={15} strokeWidth={1.8} className="text-gray-300" />
-                      <span>{opt.title}</span>
-                    </div>
-                  );
-                })}
+            <div className="w-60 max-h-[75vh] overflow-y-auto rounded-2xl border border-gray-100/90 bg-white p-3.5 shadow-xl">
+              {/* Section 1: Email Outreach */}
+              <div className="mb-3">
+                <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-md bg-blue-50 text-[10px] font-bold text-blue-600">✉</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                    Email Outreach
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  {EMAIL_ACTION_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.type}
+                        onClick={() => addAtMainTip(opt.type)}
+                        className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <div
+                          className="flex h-6 w-6 items-center justify-center rounded-lg"
+                          style={{ background: opt.bg }}
+                        >
+                          <Icon size={13} strokeWidth={2} style={{ color: opt.accent }} />
+                        </div>
+                        <span>{opt.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <p className="mb-2 mt-4 px-1 text-xs font-semibold text-gray-500">
-                Conditions:
-              </p>
-              <button
-                onClick={() => addAtMainTip(CONDITION_OPTION.type)}
-                className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-[#6367FF]/5 hover:text-[#6367FF]"
-              >
-                <CONDITION_OPTION.icon size={15} strokeWidth={1.8} className="text-gray-400 group-hover:text-[#6367FF] transition" />
-                <span>{CONDITION_OPTION.title}</span>
-              </button>
+              {/* Section 2: LinkedIn Outreach */}
+              <div className="mb-3 border-t border-gray-100 pt-3">
+                <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-md bg-indigo-50 text-[10px] font-bold text-indigo-600">in</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                    LinkedIn Outreach
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  {LINKEDIN_ACTION_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.type}
+                        onClick={() => addAtMainTip(opt.type)}
+                        className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-[#6367FF]/5 hover:text-[#6367FF]"
+                      >
+                        <div
+                          className="flex h-6 w-6 items-center justify-center rounded-lg"
+                          style={{ background: opt.bg }}
+                        >
+                          <Icon size={13} strokeWidth={2} style={{ color: opt.accent }} />
+                        </div>
+                        <span>{opt.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 3: Conditions & Logic */}
+              <div className="border-t border-gray-100 pt-3">
+                <div className="flex items-center gap-1.5 px-2 py-1 mb-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                    Flow & Logic
+                  </span>
+                </div>
+                <button
+                  onClick={() => addAtMainTip(CONDITION_OPTION.type)}
+                  className="group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px] font-medium text-gray-700 transition hover:bg-[#6367FF]/5 hover:text-[#6367FF]"
+                >
+                  <div
+                    className="flex h-6 w-6 items-center justify-center rounded-lg"
+                    style={{ background: CONDITION_OPTION.bg }}
+                  >
+                    <CONDITION_OPTION.icon size={13} strokeWidth={2} style={{ color: CONDITION_OPTION.accent }} />
+                  </div>
+                  <span>{CONDITION_OPTION.title}</span>
+                </button>
+              </div>
             </div>
           </Panel>
 

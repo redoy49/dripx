@@ -15,6 +15,7 @@ export const STEP_TYPES = {
   like_post: { label: "Like Post", action: true, channel: "linkedin" },
   follow_up: { label: "Follow-up", action: true, channel: "linkedin" },
   email: { label: "Email", action: true, channel: "email" },
+  email_followup: { label: "Email Follow-up", action: true, channel: "email" },
   condition: { label: "Condition", action: false, channel: null },
   delay: { label: "Delay", action: false, channel: null },
 };
@@ -61,15 +62,15 @@ export async function resolveNextExecutableStep(steps, currentStep, evaluateCond
 
     if (cursor.type === "delay") {
       const amount = Math.max(0, Number(cursor.config?.amount) || 0);
-      const unit = (cursor.config?.unit || "hours").toLowerCase();
-      let multiplier = 60 * 60 * 1000;
-      if (unit === "seconds" || unit === "second" || unit === "secs" || unit === "sec" || unit === "s") {
+      const rawUnit = (cursor.config?.unit || "minutes").toString().toLowerCase().trim();
+      let multiplier = 60 * 1000; // default to minutes
+      if (["seconds", "second", "secs", "sec", "s"].includes(rawUnit)) {
         multiplier = 1000;
-      } else if (unit === "minutes" || unit === "minute" || unit === "mins" || unit === "min" || unit === "m") {
+      } else if (["minutes", "minute", "mins", "min", "m"].includes(rawUnit)) {
         multiplier = 60 * 1000;
-      } else if (unit === "days" || unit === "day" || unit === "d") {
+      } else if (["days", "day", "d"].includes(rawUnit)) {
         multiplier = 24 * 60 * 60 * 1000;
-      } else if (unit === "hours" || unit === "hour" || unit === "hrs" || unit === "hr" || unit === "h") {
+      } else if (["hours", "hour", "hrs", "hr", "h"].includes(rawUnit)) {
         multiplier = 60 * 60 * 1000;
       }
       delayMs += amount * multiplier;

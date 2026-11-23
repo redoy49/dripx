@@ -53,11 +53,13 @@ async function recordOutboundMessage(workspaceId, leadId, channel, body, subject
     conversationId: conversation._id,
     direction: "outbound",
     channel,
+    subject: subject || null,
     body,
     sentByUserId: null,
     sentAt: new Date(),
     providerMessageId: providerMessageId || null,
-    threadId: threadId || null,
+    threadId: threadId || conversation.threadId || null,
+    messageIdHeader: providerMessageId ? `<${providerMessageId}@mail.gmail.com>` : null,
   });
 }
 
@@ -147,8 +149,62 @@ async function dispatchAction(step, lead, campaign) {
       return { ...(await connector.visitProfile(lead)), channel: "linkedin" };
     case "like_post":
       return { ...(await connector.likeRecentPost(lead)), channel: "linkedin" };
-    case "email": {
-      const subject = renderTemplate(step.config?.subject || "", lead);
+    case "email":
+    case "email_followup": {
+      const conversationsCol = await dbConnect("conversations");
+      const messagesCol = await dbConnect("messages");
+
+      // Check if there is an existing email conversation for this lead in this workspace
+      const existingConv = await conversationsCol.findOne({
+        leadId: lead._id,
+        channel: "email",
+      });
+
+      let inReplyTo = null;
+      let references = null;
+      let resolvedThreadId = existingConv?.threadId || null;
+      const rawSubject = renderTemplate(step.config?.subject || "", lead).trim();
+      let subject = rawSubject;
+
+      if (existingConv) {
+        // Find latest message in this conversation (outbound or inbound)
+        const lastMsg = await messagesCol.findOne(
+          { conversationId: existingConv._id },
+          { sort: { sentAt: -1 } },
+        );
+
+        if (!resolvedThreadId && lastMsg?.threadId) {
+          resolvedThreadId = lastMsg.threadId;
+        }
+
+        if (lastMsg) {
+          inReplyTo = lastMsg.messageIdHeader || null;
+          references = lastMsg.references || null;
+
+          if (!inReplyTo && lastMsg.providerMessageId) {
+            inReplyTo = `<${lastMsg.providerMessageId}@mail.gmail.com>`;
+            if (!references) references = inReplyTo;
+          }
+        }
+
+        // Subject threading:
+        // For Gmail / Outlook / cold email clients, follow-up emails in a sequence must stay in the same thread.
+        // Thread grouping requires the Subject header to match the base thread subject with "Re: " prefix.
+        const baseSubject = (existingConv.subject || lastMsg?.subject || rawSubject || "Outreach")
+          .replace(/^(?:re:\s*)+/i, "")
+          .trim();
+
+        if (!rawSubject || step.config?.sendAsReply !== false) {
+          subject = `Re: ${baseSubject}`;
+        } else if (rawSubject.toLowerCase().startsWith("re:")) {
+          subject = `Re: ${rawSubject.replace(/^(?:re:\s*)+/i, "").trim()}`;
+        }
+      }
+
+      if (!subject) {
+        subject = rawSubject || "Quick note";
+      }
+
       const body = renderTemplate(step.config?.template || "", lead);
       const result = await sendEmail({
         to: lead.email,
@@ -156,16 +212,25 @@ async function dispatchAction(step, lead, campaign) {
         body,
         accountId: campaign.senderEmailAccountId,
         workspaceId: campaign.workspaceId,
+        inReplyTo,
+        references,
+        threadId: resolvedThreadId,
         purpose: "campaign",
       });
-      return { ...result, body, subject, channel: "email" };
+      return {
+        ...result,
+        body,
+        subject,
+        channel: "email",
+        threadId: result.threadId || resolvedThreadId,
+      };
     }
     default:
       return { success: false, error: `Unhandled step type: ${step.type}` };
   }
 }
 
-const MESSAGE_STEP_TYPES = new Set(["message", "follow_up", "inmail", "email"]);
+const MESSAGE_STEP_TYPES = new Set(["message", "follow_up", "inmail", "email", "email_followup"]);
 
 /**
  * Processes a single due job: dispatches the step's action (respecting daily limits),
@@ -274,7 +339,7 @@ export async function processJob(job) {
     }
 
     // For email actions, also enforce the specific sender mailbox's ramp-up cap
-    if (step.type === "email") {
+    if (step.type === "email" || step.type === "email_followup") {
       const emailAccountsCol = await dbConnect("email_accounts");
       const senderAccountId = campaign.senderEmailAccountId
         ? (typeof campaign.senderEmailAccountId === "string" ? new ObjectId(campaign.senderEmailAccountId) : campaign.senderEmailAccountId)
@@ -355,7 +420,7 @@ export async function processJob(job) {
     }
 
     // Atomically increment sender mailbox todaySentCount
-    if (step.type === "email") {
+    if (step.type === "email" || step.type === "email_followup") {
       const emailAccountsCol = await dbConnect("email_accounts");
       const senderAccountId = campaign.senderEmailAccountId
         ? (typeof campaign.senderEmailAccountId === "string" ? new ObjectId(campaign.senderEmailAccountId) : campaign.senderEmailAccountId)
@@ -408,6 +473,7 @@ export async function processJob(job) {
         workspaceId: job.workspaceId,
         campaignId: job.campaignId,
         campaignLeadId: campaignLead._id,
+        leadId: lead._id,
         stepId: nextStep._id,
         type: nextStep.type,
         runAfter: scheduledRunAfter,

@@ -85,6 +85,7 @@ export async function enrollLeads(campaignId, leadIds) {
               workspaceId: campaign.workspaceId,
               campaignId: campaignObjectId,
               campaignLeadId: cl._id,
+              leadId: cl.leadId,
               stepId: nextStep._id,
               type: nextStep.type,
               runAfter,

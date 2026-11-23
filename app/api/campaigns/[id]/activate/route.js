@@ -60,19 +60,39 @@ export async function POST(req, { params }) {
       );
     }
 
-    for (const step of steps) {
-      if (
-        (step.type === "email" || step.type === "inmail") &&
-        (!step.config?.template?.trim() || !step.config?.subject?.trim())
-      ) {
-        return Response.json(
-          {
-            message: `Configure the subject line and message body for your ${step.type} step before activating`,
-          },
-          { status: 400 },
-        );
-      }
-      if (
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      if (step.type === "email_followup") {
+        if (!step.config?.template?.trim()) {
+          return Response.json(
+            { message: "Configure the message body for your Email Follow-up step before activating" },
+            { status: 400 },
+          );
+        }
+      } else if (step.type === "email") {
+        const isFollowUpEmail = steps.slice(0, i).some((s) => s.type === "email" || s.type === "email_followup");
+        if (!step.config?.template?.trim()) {
+          return Response.json(
+            { message: "Configure the message body for your email step before activating" },
+            { status: 400 },
+          );
+        }
+        if (!isFollowUpEmail && !step.config?.subject?.trim()) {
+          return Response.json(
+            { message: "Configure the subject line for your initial email step before activating" },
+            { status: 400 },
+          );
+        }
+      } else if (step.type === "inmail") {
+        if (!step.config?.template?.trim() || !step.config?.subject?.trim()) {
+          return Response.json(
+            {
+              message: "Configure the subject line and message body for your inmail step before activating",
+            },
+            { status: 400 },
+          );
+        }
+      } else if (
         (step.type === "message" || step.type === "follow_up") &&
         !step.config?.template?.trim()
       ) {
@@ -85,7 +105,7 @@ export async function POST(req, { params }) {
       }
     }
 
-    const hasEmailSteps = steps.some((s) => s.type === "email");
+    const hasEmailSteps = steps.some((s) => s.type === "email" || s.type === "email_followup");
     if (hasEmailSteps) {
       const emailAccountsCol = await dbConnect("email_accounts");
       let senderAccount = null;

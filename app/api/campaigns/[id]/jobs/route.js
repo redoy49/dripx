@@ -102,9 +102,13 @@ export async function GET(req, { params }) {
 
       const stepTitle = stepDoc?.config?.subject
         ? `Step ${stepDoc.order}: ${stepDoc.config.subject.slice(0, 30)}`
-        : stepDoc
-          ? `Step ${stepDoc.order}: ${stepDoc.type?.replace("_", " ")}`
-          : job.type?.replace("_", " ") || "Step";
+        : stepDoc?.type === "email_followup"
+          ? `Step ${stepDoc.order}: Email Follow-up (Reply)`
+          : stepDoc?.type === "email"
+            ? `Step ${stepDoc.order}: Follow-up Reply (Same Thread)`
+            : stepDoc
+              ? `Step ${stepDoc.order}: ${stepDoc.type?.replace("_", " ")}`
+              : job.type?.replace("_", " ") || "Step";
 
       return {
         id: job._id.toString(),

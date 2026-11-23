@@ -34,6 +34,12 @@ function getActivityBadge(type) {
         label: "Email dispatched",
         color: "text-blue-600 bg-blue-50 border-blue-100",
       };
+    case "email_followup":
+      return {
+        icon: Mail,
+        label: "Email follow-up dispatched",
+        color: "text-indigo-600 bg-indigo-50 border-indigo-100",
+      };
     case "connection_request":
       return {
         icon: FaLinkedin,

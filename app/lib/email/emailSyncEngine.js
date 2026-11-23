@@ -159,27 +159,47 @@ export async function syncAccountReplies(account) {
         conversation = { _id: newConvo.insertedId };
       }
 
-      // 3. Persist Inbound Message
-      await messagesCol.insertOne({
-        conversationId: conversation._id,
-        direction: "inbound",
-        channel: "email",
-        body: msg.text || msg.snippet || "",
-        rawBody: msg.rawText || msg.text || null,
-        quotedText: msg.quotedText || null,
-        html: msg.html || null,
-        subject: msg.subject || null,
-        from: msg.from,
-        to: msg.to,
-        sentByUserId: null,
-        sentAt: msg.date,
-        providerMessageId: msg.id,
-        threadId: msg.threadId || null,
-        messageIdHeader: msg.messageIdHeader || null,
-        inReplyTo: msg.inReplyTo || null,
-        references: msg.references || null,
-        createdAt: new Date(),
-      });
+      // 3. Persist Inbound Message atomically to strictly prevent race-condition duplicates
+      let insertResult;
+      try {
+        insertResult = await messagesCol.updateOne(
+          { providerMessageId: msg.id },
+          {
+            $setOnInsert: {
+              conversationId: conversation._id,
+              direction: "inbound",
+              channel: "email",
+              body: msg.text || msg.snippet || "",
+              rawBody: msg.rawText || msg.text || null,
+              quotedText: msg.quotedText || null,
+              html: msg.html || null,
+              subject: msg.subject || null,
+              from: msg.from,
+              to: msg.to,
+              sentByUserId: null,
+              sentAt: msg.date,
+              providerMessageId: msg.id,
+              threadId: msg.threadId || null,
+              messageIdHeader: msg.messageIdHeader || null,
+              inReplyTo: msg.inReplyTo || null,
+              references: msg.references || null,
+              createdAt: new Date(),
+            },
+          },
+          { upsert: true }
+        );
+      } catch (err) {
+        if (err.code === 11000) {
+          // E11000 duplicate key error: message already ingested concurrently by another worker
+          continue;
+        }
+        throw err;
+      }
+
+      // If already ingested by a concurrent worker/request, skip conversation updates
+      if (!insertResult?.upsertedCount) {
+        continue;
+      }
 
       // 4. Update Conversation Metadata
       const convoUpdates = {

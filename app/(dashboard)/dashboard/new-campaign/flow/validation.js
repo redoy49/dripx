@@ -38,7 +38,31 @@ export function validateSequence(steps = []) {
     const config = step.config || {};
 
     switch (step.type) {
-      case "email":
+      case "email_followup": {
+        const hasTemplate =
+          typeof config.template === "string" && config.template.trim().length > 0;
+        if (!hasTemplate) {
+          addError(id, "Message body is required for email follow-up");
+        }
+        break;
+      }
+
+      case "email": {
+        const hasSubject = typeof config.subject === "string" && config.subject.trim().length > 0;
+        const hasTemplate =
+          typeof config.template === "string" && config.template.trim().length > 0;
+        const isFollowUpEmail = steps.slice(0, index).some((s) => s.type === "email" || s.type === "email_followup");
+
+        if (!hasTemplate && !hasSubject && !isFollowUpEmail) {
+          addError(id, "Subject line and message body are required");
+        } else if (!hasTemplate) {
+          addError(id, "Message body is required");
+        } else if (!hasSubject && !isFollowUpEmail) {
+          addError(id, "Subject line is required for the initial email");
+        }
+        break;
+      }
+
       case "inmail": {
         const hasSubject = typeof config.subject === "string" && config.subject.trim().length > 0;
         const hasTemplate =

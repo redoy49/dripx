@@ -1,7 +1,12 @@
 "use client";
 
 import { X } from "lucide-react";
-import { ACTION_STEP_OPTIONS, CONDITION_OPTION, UNAVAILABLE_ACTIONS } from "./graph";
+import {
+  EMAIL_ACTION_OPTIONS,
+  LINKEDIN_ACTION_OPTIONS,
+  CONDITION_OPTION,
+  UNAVAILABLE_ACTIONS,
+} from "./graph";
 
 /** Modal shown when the user clicks a "+ Add" tip on the canvas — picks what kind of
  * step to append there. */
@@ -21,63 +26,111 @@ export default function ActionPicker({ open, onClose, onPick }) {
           </button>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto p-5">
-          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-            Actions
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            {ACTION_STEP_OPTIONS.map((opt) => {
-              const Icon = opt.icon;
-              return (
-                <button
-                  key={opt.type}
-                  onClick={() => onPick(opt.type)}
-                  className="card-option flex flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 text-left hover:border-[#6367FF]/30"
-                >
-                  <div
-                    className="flex h-8 w-8 items-center justify-center rounded-lg"
-                    style={{ background: opt.bg }}
+        <div className="max-h-[70vh] overflow-y-auto p-5 space-y-5">
+          {/* Section 1: Email Outreach */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2 px-1">
+              <span className="flex h-4 w-4 items-center justify-center rounded-md bg-blue-50 text-[10px] font-bold text-blue-600">✉</span>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                Email Outreach
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {EMAIL_ACTION_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.type}
+                    onClick={() => onPick(opt.type)}
+                    className="card-option flex flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 text-left hover:border-blue-400/50 hover:bg-blue-50/20 transition"
                   >
-                    <Icon size={15} strokeWidth={1.9} style={{ color: opt.accent }} />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-700">{opt.title}</span>
-                </button>
-              );
-            })}
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-lg"
+                      style={{ background: opt.bg }}
+                    >
+                      <Icon size={16} strokeWidth={2} style={{ color: opt.accent }} />
+                    </div>
+                    <div>
+                      <span className="block text-xs font-semibold text-gray-800">{opt.title}</span>
+                      <span className="block text-[11px] text-gray-400 leading-tight mt-0.5">{opt.desc}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <p className="mb-2 mt-5 px-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-            Conditions
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              onClick={() => onPick(CONDITION_OPTION.type)}
-              className="card-option flex flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 text-left hover:border-[#6367FF]/30"
-            >
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-lg"
-                style={{ background: CONDITION_OPTION.bg }}
-              >
-                <CONDITION_OPTION.icon size={15} strokeWidth={1.9} style={{ color: CONDITION_OPTION.accent }} />
-              </div>
-              <span className="text-xs font-semibold text-gray-700">{CONDITION_OPTION.title}</span>
-            </button>
+          {/* Section 2: LinkedIn Outreach */}
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-1.5 mb-2 px-1">
+              <span className="flex h-4 w-4 items-center justify-center rounded-md bg-indigo-50 text-[10px] font-bold text-indigo-600">in</span>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                LinkedIn Outreach
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {LINKEDIN_ACTION_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.type}
+                    onClick={() => onPick(opt.type)}
+                    className="card-option flex flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 text-left hover:border-[#6367FF]/30 transition"
+                  >
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-lg"
+                      style={{ background: opt.bg }}
+                    >
+                      <Icon size={16} strokeWidth={2} style={{ color: opt.accent }} />
+                    </div>
+                    <div>
+                      <span className="block text-xs font-semibold text-gray-800">{opt.title}</span>
+                      <span className="block text-[11px] text-gray-400 leading-tight mt-0.5">{opt.desc}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-            {UNAVAILABLE_ACTIONS.map((opt) => {
-              const Icon = opt.icon;
-              return (
+          {/* Section 3: Conditions & Rules */}
+          <div className="border-t border-gray-100 pt-4">
+            <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+              Flow & Logic
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => onPick(CONDITION_OPTION.type)}
+                className="card-option flex flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 text-left hover:border-[#6367FF]/30 transition"
+              >
                 <div
-                  key={opt.title}
-                  title="Coming soon"
-                  className="flex cursor-not-allowed flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 opacity-40"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ background: CONDITION_OPTION.bg }}
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
-                    <Icon size={15} strokeWidth={1.9} className="text-gray-400" />
-                  </div>
-                  <span className="text-xs font-semibold text-gray-500">{opt.title}</span>
+                  <CONDITION_OPTION.icon size={16} strokeWidth={2} style={{ color: CONDITION_OPTION.accent }} />
                 </div>
-              );
-            })}
+                <div>
+                  <span className="block text-xs font-semibold text-gray-800">{CONDITION_OPTION.title}</span>
+                  <span className="block text-[11px] text-gray-400 leading-tight mt-0.5">{CONDITION_OPTION.desc}</span>
+                </div>
+              </button>
+
+              {UNAVAILABLE_ACTIONS.map((opt) => {
+                const Icon = opt.icon;
+                return (
+                  <div
+                    key={opt.title}
+                    title="Coming soon"
+                    className="flex cursor-not-allowed flex-col items-start gap-2 rounded-xl border border-gray-100 p-3 opacity-40"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
+                      <Icon size={16} strokeWidth={2} className="text-gray-400" />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">{opt.title}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

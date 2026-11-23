@@ -7,14 +7,14 @@ import { X } from "lucide-react";
  * `delay`-type steps in the flat array (invisible on the canvas) — this UI always
  * collapses them down to a single equivalent delay step on save. */
 export default function DelayEditorModal({ open, initial, onClose, onSave }) {
-  const [amount, setAmount] = useState(initial?.amount ?? 1);
-  const [unit, setUnit] = useState(initial?.unit ?? "days");
+  const [amount, setAmount] = useState(initial?.amount ?? 3);
+  const [unit, setUnit] = useState(initial?.unit ?? "minutes");
 
   useEffect(() => {
     if (open) {
       Promise.resolve().then(() => {
-        setAmount(initial?.amount ?? 1);
-        setUnit(initial?.unit ?? "days");
+        setAmount(initial?.amount ?? 3);
+        setUnit(initial?.unit ?? "minutes");
       });
     }
   }, [open, initial]);

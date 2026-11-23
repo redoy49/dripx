@@ -13,20 +13,96 @@ import {
   UserCheck,
   MailSearch,
   Ban,
+  CornerUpLeft,
 } from "lucide-react";
 import { BRANCH_END } from "../../../../lib/sequenceEngine.js";
 
 export { BRANCH_END };
 
-// Action types jobProcessor.js can actually execute — shown as live sidebar items.
+// Categorized email outreach actions
+export const EMAIL_ACTION_OPTIONS = [
+  {
+    type: "email",
+    title: "Send Email",
+    channel: "email",
+    desc: "Send a cold email through the connected mailbox",
+    icon: Mail,
+    accent: "#0A66C2",
+    bg: "#EBF3FB",
+  },
+  {
+    type: "email_followup",
+    title: "Email Follow-up",
+    channel: "email",
+    desc: "Send a threaded reply in the same email conversation",
+    icon: CornerUpLeft,
+    accent: "#4F46E5",
+    bg: "#EEF2FF",
+  },
+];
+
+// Categorized LinkedIn outreach actions
+export const LINKEDIN_ACTION_OPTIONS = [
+  {
+    type: "connection_request",
+    title: "Connection Request",
+    channel: "linkedin",
+    desc: "Send a LinkedIn invite, optionally with a note",
+    icon: UserPlus,
+    accent: "#6367FF",
+    bg: "#F3F2FF",
+  },
+  {
+    type: "message",
+    title: "Message",
+    channel: "linkedin",
+    desc: "Send a direct message to a 1st-degree connection",
+    icon: MessageSquare,
+    accent: "#7C3AED",
+    bg: "#F3EFFE",
+  },
+  {
+    type: "follow_up",
+    title: "LinkedIn Follow-up",
+    channel: "linkedin",
+    desc: "Send a follow-up LinkedIn message",
+    icon: RefreshCw,
+    accent: "#E11D48",
+    bg: "#FFF1F2",
+  },
+  {
+    type: "inmail",
+    title: "InMail",
+    channel: "linkedin",
+    desc: "Send a paid InMail to an out-of-network profile",
+    icon: Mail,
+    accent: "#0891B2",
+    bg: "#ECFBFE",
+  },
+  {
+    type: "profile_visit",
+    title: "View Profile",
+    channel: "linkedin",
+    desc: "Visit the lead's profile to trigger a view notification",
+    icon: Eye,
+    accent: "#059669",
+    bg: "#ECFDF5",
+  },
+  {
+    type: "like_post",
+    title: "Like a Post",
+    channel: "linkedin",
+    desc: "Like the lead's most recent LinkedIn post",
+    icon: ThumbsUp,
+    accent: "#D97706",
+    bg: "#FFFBEB",
+  },
+];
+
+// Flat array for quick lookup and backwards compatibility
 export const ACTION_STEP_OPTIONS = [
-  { type: "connection_request", title: "Connection Request", desc: "Send a LinkedIn invite, optionally with a note", icon: UserPlus, accent: "#6367FF", bg: "#F3F2FF" },
-  { type: "message", title: "Message", desc: "Send a direct message to a 1st-degree connection", icon: MessageSquare, accent: "#7C3AED", bg: "#F3EFFE" },
-  { type: "inmail", title: "InMail", desc: "Send a paid InMail to an out-of-network profile", icon: Mail, accent: "#0891B2", bg: "#ECFBFE" },
-  { type: "profile_visit", title: "View Profile", desc: "Visit the lead's profile to trigger a view notification", icon: Eye, accent: "#059669", bg: "#ECFDF5" },
-  { type: "like_post", title: "Like a Post", desc: "Like the lead's most recent LinkedIn post", icon: ThumbsUp, accent: "#D97706", bg: "#FFFBEB" },
-  { type: "follow_up", title: "Follow-up", desc: "Send a follow-up LinkedIn message", icon: RefreshCw, accent: "#E11D48", bg: "#FFF1F2" },
-  { type: "email", title: "Send Email", desc: "Send a cold email through the connected email channel", icon: Mail, accent: "#0A66C2", bg: "#EBF3FB" },
+  ...EMAIL_ACTION_OPTIONS,
+  ...LINKEDIN_ACTION_OPTIONS,
 ];
 
 // Grayed-out, disabled — not wired to a real connector yet.
@@ -55,9 +131,11 @@ export function stepSummary(step) {
   const text =
     step.type === "connection_request"
       ? step.config?.note
-      : step.type === "inmail" || step.type === "email"
-        ? step.config?.subject || step.config?.template
-        : step.config?.template;
+      : step.type === "email_followup"
+        ? (step.config?.template ? `Reply: ${step.config.template}` : null)
+        : step.type === "inmail" || step.type === "email"
+          ? step.config?.subject || step.config?.template
+          : step.config?.template;
 
   if (!text) return opt.desc;
   return text.length > 46 ? `${text.slice(0, 46)}…` : text;
@@ -74,6 +152,8 @@ export function defaultConfigFor(type) {
     case "message":
     case "follow_up":
       return { template: "" };
+    case "email_followup":
+      return { subject: "", template: "", sendAsReply: true };
     case "inmail":
     case "email":
       return { subject: "", template: "" };
