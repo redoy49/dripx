@@ -30,11 +30,12 @@ export async function GET(req, { params }) {
     const leads = await dbConnect("leads");
     const sequenceSteps = await dbConnect("sequence_steps");
     const conversations = await dbConnect("conversations");
+    const jobsCol = await dbConnect("jobs");
 
     const enrollments = await campaignLeads.find(query).toArray();
     const enrolledLeadIds = enrollments.map((e) => e.leadId);
 
-    const [leadDocs, stepDocs, convoDocs] = await Promise.all([
+    const [leadDocs, stepDocs, convoDocs, activeJobs] = await Promise.all([
       enrolledLeadIds.length > 0
         ? leads.find({ _id: { $in: enrolledLeadIds } }).toArray()
         : [],
@@ -44,7 +45,25 @@ export async function GET(req, { params }) {
             .find({ workspaceId: new ObjectId(session.workspaceId), leadId: { $in: enrolledLeadIds } })
             .toArray()
         : [],
+      jobsCol
+        .find({ campaignId: campaign._id })
+        .sort({ runAfter: 1, createdAt: -1 })
+        .toArray(),
     ]);
+
+    const jobByEnrollmentId = new Map();
+    for (const j of activeJobs) {
+      const key = j.campaignLeadId?.toString();
+      if (!key) continue;
+      if (!jobByEnrollmentId.has(key)) {
+        jobByEnrollmentId.set(key, j);
+      } else {
+        const existing = jobByEnrollmentId.get(key);
+        if (existing.status !== "queued" && j.status === "queued") {
+          jobByEnrollmentId.set(key, j);
+        }
+      }
+    }
 
     const leadById = new Map(leadDocs.map((l) => [l._id.toString(), l]));
     const stepById = new Map(
@@ -90,6 +109,8 @@ export async function GET(req, { params }) {
               ? "Paused"
               : "Pending Start";
 
+      const job = jobByEnrollmentId.get(e._id.toString());
+
       return {
         id: e._id.toString(),
         enrollmentId: e._id.toString(),
@@ -97,6 +118,10 @@ export async function GET(req, { params }) {
         status: e.status,
         currentStepId: e.currentStepId ? e.currentStepId.toString() : null,
         currentStepTitle: stepTitle,
+        scheduledRunAfter: job?.runAfter || null,
+        jobStatus: job?.status || null,
+        jobLastError: job?.lastError || null,
+        jobType: job?.type || null,
         enrolledAt: e.enrolledAt,
         lastActionAt: e.lastActionAt,
         conversationId: convoByLeadId.get(e.leadId.toString()) || null,

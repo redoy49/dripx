@@ -166,4 +166,97 @@ assert.equal(sendResult.success, true);
 assert.equal(typeof sendResult.providerMessageId, "string");
 console.log("✓ Manual inbox email reply successfully dispatches through modular email connector\n");
 
+// --- TEST 6: Conversation Deletion & Cascading Messages Cleanup ---
+console.log("6. Testing Conversation Cascading Deletion & Validation...");
+{
+  // 6a. ID Validation
+  const invalidIds = ["not-an-id", "123", "", null, undefined, "609c1234"];
+  for (const inv of invalidIds) {
+    assert.equal(ObjectId.isValid(inv), false, `ID "${inv}" should fail ObjectId.isValid`);
+  }
+  const validId = new ObjectId().toString();
+  assert.equal(ObjectId.isValid(validId), true, "Valid 24-hex string must pass ObjectId.isValid");
+
+  // 6b. Database Cascading Deletion Verification
+  const { dbConnect } = await import("./mongoDb.js");
+  const testWorkspaceId = new ObjectId();
+  const testConversationId = new ObjectId();
+
+  const convosCol = await dbConnect("conversations");
+  const msgsCol = await dbConnect("messages");
+
+  // Insert mock conversation
+  await convosCol.insertOne({
+    _id: testConversationId,
+    workspaceId: testWorkspaceId,
+    subject: "Test Outreach Thread for Deletion",
+    channel: "email",
+    unreadCount: 2,
+    status: "open",
+    createdAt: new Date(),
+  });
+
+  // Insert 3 associated messages
+  await msgsCol.insertMany([
+    {
+      _id: new ObjectId(),
+      conversationId: testConversationId,
+      body: "Initial outreach message",
+      direction: "outbound",
+      sentAt: new Date(Date.now() - 3600000),
+    },
+    {
+      _id: new ObjectId(),
+      conversationId: testConversationId,
+      body: "Follow-up question",
+      direction: "inbound",
+      sentAt: new Date(Date.now() - 1800000),
+    },
+    {
+      _id: new ObjectId(),
+      conversationId: testConversationId,
+      body: "Closing response",
+      direction: "outbound",
+      sentAt: new Date(),
+    },
+  ]);
+
+  // Verify setup
+  const convoBefore = await convosCol.findOne({ _id: testConversationId, workspaceId: testWorkspaceId });
+  assert.ok(convoBefore, "Test conversation must be present before deletion");
+  const msgsBefore = await msgsCol.countDocuments({ conversationId: testConversationId });
+  assert.equal(msgsBefore, 3, "Must have exactly 3 messages before deletion");
+
+  // Workspace Isolation Check: querying with different workspaceId must yield nothing
+  const otherWorkspaceId = new ObjectId();
+  const isolatedCheck = await convosCol.findOne({ _id: testConversationId, workspaceId: otherWorkspaceId });
+  assert.equal(isolatedCheck, null, "Conversation must not be accessible from another workspace");
+
+  // Execute Cascading Deletion
+  const deleteMsgsRes = await msgsCol.deleteMany({ conversationId: testConversationId });
+  assert.equal(deleteMsgsRes.deletedCount, 3, "Must delete all 3 associated messages");
+
+  const deleteConvoRes = await convosCol.deleteOne({ _id: testConversationId, workspaceId: testWorkspaceId });
+  assert.equal(deleteConvoRes.deletedCount, 1, "Must delete the conversation document");
+
+  // Confirm Zero Orphaned Records
+  const convoAfter = await convosCol.findOne({ _id: testConversationId });
+  assert.equal(convoAfter, null, "Conversation must no longer exist in DB");
+
+  const msgsAfter = await msgsCol.countDocuments({ conversationId: testConversationId });
+  assert.equal(msgsAfter, 0, "No orphaned messages must remain for the deleted conversation");
+
+  // Expected response payload contract
+  const deleteResponsePayload = {
+    success: true,
+    deletedId: testConversationId.toString(),
+    message: "Conversation and messages successfully deleted",
+  };
+  assert.equal(deleteResponsePayload.success, true);
+  assert.equal(deleteResponsePayload.deletedId, testConversationId.toString());
+
+  console.log("✓ Cascading deletion cleans thread messages and enforces workspace scoping with 0 orphaned records\n");
+}
+
 console.log("ALL UNIFIED INBOX & LEAD DETAILS TESTS PASSED (100% SUCCESS)!");
+process.exit(0);

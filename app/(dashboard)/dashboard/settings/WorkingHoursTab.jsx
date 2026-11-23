@@ -20,7 +20,7 @@ import {
   POPULAR_TIMEZONES,
   getZonedParts,
   parseTimeToMinutes,
-} from "@/app/lib/scheduleEngine";
+} from "@/app/lib/scheduleConstants";
 
 export default function WorkingHoursTab() {
   const [schedule, setSchedule] = useState({ ...DEFAULT_SENDING_SCHEDULE });
@@ -161,7 +161,7 @@ export default function WorkingHoursTab() {
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <Loader2 className="h-6 w-6 animate-spin text-[#6367FF]" />
+        <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
         <span className="text-xs font-medium text-gray-400">Loading sending schedule...</span>
       </div>
     );
@@ -180,7 +180,7 @@ export default function WorkingHoursTab() {
 
         {/* Live Window Pulse */}
         <div
-          className={`flex items-center gap-2.5 rounded-2xl border px-4 py-2 text-xs font-semibold shadow-sm ${
+          className={`flex items-center gap-2.5 rounded-full border px-4 py-2 text-xs font-semibold shadow-2xs ${
             isWindowActiveNow
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
               : "border-amber-200 bg-amber-50 text-amber-800"
@@ -188,7 +188,7 @@ export default function WorkingHoursTab() {
         >
           <span
             className={`h-2.5 w-2.5 rounded-full ${
-              isWindowActiveNow ? "animate-pulse bg-emerald-500" : "bg-amber-400"
+              isWindowActiveNow ? "animate-pulse bg-emerald-400" : "bg-amber-400"
             }`}
           />
           <span>{isWindowActiveNow ? "Sending Window Open" : "Outside Sending Hours (Quiet Period)"}</span>
@@ -213,10 +213,10 @@ export default function WorkingHoursTab() {
         {/* Left Column: Timezone & Active Days */}
         <div className="space-y-6 lg:col-span-2">
           {/* Card 1: Timezone Selection */}
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6367FF]/10 text-[#6367FF]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-500 border border-indigo-100">
                   <Globe2 size={18} />
                 </div>
                 <div>
@@ -227,14 +227,14 @@ export default function WorkingHoursTab() {
 
               <div className="hidden sm:block text-right">
                 <span className="block text-[11px] font-semibold text-gray-400">Current Local Time</span>
-                <span className="text-xs font-bold text-[#6367FF]">{localTimeDisplay}</span>
+                <span className="text-xs font-bold text-indigo-500">{localTimeDisplay}</span>
               </div>
             </div>
 
             <select
               value={schedule.timezone}
               onChange={(e) => setSchedule((prev) => ({ ...prev, timezone: e.target.value }))}
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-xs font-semibold text-gray-800 outline-none transition focus:border-[#6367FF] focus:bg-white focus:ring-2 focus:ring-[#6367FF]/10"
+              className="w-full rounded-full border border-gray-200/90 bg-white px-4 py-2.5 text-xs font-semibold text-gray-800 outline-none transition focus:border-indigo-400 shadow-2xs cursor-pointer"
             >
               {POPULAR_TIMEZONES.map((tz) => (
                 <option key={tz.value} value={tz.value}>
@@ -245,14 +245,14 @@ export default function WorkingHoursTab() {
           </div>
 
           {/* Card 2: Active Sending Days */}
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-500">
                   <Calendar size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Active Outreach Days</h3>
+                  <h3 className="text-sm font-bold text-gray-900">Active Outreach Days</h3>
                   <p className="text-[11px] text-gray-400">Outreach jobs will strictly pause on unchecked days.</p>
                 </div>
               </div>
@@ -262,14 +262,14 @@ export default function WorkingHoursTab() {
                 <button
                   type="button"
                   onClick={() => applyPreset("weekdays")}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+                  className="rounded-full border border-gray-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                 >
                   Mon–Fri Only
                 </button>
                 <button
                   type="button"
                   onClick={() => applyPreset("all")}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+                  className="rounded-full border border-gray-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                 >
                   All 7 Days
                 </button>
@@ -285,10 +285,10 @@ export default function WorkingHoursTab() {
                     key={wd.day}
                     type="button"
                     onClick={() => toggleDay(wd.day)}
-                    className={`flex flex-col items-center justify-center rounded-2xl py-3.5 transition-all ${
+                    className={`flex flex-col items-center justify-center rounded-2xl py-3.5 transition-all cursor-pointer ${
                       isActive
-                        ? "bg-[#6367FF] text-white shadow-md shadow-[#6367FF]/20 font-bold scale-[1.02]"
-                        : "border border-gray-200 bg-gray-50/60 text-gray-400 hover:border-gray-300 hover:text-gray-700"
+                        ? "bg-indigo-400 text-white shadow-xs font-bold scale-[1.02]"
+                        : "border border-gray-200/90 bg-white text-gray-400 shadow-2xs hover:bg-gray-50 hover:text-gray-700 active:scale-95"
                     }`}
                   >
                     <span className="text-xs">{wd.short}</span>
@@ -302,13 +302,13 @@ export default function WorkingHoursTab() {
           </div>
 
           {/* Card 3: Daily Sending Window */}
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs">
             <div className="mb-4 flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-amber-500">
                 <Clock size={18} />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">Daily Sending Hours</h3>
+                <h3 className="text-sm font-bold text-gray-900">Daily Sending Hours</h3>
                 <p className="text-[11px] text-gray-400">Outreach is dispatched between these hours.</p>
               </div>
             </div>
@@ -321,9 +321,9 @@ export default function WorkingHoursTab() {
                     type="time"
                     value={schedule.startTime}
                     onChange={(e) => setSchedule((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#6367FF] focus:bg-white"
+                    className="w-full rounded-full border border-gray-200/90 bg-white px-4 py-2.5 text-xs font-semibold text-gray-800 shadow-2xs outline-none transition focus:border-indigo-400 cursor-pointer"
                   />
-                  <Sun size={15} className="absolute right-4 top-3.5 text-amber-500" />
+                  <Sun size={15} className="absolute right-4 top-3 text-amber-500" />
                 </div>
               </div>
 
@@ -334,9 +334,9 @@ export default function WorkingHoursTab() {
                     type="time"
                     value={schedule.endTime}
                     onChange={(e) => setSchedule((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#6367FF] focus:bg-white"
+                    className="w-full rounded-full border border-gray-200/90 bg-white px-4 py-2.5 text-xs font-semibold text-gray-800 shadow-2xs outline-none transition focus:border-indigo-400 cursor-pointer"
                   />
-                  <Moon size={15} className="absolute right-4 top-3.5 text-indigo-400" />
+                  <Moon size={15} className="absolute right-4 top-3 text-indigo-400" />
                 </div>
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function WorkingHoursTab() {
                       title={`${hour}:00 - ${hour + 1}:00: ${isActive ? "Active Sending" : "Quiet Hour"}`}
                       className={`h-7 rounded-sm transition-all ${
                         isActive
-                          ? "bg-[#6367FF] shadow-sm shadow-[#6367FF]/30"
+                          ? "bg-indigo-400 shadow-xs"
                           : "bg-white hover:bg-gray-200"
                       }`}
                     />
@@ -381,12 +381,12 @@ export default function WorkingHoursTab() {
         {/* Right Column: Smart Optimization & Save */}
         <div className="space-y-6">
           {/* Card 4: Smart Lead Timezone Auto-Detect */}
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-[#6367FF]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-400">
                 <Sparkles size={18} />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900">Smart Send Optimization</h3>
+              <h3 className="text-sm font-bold text-gray-900">Smart Send Optimization</h3>
             </div>
 
             <p className="mt-3 text-xs leading-relaxed text-gray-500">
@@ -402,8 +402,8 @@ export default function WorkingHoursTab() {
               }
               className={`mt-5 flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all ${
                 schedule.leadTimezoneOptimization
-                  ? "border-[#6367FF]/40 bg-[#6367FF]/[0.04]"
-                  : "border-gray-200 bg-gray-50/60"
+                  ? "border-indigo-300 bg-indigo-50/30"
+                  : "border-gray-200/90 bg-white shadow-2xs"
               }`}
             >
               <div>
@@ -414,8 +414,8 @@ export default function WorkingHoursTab() {
               </div>
 
               <div
-                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ease-in-out ${
-                  schedule.leadTimezoneOptimization ? "bg-[#6367FF]" : "bg-gray-300"
+                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ease-in-out cursor-pointer ${
+                  schedule.leadTimezoneOptimization ? "bg-indigo-400" : "bg-gray-300"
                 }`}
               >
                 <span
@@ -428,22 +428,22 @@ export default function WorkingHoursTab() {
           </div>
 
           {/* Card 5: Safe Rollover Notice */}
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs">
             <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
-              <Info size={16} className="text-[#6367FF]" />
+              <Info size={16} className="text-indigo-400" />
               <span>How Rollover Works</span>
             </div>
             <ul className="mt-3 space-y-2 text-xs text-gray-500">
               <li className="flex items-start gap-1.5">
-                <span className="text-[#6367FF]">•</span>
+                <span className="text-indigo-400 font-bold">•</span>
                 <span>Jobs triggered after hours are automatically postponed to the next opening hour.</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-[#6367FF]">•</span>
+                <span className="text-indigo-400 font-bold">•</span>
                 <span>Friday follow-ups roll seamlessly past the weekend to Monday morning.</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-[#6367FF]">•</span>
+                <span className="text-indigo-400 font-bold">•</span>
                 <span>Postponed jobs preserve their position and never consume daily quota until dispatched.</span>
               </li>
             </ul>
@@ -454,7 +454,7 @@ export default function WorkingHoursTab() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#6367FF] py-3.5 text-xs font-bold text-white shadow-lg shadow-[#6367FF]/25 transition hover:bg-[#5254e8] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 py-3 px-6 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {saving ? (
               <>

@@ -87,13 +87,31 @@ export function defaultConfigFor(type) {
 }
 
 function delayMsOf(config) {
-  const amount = Number(config?.amount) || 0;
-  const unit = config?.unit || "hours";
-  return amount * (unit === "days" ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000);
+  const amount = Math.max(0, Number(config?.amount) || 0);
+  const unit = (config?.unit || "hours").toLowerCase();
+  if (unit === "seconds" || unit === "second" || unit === "secs" || unit === "sec" || unit === "s") {
+    return amount * 1000;
+  }
+  if (unit === "minutes" || unit === "minute" || unit === "mins" || unit === "min" || unit === "m") {
+    return amount * 60 * 1000;
+  }
+  if (unit === "days" || unit === "day" || unit === "d") {
+    return amount * 24 * 60 * 60 * 1000;
+  }
+  return amount * 60 * 60 * 1000;
 }
 
 export function formatDelay(ms) {
   if (!ms) return "No delay";
+  const seconds = ms / 1000;
+  if (seconds < 60) {
+    return `${Math.round(seconds)}s`;
+  }
+  const minutes = ms / (60 * 1000);
+  if (minutes < 60) {
+    const m = Math.round(minutes * 10) / 10;
+    return `${m} ${m === 1 ? "minute" : "minutes"}`;
+  }
   const hours = ms / (60 * 60 * 1000);
   if (hours < 24) {
     const h = Math.round(hours * 10) / 10;

@@ -57,7 +57,7 @@ const RANGE_TABS = [
 ];
 
 // Circular SVG Progress Ring Component (matches reference video)
-function CircularProgressGauge({ percentage = 0, fraction = "0 / 0", label, color = "#6367FF" }) {
+function CircularProgressGauge({ percentage = 0, fraction = "0 / 0", label, color = "#818CF8" }) {
   const size = 66;
   const strokeWidth = 4.5;
   const radius = (size - strokeWidth * 2) / 2;
@@ -345,7 +345,7 @@ export default function DashboardPage() {
           <button
             onClick={handleCreateCampaign}
             disabled={creatingCampaign}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#6367FF] hover:bg-[#5254e8] px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-60 cursor-pointer"
           >
             <Plus size={14} />
             <span>{creatingCampaign ? "Creating..." : "New Campaign"}</span>
@@ -353,7 +353,7 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/leads"
-            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs transition active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-gray-200/90 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs transition active:scale-95 cursor-pointer"
           >
             <Users size={14} className="text-gray-400" />
             <span>Manage Leads</span>
@@ -361,9 +361,9 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/inbox"
-            className="relative inline-flex items-center gap-1.5 rounded-full bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs transition active:scale-95"
+            className="relative inline-flex items-center gap-1.5 rounded-full bg-white border border-gray-200/90 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs transition active:scale-95 cursor-pointer"
           >
-            <MessageSquare size={14} className="text-[#6367FF]" />
+            <MessageSquare size={14} className="text-indigo-400" />
             <span>Unified Inbox</span>
             {unreadMessagesCount > 0 && (
               <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white">
@@ -379,9 +379,9 @@ export default function DashboardPage() {
               loadSummary();
             }}
             title="Refresh dashboard metrics"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 transition shadow-2xs active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold text-gray-500 bg-white border border-gray-200/90 hover:bg-gray-50 transition shadow-2xs active:scale-95 cursor-pointer"
           >
-            <RefreshCw size={13} className={refreshing ? "animate-spin text-[#6367FF]" : ""} />
+            <RefreshCw size={13} className={refreshing ? "animate-spin text-indigo-400" : ""} />
             <span>Refresh</span>
           </button>
         </div>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
                 ) : alert.type === "warning" ? (
                   <AlertTriangle size={15} className="text-amber-600 shrink-0" />
                 ) : (
-                  <CheckCircle2 size={15} className="text-[#6367FF] shrink-0" />
+                  <CheckCircle2 size={15} className="text-indigo-400 shrink-0" />
                 )}
                 <div className="min-w-0 truncate">
                   <span className="font-bold">{alert.title}</span> —{" "}
@@ -427,7 +427,7 @@ export default function DashboardPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-28 text-center text-xs text-gray-400 space-y-3">
-          <Loader2 size={28} className="animate-spin text-[#6367FF]" />
+          <Loader2 size={28} className="animate-spin text-indigo-400" />
           <p className="font-semibold text-gray-500">Loading live telemetry and campaign analytics...</p>
         </div>
       ) : (
@@ -435,13 +435,13 @@ export default function DashboardPage() {
           {/* ── 2. Upper Grid: Statistics & Recent Activity (Matches Reference Video) ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             {/* Left Card (~68% width): Statistics */}
-            <div className="lg:col-span-8 rounded-3xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-5">
+            <div className="lg:col-span-8 rounded-2xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-5">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h2 className="text-base font-bold text-gray-900 tracking-tight">Statistics</h2>
                 <Link
                   href="/dashboard/campaigns"
-                  className="text-xs font-semibold text-[#6367FF] hover:underline"
+                  className="text-xs font-semibold text-indigo-400 hover:text-indigo-500 hover:underline"
                 >
                   View More
                 </Link>
@@ -453,25 +453,25 @@ export default function DashboardPage() {
                   percentage={invitePct}
                   fraction={`${inviteCount} / ${inviteLimit}`}
                   label="Invites sent"
-                  color="#6367FF"
+                  color="#818CF8"
                 />
                 <CircularProgressGauge
                   percentage={messagePct}
                   fraction={`${messageCount} / ${messageLimit}`}
                   label="Messages sent"
-                  color="#F43F5E"
+                  color="#FB7185"
                 />
                 <CircularProgressGauge
                   percentage={emailPct}
                   fraction={`${emailCount} / ${emailLimit}`}
                   label="Emails sent"
-                  color="#F59E0B"
+                  color="#FBBF24"
                 />
                 <CircularProgressGauge
                   percentage={profilePct}
                   fraction={`${profileCount} / ${profileLimit}`}
                   label="Profile viewed"
-                  color="#10B981"
+                  color="#34D399"
                 />
               </div>
 
@@ -488,7 +488,7 @@ export default function DashboardPage() {
                     </span>
                     <button
                       onClick={showWithdrawToast}
-                      className="rounded-full border border-gray-200 bg-white px-3.5 py-1 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95"
+                      className="rounded-full border border-gray-200/90 bg-white px-3.5 py-1 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                     >
                       Withdraw
                     </button>
@@ -506,7 +506,7 @@ export default function DashboardPage() {
                     </span>
                     <Link
                       href="/dashboard/inbox"
-                      className="rounded-full border border-gray-200 bg-white px-4 py-1 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95"
+                      className="rounded-full border border-gray-200/90 bg-white px-4 py-1 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                     >
                       View
                     </Link>
@@ -531,11 +531,11 @@ export default function DashboardPage() {
             </div>
 
             {/* Right Card (~32% width): Recent activity */}
-            <div className="lg:col-span-4 rounded-3xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div className="lg:col-span-4 rounded-2xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
                   <h2 className="text-base font-bold text-gray-900 tracking-tight">Recent activity</h2>
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 </div>
 
                 {/* Activity Feed Items (Real Database Events) */}
@@ -545,9 +545,9 @@ export default function DashboardPage() {
                       const isEmail = act.actionType === "email";
                       return (
                         <div key={act.id} className="flex items-start gap-3 group">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-50 border border-gray-100 text-gray-500 mt-0.5 group-hover:border-[#6367FF]/30 transition">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-50 border border-gray-100 text-gray-500 mt-0.5 group-hover:border-indigo-400/30 transition">
                             {isEmail ? (
-                              <Mail size={13} className="text-[#6367FF]" />
+                              <Mail size={13} className="text-indigo-400" />
                             ) : (
                               <FaLinkedin size={13} className="text-[#0A66C2]" />
                             )}
@@ -574,7 +574,7 @@ export default function DashboardPage() {
 
               <Link
                 href="/dashboard/campaigns"
-                className="mt-4 block w-full rounded-full border border-gray-200 bg-white py-2 text-center text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50"
+                className="mt-4 block w-full rounded-full border border-gray-200/90 bg-white py-2 text-center text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
               >
                 View all activity
               </Link>
@@ -582,21 +582,21 @@ export default function DashboardPage() {
           </div>
 
           {/* ── 3. Middle Section: Recent Campaigns Table (Matches Reference Video) ── */}
-          <div className="rounded-3xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-4">
+          <div className="rounded-2xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-4">
             {/* Header with All Campaigns & New Campaign (Both Rounded-Full) */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-base font-bold text-gray-900 tracking-tight">Recent campaigns</h2>
               <div className="flex items-center gap-2.5">
                 <Link
                   href="/dashboard/campaigns"
-                  className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50"
+                  className="rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                 >
                   All campaigns
                 </Link>
                 <button
                   onClick={handleCreateCampaign}
                   disabled={creatingCampaign}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#6367FF] hover:bg-[#5254e8] px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-60 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-60 cursor-pointer"
                 >
                   <Plus size={14} />
                   <span>{creatingCampaign ? "Creating..." : "New campaign"}</span>
@@ -629,21 +629,21 @@ export default function DashboardPage() {
                           <td className="py-4 pr-4">
                             <Link
                               href={`/dashboard/campaigns/${camp.id}`}
-                              className="inline-flex items-center gap-1.5 font-bold text-gray-800 group-hover:text-[#6367FF] transition"
+                              className="inline-flex items-center gap-1.5 font-bold text-gray-800 group-hover:text-indigo-400 transition"
                             >
                               <span>{camp.name}</span>
-                              <ChevronRight size={13} className="text-gray-400 group-hover:text-[#6367FF]" />
+                              <ChevronRight size={13} className="text-gray-400 group-hover:text-indigo-400" />
                             </Link>
                             <div className="mt-2 space-y-1 max-w-xs">
                               <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
                                 <span>👥 {camp.totalLeads} prospects</span>
-                                <span className="text-emerald-600 font-semibold">{camp.progressPct}%</span>
+                                <span className="text-emerald-500 font-semibold">{camp.progressPct}%</span>
                               </div>
                               {/* Segmented multi-color progress bar */}
                               <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                                 <div
                                   style={{ width: `${Math.min(70, camp.progressPct)}%` }}
-                                  className="bg-[#6367FF]"
+                                  className="bg-indigo-400"
                                 />
                                 <div
                                   style={{ width: `${Math.min(20, (camp.replyRate || 10))}%` }}
@@ -658,7 +658,7 @@ export default function DashboardPage() {
                           <td className="py-4 pr-4 align-top">
                             <div className="flex items-baseline gap-1.5">
                               <span className="text-sm font-bold text-gray-900">{camp.totalLeads}</span>
-                              <span className="text-[10px] font-bold text-[#6367FF]">Total</span>
+                              <span className="text-[10px] font-bold text-indigo-400">Total</span>
                             </div>
                             <p className="text-[11px] text-gray-400 mt-0.5">All leads</p>
                             <div className="mt-2 text-[11px] text-gray-400">
@@ -694,7 +694,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => handleToggleCampaign(camp.id, camp.status)}
                                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                                  isToggledActive ? "bg-emerald-500" : "bg-gray-200"
+                                  isToggledActive ? "bg-emerald-400" : "bg-gray-200"
                                 }`}
                               >
                                 <span
@@ -719,7 +719,7 @@ export default function DashboardPage() {
                         <button
                           onClick={handleCreateCampaign}
                           disabled={creatingCampaign}
-                          className="inline-flex items-center gap-1.5 mt-3 rounded-full bg-[#6367FF] px-4 py-2 text-xs font-bold text-white hover:bg-[#5254e8] disabled:opacity-60 cursor-pointer"
+                          className="inline-flex items-center gap-1.5 mt-3 rounded-full bg-indigo-400 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-60 cursor-pointer shadow-sm transition active:scale-95"
                         >
                           <Plus size={13} />
                           <span>{creatingCampaign ? "Creating..." : "Create first campaign"}</span>
@@ -733,24 +733,24 @@ export default function DashboardPage() {
           </div>
 
           {/* ── 4. Bottom Section: Your team & Multi-Bar Activity Chart (Matches Video) ── */}
-          <div className="rounded-3xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-5">
+          <div className="rounded-2xl border border-gray-100/90 bg-white p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-5">
             {selectedMember ? (
               /* Dedicated Team Member Profile View (Matches Video 00:22) */
               <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
                   <button
                     onClick={() => setSelectedMember(null)}
-                    className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50"
+                    className="flex items-center gap-1.5 rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                   >
                     <ArrowLeft size={14} />
                     <span>Back to Team</span>
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <button className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50">
+                    <button className="rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 active:scale-95 cursor-pointer">
                       View on LinkedIn
                     </button>
-                    <button className="rounded-full bg-[#6367FF] hover:bg-[#5254e8] px-4 py-2 text-xs font-bold text-white shadow-sm">
+                    <button className="rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer">
                       Sign in →
                     </button>
                   </div>
@@ -758,7 +758,7 @@ export default function DashboardPage() {
 
                 {/* Member Header Information */}
                 <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-[#6367FF] to-violet-400 text-lg font-bold text-white shadow-sm">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 text-lg font-bold text-white shadow-sm">
                     {selectedMember.avatar}
                   </div>
                   <div>
@@ -768,7 +768,7 @@ export default function DashboardPage() {
                       <span>·</span>
                       <span>Role: <strong className="text-gray-800">{selectedMember.role || "MEMBER"}</strong></span>
                       <span>·</span>
-                      <span className="font-bold text-emerald-600">Active</span>
+                      <span className="font-bold text-emerald-500">Active</span>
                     </div>
                   </div>
                 </div>
@@ -793,7 +793,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="rounded-2xl border border-gray-100 bg-[#FAFAFC] p-3 text-center">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Reply Rate</p>
-                    <p className="mt-1 text-lg font-black text-emerald-600">{pipeline.overallReplyRate || 0}%</p>
+                    <p className="mt-1 text-lg font-black text-emerald-500">{pipeline.overallReplyRate || 0}%</p>
                   </div>
                   <div className="rounded-2xl border border-gray-100 bg-[#FAFAFC] p-3 text-center">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Enrolled Leads</p>
@@ -814,10 +814,10 @@ export default function DashboardPage() {
                     <button
                       key={tab.key}
                       onClick={() => handleRangeChange(tab.key)}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                         range === tab.key
                           ? "bg-gray-900 text-white shadow-xs"
-                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                          : "text-gray-500 border border-gray-200/90 bg-white hover:bg-gray-50 hover:text-gray-800 shadow-2xs active:scale-95"
                       }`}
                     >
                       {tab.label}
@@ -826,7 +826,7 @@ export default function DashboardPage() {
                   {teamMembers.length > 0 && (
                     <button
                       onClick={() => setSelectedMember(teamMembers[0])}
-                      className="ml-1 rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95"
+                      className="ml-1 rounded-full border border-gray-200/90 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
                     >
                       View profile
                     </button>
@@ -846,12 +846,12 @@ export default function DashboardPage() {
                       onClick={() => setSelectedMember(member)}
                       className={`flex w-full items-center justify-between rounded-2xl p-2.5 text-left transition ${
                         selectedMember?.id === member.id
-                          ? "bg-[#6367FF]/10 border border-[#6367FF]/30"
-                          : "hover:bg-gray-50 border border-transparent"
+                          ? "bg-indigo-50 border border-indigo-200"
+                          : "hover:bg-gray-50 border border-transparent cursor-pointer"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#6367FF] to-violet-400 text-xs font-bold text-white">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 text-xs font-bold text-white">
                           {member.avatar}
                         </div>
                         <div className="min-w-0 truncate">
@@ -882,37 +882,37 @@ export default function DashboardPage() {
                           <div className="flex items-end justify-center gap-1 w-full max-w-[55px] h-44">
                             {/* Purple: Invites Sent */}
                             <div
-                              className="w-1.5 sm:w-2 rounded-t-sm bg-[#6367FF] transition-all hover:brightness-110"
+                              className="w-1.5 sm:w-2 rounded-t-sm bg-indigo-400 transition-all hover:brightness-110"
                               style={{ height: `${Math.max(4, (day.invitesSent / maxChartVal) * 100)}%` }}
                               title={`Invites sent: ${day.invitesSent}`}
                             />
                             {/* Green: Invites Accepted */}
                             <div
-                              className="w-1.5 sm:w-2 rounded-t-sm bg-[#10B981] transition-all hover:brightness-110"
+                              className="w-1.5 sm:w-2 rounded-t-sm bg-emerald-400 transition-all hover:brightness-110"
                               style={{ height: `${Math.max(4, (day.invitesAccepted / maxChartVal) * 100)}%` }}
                               title={`Invites accepted: ${day.invitesAccepted}`}
                             />
                             {/* Coral: Messages Sent */}
                             <div
-                              className="w-1.5 sm:w-2 rounded-t-sm bg-[#F43F5E] transition-all hover:brightness-110"
+                              className="w-1.5 sm:w-2 rounded-t-sm bg-rose-400 transition-all hover:brightness-110"
                               style={{ height: `${Math.max(4, (day.messagesSent / maxChartVal) * 100)}%` }}
                               title={`Messages sent: ${day.messagesSent}`}
                             />
                             {/* Amber: Leads Replied */}
                             <div
-                              className="w-1.5 sm:w-2 rounded-t-sm bg-[#F59E0B] transition-all hover:brightness-110"
+                              className="w-1.5 sm:w-2 rounded-t-sm bg-amber-400 transition-all hover:brightness-110"
                               style={{ height: `${Math.max(4, (day.leadsReplied / maxChartVal) * 100)}%` }}
                               title={`Leads replied: ${day.leadsReplied}`}
                             />
-                            {/* Indigo: Emails Sent */}
+                            {/* Violet: Emails Sent */}
                             <div
-                              className="w-1.5 sm:w-2 rounded-t-sm bg-[#4F46E5] transition-all hover:brightness-110"
+                              className="w-1.5 sm:w-2 rounded-t-sm bg-violet-400 transition-all hover:brightness-110"
                               style={{ height: `${Math.max(4, (day.emailsSent / maxChartVal) * 100)}%` }}
                               title={`Emails sent: ${day.emailsSent}`}
                             />
                             {/* Sky: Profiles Viewed */}
                             <div
-                              className="w-1.5 sm:w-2 rounded-t-sm bg-[#0EA5E9] transition-all hover:brightness-110"
+                              className="w-1.5 sm:w-2 rounded-t-sm bg-sky-400 transition-all hover:brightness-110"
                               style={{ height: `${Math.max(4, (day.profilesViewed / maxChartVal) * 100)}%` }}
                               title={`Profiles viewed: ${day.profilesViewed}`}
                             />
@@ -935,27 +935,27 @@ export default function DashboardPage() {
                 {/* Chart Color Legend (Matches Reference Video) */}
                 <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] font-medium text-gray-500 pt-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#6367FF]" />
+                    <span className="h-2 w-2 rounded-full bg-indigo-400" />
                     <span>Invites sent</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#10B981]" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
                     <span>Invites accepted</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#F43F5E]" />
+                    <span className="h-2 w-2 rounded-full bg-rose-400" />
                     <span>Messages sent</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#F59E0B]" />
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
                     <span>Leads replied</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#4F46E5]" />
+                    <span className="h-2 w-2 rounded-full bg-violet-400" />
                     <span>Emails sent</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#0EA5E9]" />
+                    <span className="h-2 w-2 rounded-full bg-sky-400" />
                     <span>Profiles viewed</span>
                   </div>
                 </div>

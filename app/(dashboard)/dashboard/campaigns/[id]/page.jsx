@@ -30,6 +30,44 @@ const TABS = [
   { id: "queue", label: "Execution Queue", icon: Clock },
 ];
 
+function formatFriendlyDateTime(dateString) {
+  if (!dateString) return "Immediate";
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = date - now;
+
+  if (diffMs <= 0) return "Due Now";
+
+  const diffMins = Math.round(diffMs / 60000);
+  const timeStr = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  if (diffMins < 60) {
+    return `In ${diffMins}m (${timeStr})`;
+  }
+
+  const isToday =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+
+  if (isToday) {
+    return `Today at ${timeStr}`;
+  }
+
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const isTomorrow =
+    date.getDate() === tomorrow.getDate() &&
+    date.getMonth() === tomorrow.getMonth() &&
+    date.getFullYear() === tomorrow.getFullYear();
+
+  if (isTomorrow) {
+    return `Tomorrow at ${timeStr}`;
+  }
+
+  const dateStr = date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  return `${dateStr}, ${timeStr}`;
+}
+
 export default function CampaignCommandCenterPage({ params }) {
   const unwrappedParams = use(params);
   const campaignId = unwrappedParams.id;
@@ -207,6 +245,17 @@ export default function CampaignCommandCenterPage({ params }) {
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-600">
                 {campaign.status}
+              </span>
+            )}
+
+            {/* Next Scheduled Action Pill */}
+            {isActive && analytics?.nextScheduledJob && (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100"
+                title={new Date(analytics.nextScheduledJob.runAfter).toLocaleString()}
+              >
+                <Clock className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                <span>Next Email: {formatFriendlyDateTime(analytics.nextScheduledJob.runAfter)}</span>
               </span>
             )}
           </div>

@@ -254,13 +254,13 @@ export default function LeadsPage() {
   const isPartiallySelected = selectedIds.length > 0 && selectedIds.length < leads.length;
 
   return (
-    <div className="min-h-screen bg-gray-50/70 p-4 md:p-6 space-y-4">
+    <div className="min-h-screen bg-[#F2F2F6] p-4 md:p-6 space-y-4">
       {/* 1. Header */}
-      <div className="bg-white rounded-2xl shadow-2xs border border-gray-100 p-4 md:p-5 flex items-center justify-between gap-4 flex-wrap">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 p-4 md:p-5 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
             <span>Leads</span>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-500 border border-indigo-100">
               {total} prospects
             </span>
           </h1>
@@ -273,7 +273,7 @@ export default function LeadsPage() {
           {/* Export CSV Button */}
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
             title="Download RFC 4180 CSV matching current filters"
           >
             <Download className="w-3.5 h-3.5 text-gray-500" />
@@ -283,13 +283,16 @@ export default function LeadsPage() {
           {/* Import Leads Button */}
           <button
             onClick={() => setOpenImport(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold text-white shadow-xs transition bg-violet-600 hover:bg-violet-700"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white shadow-sm transition bg-indigo-400 hover:bg-indigo-500 active:scale-95 cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Import Leads</span>
           </button>
 
-          <button className="p-2 transition-colors rounded-full hover:bg-gray-100 text-gray-500">
+          <button
+            title="Notifications"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
+          >
             <BellIcon />
           </button>
         </div>
@@ -306,7 +309,7 @@ export default function LeadsPage() {
       )}
 
       {/* 2. Filter Toolbar */}
-      <div className="bg-white rounded-2xl shadow-2xs border border-gray-100 p-4 space-y-3">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 p-4 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search Input */}
           <div className="relative flex-1 min-w-[220px]">
@@ -319,7 +322,7 @@ export default function LeadsPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-9 pr-4 py-2 text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-full focus:outline-hidden focus:ring-2 focus:ring-violet-400 transition"
+              className="w-full pl-9 pr-4 py-2 text-xs text-gray-700 bg-white border border-gray-200/90 rounded-full shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 transition"
             />
           </div>
 
@@ -331,7 +334,7 @@ export default function LeadsPage() {
                 setCampaignFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 text-xs bg-white border border-gray-200/90 rounded-full font-medium text-gray-700 shadow-2xs hover:bg-gray-50 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 transition"
             >
               <option value="all">All Campaigns</option>
               <option value="unassigned">Unassigned (Not Enrolled)</option>
@@ -351,7 +354,7 @@ export default function LeadsPage() {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 text-xs bg-white border border-gray-200/90 rounded-full font-medium text-gray-700 shadow-2xs hover:bg-gray-50 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 transition"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -369,7 +372,7 @@ export default function LeadsPage() {
                 setSourceFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 text-xs bg-white border border-gray-200/90 rounded-full font-medium text-gray-700 shadow-2xs hover:bg-gray-50 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 transition"
             >
               <option value="all">All Sources</option>
               {Object.entries(SOURCE_LABELS).map(([k, label]) => (
@@ -389,7 +392,7 @@ export default function LeadsPage() {
                   setTagFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-full font-medium text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-violet-400"
+                className="w-full px-3 py-2 text-xs bg-white border border-gray-200/90 rounded-full font-medium text-gray-700 shadow-2xs hover:bg-gray-50 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 transition"
               >
                 <option value="all">All Tags</option>
                 {allTags.map((t) => (
@@ -404,7 +407,7 @@ export default function LeadsPage() {
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-full transition flex items-center gap-1"
+              className="px-3 py-2 text-xs font-semibold text-rose-500 border border-rose-200/90 bg-white hover:bg-rose-50 rounded-full shadow-2xs transition active:scale-95 cursor-pointer flex items-center gap-1"
             >
               <X className="w-3.5 h-3.5" />
               <span>Clear Filters</span>
@@ -415,9 +418,9 @@ export default function LeadsPage() {
 
       {/* 3. Floating Bulk Actions Bar */}
       {selectedIds.length > 0 && (
-        <div className="sticky top-4 z-30 bg-white border border-gray-100 text-white rounded-2xl p-3.5 px-5 shadow-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+        <div className="sticky top-4 z-30 bg-white border border-gray-200/90 text-gray-900 rounded-2xl p-3.5 px-5 shadow-xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-2.5">
-            <span className="w-6 h-6 rounded-full bg-violet-600 text-white font-bold text-xs flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-indigo-400 text-white font-bold text-xs flex items-center justify-center shadow-xs">
               {selectedIds.length}
             </span>
             <span className="text-xs font-semibold text-gray-700">
@@ -429,7 +432,7 @@ export default function LeadsPage() {
             {/* Bulk Enroll */}
             <button
               onClick={() => setOpenBulkEnroll(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-xs transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition active:scale-95 cursor-pointer"
             >
               <Megaphone className="w-3.5 h-3.5" />
               <span>Enroll in Campaign</span>
@@ -438,7 +441,7 @@ export default function LeadsPage() {
             {/* Bulk Tag */}
             <button
               onClick={() => setOpenBulkTag(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200/90 bg-white text-gray-700 hover:bg-gray-50 text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
             >
               <Tag className="w-3.5 h-3.5 text-gray-400" />
               <span>Manage Tags</span>
@@ -448,7 +451,7 @@ export default function LeadsPage() {
             <button
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-semibold transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {bulkDeleting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -461,7 +464,7 @@ export default function LeadsPage() {
             {/* Deselect All */}
             <button
               onClick={() => setSelectedIds([])}
-              className="px-2.5 py-1.5 text-xs bg-gray-800 rounded-full hover:bg-gray-700 text-white hover:text-white transition font-medium"
+              className="px-3.5 py-2 text-xs rounded-full border border-gray-200/90 bg-white text-gray-600 hover:bg-gray-50 font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
             >
               Deselect All
             </button>
@@ -470,7 +473,7 @@ export default function LeadsPage() {
       )}
 
       {/* 4. Leads Roster Table */}
-      <div className="bg-white rounded-2xl shadow-2xs border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 overflow-hidden">
         {loading ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -550,13 +553,13 @@ export default function LeadsPage() {
                     <button
                       type="button"
                       onClick={handleSelectAll}
-                      className="p-1 rounded text-gray-500 hover:text-violet-600 transition"
+                      className="p-1 rounded-sm text-gray-500 hover:text-indigo-400 transition cursor-pointer"
                       title={isAllSelected ? "Deselect all" : "Select all on this page"}
                     >
                       {isAllSelected ? (
-                        <CheckSquare className="w-4 h-4 text-violet-600" />
+                        <CheckSquare className="w-4 h-4 text-indigo-400" />
                       ) : isPartiallySelected ? (
-                        <MinusSquare className="w-4 h-4 text-violet-500" />
+                        <MinusSquare className="w-4 h-4 text-indigo-400" />
                       ) : (
                         <Square className="w-4 h-4 text-gray-300" />
                       )}
@@ -586,7 +589,7 @@ export default function LeadsPage() {
                       key={lead.id ? `${lead.id}-${idx}` : idx}
                       onClick={() => setDetailId(lead.id)}
                       className={`hover:bg-gray-50/60 transition-colors cursor-pointer ${
-                        isSelected ? "bg-violet-50/40" : ""
+                        isSelected ? "bg-indigo-50/40" : ""
                       }`}
                     >
                       {/* Row Checkbox */}
@@ -594,9 +597,9 @@ export default function LeadsPage() {
                         className="py-3.5 px-4 text-center"
                         onClick={(e) => handleToggleRow(lead.id, e)}
                       >
-                        <button type="button" className="p-1 rounded text-gray-500">
+                        <button type="button" className="p-1 rounded-sm text-gray-500 cursor-pointer">
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-violet-600" />
+                            <CheckSquare className="w-4 h-4 text-indigo-400" />
                           ) : (
                             <Square className="w-4 h-4 text-gray-300 hover:text-gray-400" />
                           )}
@@ -606,7 +609,7 @@ export default function LeadsPage() {
                       {/* Prospect Info */}
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-violet-50 text-violet-700 font-bold flex items-center justify-center text-xs border border-violet-100 shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-500 font-bold flex items-center justify-center text-xs border border-indigo-100 shrink-0">
                             {initials}
                           </div>
                           <div className="min-w-0">
@@ -636,7 +639,7 @@ export default function LeadsPage() {
                           {(lead.tags || []).slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600"
+                              className="rounded-full bg-indigo-50/80 text-indigo-500 border border-indigo-100/70 px-2 py-0.5 text-[10px] font-semibold"
                             >
                               {tag}
                             </span>
@@ -661,7 +664,7 @@ export default function LeadsPage() {
                                 key={camp.enrollmentId || (camp.id ? `${camp.id}-${cIdx}` : cIdx)}
                                 href={`/dashboard/campaigns/${camp.id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50/80 text-violet-700 hover:bg-violet-100 border border-violet-100 transition shadow-2xs"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50/80 text-indigo-500 hover:bg-indigo-100 border border-indigo-100 transition shadow-2xs"
                                 title={`${camp.name} · ${camp.currentStepTitle} (${camp.enrollmentStatus})`}
                               >
                                 <span
@@ -741,7 +744,7 @@ export default function LeadsPage() {
                   setLimit(Number(e.target.value));
                   setPage(1);
                 }}
-                className="px-2 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700"
+                className="px-3 py-1 bg-white border border-gray-200/90 rounded-full text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 cursor-pointer"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -754,7 +757,7 @@ export default function LeadsPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="p-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                className="p-1.5 rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-2xs transition active:scale-95 cursor-pointer"
                 title="Previous page"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -765,7 +768,7 @@ export default function LeadsPage() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="p-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                className="p-1.5 rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-2xs transition active:scale-95 cursor-pointer"
                 title="Next page"
               >
                 <ChevronRight className="w-3.5 h-3.5" />

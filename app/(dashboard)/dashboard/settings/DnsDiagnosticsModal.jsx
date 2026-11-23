@@ -119,11 +119,11 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-xs">
-      <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200/90 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 p-6 bg-linear-to-r from-violet-50/50 via-white to-gray-50/50">
+        <div className="flex items-center justify-between border-b border-gray-100 p-6 bg-gradient-to-r from-indigo-50/50 via-white to-gray-50/50">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#6367FF]/10 text-[#6367FF]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-400 border border-indigo-100">
               <ShieldCheck size={22} />
             </div>
             <div>
@@ -162,9 +162,9 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
         <div className="flex border-b border-gray-100 bg-gray-50/50 px-6">
           <button
             onClick={() => setActiveTab("diagnostic")}
-            className={`border-b-2 py-3 px-4 text-xs font-bold transition ${
+            className={`border-b-2 py-3 px-4 text-xs font-bold transition cursor-pointer ${
               activeTab === "diagnostic"
-                ? "border-[#6367FF] text-[#6367FF]"
+                ? "border-indigo-400 text-indigo-600"
                 : "border-transparent text-gray-400 hover:text-gray-700"
             }`}
           >
@@ -172,9 +172,9 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
           </button>
           <button
             onClick={() => setActiveTab("records")}
-            className={`border-b-2 py-3 px-4 text-xs font-bold transition ${
+            className={`border-b-2 py-3 px-4 text-xs font-bold transition cursor-pointer ${
               activeTab === "records"
-                ? "border-[#6367FF] text-[#6367FF]"
+                ? "border-indigo-400 text-indigo-600"
                 : "border-transparent text-gray-400 hover:text-gray-700"
             }`}
           >
@@ -186,7 +186,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 text-center text-xs text-gray-400 space-y-3">
-              <Loader2 size={24} className="animate-spin text-[#6367FF]" />
+              <Loader2 size={24} className="animate-spin text-indigo-400" />
               <p className="font-medium">Querying authoritative nameservers for SPF, DKIM, DMARC, and MX...</p>
             </div>
           ) : error ? (
@@ -196,7 +196,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
           ) : activeTab === "diagnostic" ? (
             <>
               {/* Score Meter Banner */}
-              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-linear-to-r from-violet-500 to-[#6367FF] p-4 text-white shadow-xs">
+              <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gradient-to-r from-indigo-500 to-indigo-400 p-4 text-white shadow-xs">
                 <div>
                   <p className="text-xs font-medium text-violet-100">Overall Deliverability Index</p>
                   <h4 className="text-2xl font-black">{score}% Health</h4>
@@ -222,7 +222,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
               <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FileText size={16} className="text-[#6367FF]" />
+                    <FileText size={16} className="text-indigo-400" />
                     <span className="text-xs font-bold text-gray-800">SPF (Sender Policy Framework)</span>
                   </div>
                   {getStatusBadge(data.spf?.status)}
@@ -244,7 +244,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
               <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <KeyRound size={16} className="text-[#6367FF]" />
+                    <KeyRound size={16} className="text-indigo-400" />
                     <span className="text-xs font-bold text-gray-800">DKIM (DomainKeys Identified Mail)</span>
                   </div>
                   {getStatusBadge(data.dkim?.status)}
@@ -263,11 +263,11 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
                     placeholder={`Current selector: ${data.dkim?.selector || "google"}`}
                     value={customSelector}
                     onChange={(e) => setCustomSelector(e.target.value)}
-                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-[#6367FF]"
+                    className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40"
                   />
                   <button
                     onClick={() => handleManualCheck(customSelector)}
-                    className="rounded-full bg-gray-100 px-4 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-200 transition"
+                    className="rounded-full border border-gray-200/90 bg-white px-4 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 transition active:scale-95 cursor-pointer"
                   >
                     Test Selector
                   </button>
@@ -278,7 +278,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
               <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck size={16} className="text-[#6367FF]" />
+                    <ShieldCheck size={16} className="text-indigo-400" />
                     <span className="text-xs font-bold text-gray-800">DMARC (Anti-Spoofing Policy)</span>
                   </div>
                   {getStatusBadge(data.dmarc?.status)}
@@ -300,7 +300,7 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
               <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Server size={16} className="text-[#6367FF]" />
+                    <Server size={16} className="text-indigo-400" />
                     <span className="text-xs font-bold text-gray-800">MX (Mail Exchange Server)</span>
                   </div>
                   {getStatusBadge(data.mx?.status)}
@@ -327,14 +327,14 @@ export default function DnsDiagnosticsModal({ isOpen, onClose, account, onUpdate
                 <div key={idx} className="rounded-2xl border border-gray-200/80 bg-gray-50/50 p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-black text-violet-700 uppercase">
+                      <span className="rounded-full bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 uppercase">
                         {guide.type}
                       </span>
                       <span className="text-xs font-bold text-gray-800">{guide.purpose}</span>
                     </div>
                     <button
                       onClick={() => handleCopy(`val-${idx}`, guide.value)}
-                      className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-3 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition shadow-2xs"
+                      className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200/90 px-3 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-50 transition shadow-2xs active:scale-95 cursor-pointer"
                     >
                       {copiedKey === `val-${idx}` ? (
                         <>

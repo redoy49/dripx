@@ -1,5 +1,5 @@
-import { MockLinkedInConnector } from "@/app/lib/connectors/MockLinkedInConnector";
-import { UnipileConnector } from "@/app/lib/connectors/UnipileConnector";
+import { MockLinkedInConnector } from "./MockLinkedInConnector.js";
+import { UnipileConnector } from "./UnipileConnector.js";
 
 let cachedConnector = null;
 let cachedProvider = null;

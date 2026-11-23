@@ -48,6 +48,7 @@ export default function DelayEditorModal({ open, initial, onClose, onSave }) {
               onChange={(e) => setUnit(e.target.value)}
               className="rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-[#6367FF]/40"
             >
+              <option value="minutes">minutes</option>
               <option value="hours">hours</option>
               <option value="days">days</option>
             </select>

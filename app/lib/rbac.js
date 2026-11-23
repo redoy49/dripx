@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { dbConnect } from "@/app/lib/mongoDb";
+import { dbConnect } from "./mongoDb.js";
 
 const ROLE_RANK = { member: 0, admin: 1, owner: 2 };
 

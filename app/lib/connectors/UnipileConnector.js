@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
-import { LinkedInConnector } from "@/app/lib/connectors/LinkedInConnector";
-import { dbConnect } from "@/app/lib/mongoDb";
-import * as unipile from "@/app/lib/integrations/unipile";
+import { LinkedInConnector } from "./LinkedInConnector.js";
+import { dbConnect } from "../mongoDb.js";
+import * as unipile from "../integrations/unipile.js";
 
 async function getConnectedAccountId(workspaceId) {
   const integrations = await dbConnect("integrations");

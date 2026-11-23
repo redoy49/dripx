@@ -261,37 +261,33 @@ function SettingsPageContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="flex flex-col min-h-screen bg-transparent text-gray-900 font-sans p-4 sm:p-6">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-8 bg-white border-b border-gray-100 rounded-xl">
-        <h1
-          className="text-2xl font-semibold"
-          style={{
-            background: "linear-gradient(90deg, #ee7aee 0%, #fe9b85 100%)",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-        >
+      <header className="flex items-center justify-between p-4 mb-4 bg-white border border-gray-200/90 rounded-2xl shadow-2xs">
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight">
           Settings
         </h1>
-        <button className="p-2 transition-colors rounded-full hover:ring bg-gray-100 hover:ring-gray-200 ">
+        <button
+          title="Notifications"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 cursor-pointer active:scale-95"
+        >
           <BellIcon />
         </button>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full py-8 mx-auto">
-        <div className="overflow-hidden bg-white rounded-xl border border-gray-100">
+      <main className="flex-1 w-full">
+        <div className="overflow-hidden bg-white rounded-2xl border border-gray-200/90 shadow-2xs">
           {/* Tabs */}
-          <nav className="flex px-6 border-b border-gray-100 overflow-x-auto no-scrollbar">
+          <nav className="flex px-4 py-3 border-b border-gray-200/90 overflow-x-auto no-scrollbar gap-1.5 bg-gray-50/50">
             {TABS.map((tab, i) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(i)}
-                className={`whitespace-nowrap px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                className={`whitespace-nowrap px-4 py-2 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                   activeTab === i
-                    ? "border-indigo-600 text-indigo-600"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
+                    ? "bg-indigo-400 text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-white/80"
                 }`}
               >
                 {tab}
@@ -323,7 +319,7 @@ function SettingsPageContent() {
                       <select
                         value={limits.range}
                         onChange={(e) => updateRange(e.target.value)}
-                        className="appearance-none bg-gray-100 border border-gray-200 rounded-lg px-4 py-1.5 pr-8 font-bold text-gray-800 cursor-pointer focus:outline-none"
+                        className="appearance-none bg-white border border-gray-200/90 rounded-full px-4 py-1.5 pr-8 text-xs font-bold text-gray-800 shadow-2xs cursor-pointer focus:outline-none transition hover:bg-gray-50"
                         style={{
                           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M8 10L12 14L16 10' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
                           backgroundRepeat: "no-repeat",
@@ -365,14 +361,14 @@ function SettingsPageContent() {
                   </p>
 
                   <div
-                    className={`flex items-center justify-between w-full p-3 mt-4 border rounded-xl transition-all ${
+                    className={`flex items-center justify-between w-full p-3.5 mt-4 border rounded-full transition-all shadow-2xs ${
                       limits.activityControlOn
-                        ? "bg-green-50 border-green-200"
-                        : "bg-gray-50 border-gray-200"
+                        ? "bg-emerald-50/60 border-emerald-200"
+                        : "bg-gray-50 border-gray-200/90"
                     }`}
                   >
                     <span
-                      className={`text-sm font-bold ${limits.activityControlOn ? "text-green-600" : "text-gray-500"}`}
+                      className={`text-xs font-bold pl-2 ${limits.activityControlOn ? "text-emerald-600" : "text-gray-500"}`}
                     >
                       {limits.activityControlOn ? "Activated" : "Deactivated"}
                     </span>

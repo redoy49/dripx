@@ -6,12 +6,12 @@ export function ToggleViolet({ active, onChange }) {
     <button
       type="button"
       onClick={onChange}
-      className={`relative inline-flex h-5.5 w-11 items-center rounded-full transition-colors duration-200 ${
-        active ? "bg-violet-500" : "bg-gray-200"
+      className={`relative inline-flex h-5.5 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer ${
+        active ? "bg-emerald-400" : "bg-gray-200"
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition-transform duration-200 ${
           active ? "translate-x-6" : "translate-x-1"
         }`}
       />
@@ -31,7 +31,7 @@ export function ToggleGreen({ checked, onChange }) {
       />
       <div
         className={`absolute inset-0 rounded-full transition-colors ${
-          checked ? "bg-green-500" : "bg-gray-300"
+          checked ? "bg-emerald-400" : "bg-gray-300"
         }`}
       />
       <div

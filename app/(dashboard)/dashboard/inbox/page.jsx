@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Info, Search, Mail, RefreshCw } from "lucide-react";
+import { Info, Search, Mail, RefreshCw, Trash2 } from "lucide-react";
 import ConversationThread from "@/app/(dashboard)/dashboard/inbox/ConversationThread";
 import LeadDetailPanel from "@/app/(dashboard)/dashboard/inbox/LeadDetailPanel";
 import { FaLinkedin } from "react-icons/fa";
@@ -19,7 +19,7 @@ const CHANNELS = [
   { key: "linkedin", label: "LinkedIn", icon: FaLinkedin },
 ];
 
-import { getCached, setCached } from "@/app/lib/swrCache";
+import { getCached, setCached, clearCache } from "@/app/lib/swrCache";
 
 function formatMessageTime(dateString) {
   if (!dateString) return "";
@@ -183,6 +183,39 @@ export default function InboxPage() {
     setActiveConversationData(data);
   }, []);
 
+  const handleDeleteConversation = useCallback((conversationId) => {
+    // Clear cached conversation lists to prevent resurrection on tab change
+    clearCache("/api/conversations");
+
+    setConversations((prev) => {
+      const updated = prev.filter((c) => c.id !== conversationId);
+      const unreadSum = updated.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+      queueMicrotask(() => {
+        window.dispatchEvent(
+          new CustomEvent("dripx:unread-changed", { detail: { totalUnread: unreadSum } })
+        );
+      });
+      return updated;
+    });
+
+    setActiveId((curr) => (curr === conversationId ? null : curr));
+    setActiveConversationData((curr) => (curr?.id === conversationId ? null : curr));
+  }, []);
+
+  const handleQuickDelete = async (conversationId) => {
+    if (!confirm("Are you sure you want to delete this conversation and its messages?")) return;
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}`, { method: "DELETE" });
+      if (res.ok) {
+        handleDeleteConversation(conversationId);
+      } else {
+        alert("Failed to delete conversation");
+      }
+    } catch (err) {
+      console.error("Delete conversation failed:", err);
+    }
+  };
+
   const handleSelectConversation = (item) => {
     setActiveId(item.id);
     if (item.unreadCount > 0) {
@@ -231,18 +264,11 @@ export default function InboxPage() {
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="h-full min-h-0 flex flex-col p-4 bg-[#F2F2F6] overflow-hidden">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 p-4 mb-4 flex items-center justify-between">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 p-4 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <h1
-            className="text-2xl font-semibold"
-            style={{
-              background: "linear-gradient(90deg, #ee7aee 0%, #fe9b85 100%)",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
-            }}
-          >
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
             Unified Inbox
           </h1>
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full font-medium">
@@ -255,15 +281,15 @@ export default function InboxPage() {
           <button
             onClick={handleManualRefresh}
             disabled={refreshing}
-            className="p-2 transition-colors rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-100 text-gray-500 hover:text-gray-700"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
             title="Refresh inbox"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-violet-500" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-indigo-400" : ""}`} />
           </button>
 
           {totalUnread > 0 && (
-            <span className="px-2.5 py-1 rounded-full bg-violet-50 text-violet-600 border border-violet-100 text-xs font-semibold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+            <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-500 border border-indigo-100 text-xs font-semibold flex items-center gap-1.5 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
               {totalUnread} unread
             </span>
           )}
@@ -271,19 +297,19 @@ export default function InboxPage() {
       </div>
 
       {/* 3-Column Layout */}
-      <div className="grid grid-cols-[330px_1fr_310px] gap-4 h-[calc(100vh-115px)]">
+      <div className="grid grid-cols-[330px_1fr_310px] gap-4 flex-1 min-h-0 overflow-hidden">
         {/* Sidebar: Conversation List */}
-        <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 overflow-hidden flex flex-col min-h-0">
           {/* Search & Channel Filter */}
           <div className="p-3.5 border-b border-gray-100 space-y-3">
             <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search by name, email, company..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-10 pl-10 pr-3 rounded-xl border border-gray-200 bg-gray-50 text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-100 focus:border-violet-300 transition-all"
+                className="w-full pl-9 pr-3 py-2 rounded-full border border-gray-200/90 bg-white text-xs text-gray-700 placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 shadow-2xs transition-all"
               />
             </div>
 
@@ -296,9 +322,9 @@ export default function InboxPage() {
                   <button
                     key={ch.key}
                     onClick={() => setChannel(ch.key)}
-                    className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-full text-[11px] font-medium transition-all ${
+                    className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer active:scale-95 ${
                       active
-                        ? "bg-white text-violet-600 shadow-2xs font-semibold"
+                        ? "bg-white text-indigo-600 shadow-2xs font-semibold border border-gray-200/60"
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
@@ -315,13 +341,13 @@ export default function InboxPage() {
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`text-xs font-medium transition-colors relative pb-1.5 ${
-                    tab === t.key ? "text-violet-600 font-semibold" : "text-gray-400 hover:text-gray-600"
+                  className={`text-xs font-medium transition-colors relative pb-1.5 cursor-pointer ${
+                    tab === t.key ? "text-indigo-600 font-semibold" : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
                   {t.label}
                   {tab === t.key && (
-                    <span className="absolute left-0 bottom-0 w-full h-[2px] bg-violet-500 rounded-full" />
+                    <span className="absolute left-0 bottom-0 w-full h-[2px] bg-indigo-400 rounded-full" />
                   )}
                 </button>
               ))}
@@ -354,12 +380,20 @@ export default function InboxPage() {
                 const isEmail = item.channel === "email";
 
                 return (
-                  <button
+                  <div
                     key={item.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleSelectConversation(item)}
-                    className={`w-full px-3.5 py-3.5 flex items-start gap-3 text-left transition-colors relative ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSelectConversation(item);
+                      }
+                    }}
+                    className={`w-full px-3.5 py-3.5 flex items-start gap-3 text-left transition-colors relative group cursor-pointer ${
                       isSelected
-                        ? "bg-violet-50/60"
+                        ? "bg-indigo-50/50"
                         : isUnread
                           ? "bg-white hover:bg-gray-50/80"
                           : "bg-white hover:bg-gray-50/50"
@@ -367,17 +401,17 @@ export default function InboxPage() {
                   >
                     {/* Unread Accent Bar */}
                     {isUnread && (
-                      <span className="absolute left-0 top-3 bottom-3 w-1 bg-violet-500 rounded-r-md" />
+                      <span className="absolute left-0 top-3 bottom-3 w-1 bg-indigo-400 rounded-r-md" />
                     )}
 
                     {/* Avatar with Channel Badge */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-violet-50 text-violet-700 font-bold flex items-center justify-center text-xs border border-violet-100 shadow-2xs">
+                      <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 font-bold flex items-center justify-center text-xs border border-indigo-100 shadow-2xs">
                         {(item.lead?.firstName?.[0] || "?").toUpperCase()}
                       </div>
                       <span
                         className={`absolute -bottom-0.5 -right-0.5 p-0.5 rounded-full text-white text-[9px] shadow-2xs ${
-                          isEmail ? "bg-blue-500" : "bg-[#0A66C2]"
+                          isEmail ? "bg-sky-500" : "bg-[#0A66C2]"
                         }`}
                         title={isEmail ? "Email conversation" : "LinkedIn conversation"}
                       >
@@ -396,9 +430,24 @@ export default function InboxPage() {
                             ? `${item.lead.firstName || ""} ${item.lead.lastName || ""}`.trim() || item.lead.email
                             : "Unknown Contact"}
                         </h3>
-                        <span className="text-[11px] text-gray-400 shrink-0">
-                          {formatMessageTime(item.lastMessageAt)}
-                        </span>
+                        {/* Zero-jitter fixed-width container: timestamp fades out, trash button fades in */}
+                        <div className="relative flex items-center justify-end shrink-0 min-w-[56px] h-5">
+                          <span className="text-[11px] text-gray-400 transition-opacity duration-150 group-hover:opacity-0 select-none">
+                            {formatMessageTime(item.lastMessageAt)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickDelete(item.id);
+                            }}
+                            className="absolute right-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-gray-400 hover:text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all duration-150 cursor-pointer active:scale-95"
+                            title="Delete conversation"
+                            aria-label="Delete conversation"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       {item.lead?.company && (
@@ -410,18 +459,18 @@ export default function InboxPage() {
                       <div className="flex items-center justify-between gap-2 mt-1">
                         <p className="text-xs text-gray-500 truncate">
                           {item.lastMessageDirection === "outbound" && (
-                            <span className="text-violet-600 font-medium">You: </span>
+                            <span className="text-indigo-500 font-semibold">You: </span>
                           )}
                           {item.lastMessagePreview || "No messages yet"}
                         </p>
                         {isUnread && (
-                          <span className="px-1.5 py-0.5 rounded-full bg-violet-600 text-white text-[10px] font-bold shrink-0">
+                          <span className="px-1.5 py-0.5 rounded-full bg-indigo-400 text-white text-[10px] font-bold shrink-0">
                             {item.unreadCount}
                           </span>
                         )}
                       </div>
                     </div>
-                  </button>
+                  </div>
                 );
               })
             )}
@@ -429,20 +478,21 @@ export default function InboxPage() {
         </div>
 
         {/* Column 2: Thread View / Empty State */}
-        <div className="bg-white rounded-xl shadow-xs border border-gray-100 flex flex-col relative overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 flex flex-col relative overflow-hidden min-h-0">
           {activeId ? (
             <ConversationThread
               conversationId={activeId}
               onStatusChange={handleThreadStatusChange}
               onConversationLoaded={handleConversationLoaded}
+              onDeleteConversation={handleDeleteConversation}
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
               <div className="relative mb-6">
-                <div className="w-24 h-24 rounded-full bg-violet-50 flex items-center justify-center border border-violet-100 shadow-2xs">
-                  <Mail className="w-10 h-10 text-violet-400" />
+                <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 shadow-2xs">
+                  <Mail className="w-10 h-10 text-indigo-400" />
                 </div>
-                <div className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-xl px-2.5 py-1 text-gray-400 text-xs shadow-xs font-mono">
+                <div className="absolute -top-2 -right-2 bg-white border border-gray-200/90 rounded-full px-3 py-1 text-gray-400 text-xs shadow-2xs font-mono">
                   Inbox
                 </div>
               </div>
@@ -455,7 +505,7 @@ export default function InboxPage() {
         </div>
 
         {/* Column 3: Lead Intelligence & Campaign Journey */}
-        <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 overflow-hidden flex flex-col min-h-0">
           <LeadDetailPanel
             conversation={activeConversationData}
             lead={activeConversationData?.lead}

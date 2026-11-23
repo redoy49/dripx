@@ -25,6 +25,44 @@ const STATUS_FILTERS = [
   { key: "completed", label: "Completed" },
 ];
 
+function formatFriendlyDateTime(dateString) {
+  if (!dateString) return "Immediate";
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = date - now;
+
+  if (diffMs <= 0) return "Due Now";
+
+  const diffMins = Math.round(diffMs / 60000);
+  const timeStr = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  if (diffMins < 60) {
+    return `In ${diffMins}m (${timeStr})`;
+  }
+
+  const isToday =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+
+  if (isToday) {
+    return `Today at ${timeStr}`;
+  }
+
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const isTomorrow =
+    date.getDate() === tomorrow.getDate() &&
+    date.getMonth() === tomorrow.getMonth() &&
+    date.getFullYear() === tomorrow.getFullYear();
+
+  if (isTomorrow) {
+    return `Tomorrow at ${timeStr}`;
+  }
+
+  const dateStr = date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  return `${dateStr}, ${timeStr}`;
+}
+
 export default function CampaignLeadsTab({ campaignId }) {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -274,14 +312,35 @@ export default function CampaignLeadsTab({ campaignId }) {
                       </div>
                     </td>
 
-                    {/* Current Step */}
+                    {/* Current Step & Next Scheduled Action */}
                     <td className="py-3.5 px-5">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-gray-50 border border-gray-100 text-gray-700">
-                        <Clock className="w-3 h-3 text-gray-400" />
-                        <span className="truncate max-w-[150px]" title={item.currentStepTitle}>
-                          {item.currentStepTitle}
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-gray-50 border border-gray-100 text-gray-700">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          <span className="truncate max-w-[150px]" title={item.currentStepTitle}>
+                            {item.currentStepTitle}
+                          </span>
                         </span>
-                      </span>
+                        {item.status === "in_progress" && item.scheduledRunAfter && (
+                          <div className="flex flex-col gap-0.5">
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] text-violet-600 font-semibold"
+                              title={new Date(item.scheduledRunAfter).toLocaleString()}
+                            >
+                              <Clock className="w-3 h-3 shrink-0" />
+                              Send: {formatFriendlyDateTime(item.scheduledRunAfter)}
+                            </span>
+                            {item.jobLastError?.includes("Outside sending window") && (
+                              <span
+                                className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 w-fit"
+                                title={item.jobLastError}
+                              >
+                                Outside Working Hours
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     {/* Status Badge */}

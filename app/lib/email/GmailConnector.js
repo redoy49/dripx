@@ -2,6 +2,33 @@ import { google } from "googleapis";
 import { EmailConnector } from "./EmailConnector.js";
 
 /**
+ * Detects whether an error represents a Google OAuth invalid_grant / expired / revoked token error.
+ */
+export function isInvalidGrantError(err) {
+  if (!err) return false;
+  const msg = (err.message || "").toLowerCase();
+  const rawResErr = typeof err.response?.data?.error === "string"
+    ? err.response.data.error
+    : (err.response?.data?.error?.message || "");
+  const resErr = String(rawResErr || "").toLowerCase();
+  const resDesc = String(err.response?.data?.error_description || "").toLowerCase();
+  const code = String(err.code || "").toLowerCase();
+  return (
+    msg.includes("invalid_grant") ||
+    msg.includes("invalid grant") ||
+    resErr === "invalid_grant" ||
+    resDesc === "invalid_grant" ||
+    resErr.includes("invalid_grant") ||
+    resDesc.includes("invalid_grant") ||
+    msg.includes("token has been expired") ||
+    resDesc.includes("token has been expired") ||
+    msg.includes("token has been revoked") ||
+    resDesc.includes("token has been revoked") ||
+    code === "invalid_grant"
+  );
+}
+
+/**
  * Encodes a string into Base64URL format required by Gmail API.
  */
 function toBase64Url(str) {
@@ -204,11 +231,17 @@ export class GmailConnector extends EmailConnector {
         threadId: res.data.threadId,
       };
     } catch (err) {
-      console.error("[GmailConnector] Send failed:", err.message);
+      const isInvalidGrant = isInvalidGrantError(err);
+      if (isInvalidGrant) {
+        console.warn("[GmailConnector] OAuth invalid_grant in sendEmail:", err.message);
+      } else {
+        console.error("[GmailConnector] Send failed:", err.message);
+      }
       return {
         success: false,
         error: err.message,
-        code: err.code || "GMAIL_SEND_ERROR",
+        code: isInvalidGrant ? "INVALID_GRANT" : err.code || "GMAIL_SEND_ERROR",
+        isInvalidGrant,
       };
     }
   }
@@ -228,11 +261,17 @@ export class GmailConnector extends EmailConnector {
         },
       };
     } catch (err) {
-      console.error("[GmailConnector] Verification failed:", err.message);
+      const isInvalidGrant = isInvalidGrantError(err);
+      if (isInvalidGrant) {
+        console.warn("[GmailConnector] OAuth invalid_grant in verifyConnection:", err.message);
+      } else {
+        console.error("[GmailConnector] Verification failed:", err.message);
+      }
       return {
         success: false,
         error: err.message,
-        code: err.code || "GMAIL_AUTH_FAILED",
+        code: isInvalidGrant ? "INVALID_GRANT" : err.code || "GMAIL_AUTH_FAILED",
+        isInvalidGrant,
       };
     }
   }
@@ -354,7 +393,19 @@ export class GmailConnector extends EmailConnector {
           }
           newHistoryId = historyRes.data.historyId || historyId;
         } catch (historyErr) {
-          // If historyId is expired or invalid (HTTP 404 or 400), fall back to messages.list
+          // If historyErr is invalid_grant, fail immediately and skip redundant fallback
+          if (isInvalidGrantError(historyErr)) {
+            console.warn("[GmailConnector] history.list returned invalid_grant (session expired). Skipping fallback.");
+            return {
+              success: false,
+              error: historyErr.message,
+              isInvalidGrant: true,
+              messages: [],
+              newHistoryId: historyId,
+            };
+          }
+
+          // If historyId is expired or invalid cursor (HTTP 404 or 400), fall back to messages.list
           console.warn("[GmailConnector] history.list expired or failed, falling back to messages.list:", historyErr.message);
           historyId = null;
         }
@@ -381,6 +432,16 @@ export class GmailConnector extends EmailConnector {
             newHistoryId = profile.data.historyId;
           }
         } catch (profileErr) {
+          if (isInvalidGrantError(profileErr)) {
+            console.warn("[GmailConnector] getProfile returned invalid_grant in fetchRecentMessages:", profileErr.message);
+            return {
+              success: false,
+              error: profileErr.message,
+              isInvalidGrant: true,
+              messages: [],
+              newHistoryId: historyId,
+            };
+          }
           console.warn("[GmailConnector] Failed to get profile historyId:", profileErr.message);
         }
       }
@@ -404,10 +465,16 @@ export class GmailConnector extends EmailConnector {
         newHistoryId,
       };
     } catch (err) {
-      console.error("[GmailConnector] fetchRecentMessages error:", err.message);
+      const isInvalidGrant = isInvalidGrantError(err);
+      if (isInvalidGrant) {
+        console.warn("[GmailConnector] OAuth invalid_grant in fetchRecentMessages:", err.message);
+      } else {
+        console.error("[GmailConnector] fetchRecentMessages error:", err.message);
+      }
       return {
         success: false,
         error: err.message,
+        isInvalidGrant,
         messages: [],
         newHistoryId: historyId,
       };

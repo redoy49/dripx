@@ -60,9 +60,18 @@ export async function resolveNextExecutableStep(steps, currentStep, evaluateCond
     }
 
     if (cursor.type === "delay") {
-      const amount = Number(cursor.config?.amount) || 0;
-      const unit = cursor.config?.unit || "hours";
-      const multiplier = unit === "days" ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
+      const amount = Math.max(0, Number(cursor.config?.amount) || 0);
+      const unit = (cursor.config?.unit || "hours").toLowerCase();
+      let multiplier = 60 * 60 * 1000;
+      if (unit === "seconds" || unit === "second" || unit === "secs" || unit === "sec" || unit === "s") {
+        multiplier = 1000;
+      } else if (unit === "minutes" || unit === "minute" || unit === "mins" || unit === "min" || unit === "m") {
+        multiplier = 60 * 1000;
+      } else if (unit === "days" || unit === "day" || unit === "d") {
+        multiplier = 24 * 60 * 60 * 1000;
+      } else if (unit === "hours" || unit === "hour" || unit === "hrs" || unit === "hr" || unit === "h") {
+        multiplier = 60 * 60 * 1000;
+      }
       delayMs += amount * multiplier;
 
       const next = resolveContinuation(steps, cursor);

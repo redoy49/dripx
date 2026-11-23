@@ -1,4 +1,4 @@
-import { LinkedInConnector } from "@/app/lib/connectors/LinkedInConnector";
+import { LinkedInConnector } from "./LinkedInConnector.js";
 
 const FIRST_NAMES = [
   "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Jamie", "Avery",

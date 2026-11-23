@@ -162,7 +162,7 @@ export default function SequenceTemplatesTab() {
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <Loader2 className="h-6 w-6 animate-spin text-[#6367FF]" />
+        <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
         <span className="text-xs font-medium text-gray-400">Loading playbooks & templates...</span>
       </div>
     );
@@ -173,7 +173,7 @@ export default function SequenceTemplatesTab() {
       {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Sequence Templates & Playbooks</h2>
+          <h2 className="text-lg font-bold text-gray-900">Sequence Templates & Playbooks</h2>
           <p className="mt-1 text-xs text-gray-500">
             Browse built-in multi-channel playbooks or manage custom sequences saved across your workspace.
           </p>
@@ -182,7 +182,7 @@ export default function SequenceTemplatesTab() {
         <button
           onClick={handleCreateNewCampaign}
           disabled={creatingCampaign}
-          className="flex items-center gap-2 rounded-2xl bg-[#6367FF] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#6367FF]/20 transition hover:bg-[#5254e8] active:scale-95 disabled:opacity-50 self-start sm:self-auto cursor-pointer"
+          className="flex items-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-50 self-start sm:self-auto cursor-pointer"
         >
           <Plus size={15} />
           <span>{creatingCampaign ? "Creating..." : "New Sequence Campaign"}</span>
@@ -204,15 +204,15 @@ export default function SequenceTemplatesTab() {
 
       {/* Filter Tabs & Search */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           {[...TEMPLATE_CATEGORIES, "Custom Saved"].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 selectedCategory === cat
-                  ? "bg-[#6367FF] text-white shadow-sm"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-indigo-400 text-white shadow-xs"
+                  : "border border-gray-200/90 bg-white text-gray-600 shadow-2xs hover:bg-gray-50"
               }`}
             >
               {cat}
@@ -227,7 +227,7 @@ export default function SequenceTemplatesTab() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search playbooks..."
-            className="w-full rounded-2xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs font-medium text-gray-800 outline-none transition focus:border-[#6367FF]"
+            className="w-full rounded-full border border-gray-200/90 bg-white py-2 pl-9 pr-4 text-xs font-medium text-gray-800 shadow-2xs outline-none transition focus:border-indigo-400"
           />
         </div>
       </div>
@@ -245,7 +245,7 @@ export default function SequenceTemplatesTab() {
           return (
             <div
               key={tpl.id}
-              className="flex flex-col justify-between overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition hover:border-[#6367FF]/30 hover:shadow-md"
+              className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs transition hover:border-indigo-300 hover:shadow-xs"
             >
               <div>
                 {/* Header info */}
@@ -254,11 +254,11 @@ export default function SequenceTemplatesTab() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-bold text-gray-900">{tpl.name}</h3>
                       {tpl.badge && (
-                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#6367FF]">
+                        <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-500">
                           {tpl.badge}
                         </span>
                       )}
-                      <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                      <span className="rounded-full border border-gray-200/90 bg-gray-50 px-2.5 py-0.5 text-[10px] font-semibold text-gray-600">
                         {tpl.category}
                       </span>
                     </div>
@@ -270,12 +270,12 @@ export default function SequenceTemplatesTab() {
                   {/* Channel Icons */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     {tpl.channels?.includes("linkedin") && (
-                      <span title="LinkedIn" className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#0077B5]/10 text-[#0077B5]">
+                      <span title="LinkedIn" className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-50 text-sky-600">
                         <FaLinkedin size={13} />
                       </span>
                     )}
                     {tpl.channels?.includes("email") && (
-                      <span title="Email" className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                      <span title="Email" className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                         <Mail size={13} />
                       </span>
                     )}
@@ -284,12 +284,12 @@ export default function SequenceTemplatesTab() {
 
                 {/* Vertical Visual Flow (Matches reference Dripify UI) */}
                 {hasBranches && acceptedSteps.length > 0 && notAcceptedSteps.length > 0 ? (
-                  <div className="mt-4 rounded-2xl bg-gray-50/60 p-4">
+                  <div className="mt-4 rounded-2xl border border-gray-200/90 bg-gray-50/60 p-4">
                     {/* Root Card at Top */}
                     <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-800 shadow-xs">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#6367FF] text-white">
-                          <UserPlus size={13} />
+                      <div className="flex items-center gap-2.5 rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-800 shadow-2xs">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-400 text-white">
+                          <UserPlus size={12} />
                         </div>
                         <span>Send invite</span>
                         <MoreHorizontal size={13} className="text-gray-400 ml-2" />
@@ -308,9 +308,9 @@ export default function SequenceTemplatesTab() {
                         <div className="w-full rounded-2xl border border-dashed border-rose-300 bg-rose-50/20 p-2.5 space-y-2">
                           {notAcceptedSteps.slice(0, 3).map((s, i) => (
                             <div key={i} className="space-y-1.5">
-                              <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 shadow-2xs">
+                              <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white p-2 shadow-2xs">
                                 <div className="flex items-center gap-2">
-                                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#6367FF] text-white">
+                                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-400 text-white">
                                     <Mail size={12} />
                                   </div>
                                   <span className="truncate text-[11px] font-semibold text-gray-800">
@@ -321,7 +321,7 @@ export default function SequenceTemplatesTab() {
                               </div>
                               {s.delayMinutes > 0 && (
                                 <div className="flex justify-center">
-                                  <span className="flex items-center gap-1 rounded-full border border-purple-200 bg-[#F4F3FF] px-2 py-0.5 text-[9px] font-semibold text-[#6367FF]">
+                                  <span className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[9px] font-semibold text-indigo-500">
                                     <Clock size={9} />
                                     <span>{Math.round(s.delayMinutes / 1440)}d</span>
                                   </span>
@@ -340,9 +340,9 @@ export default function SequenceTemplatesTab() {
                         <div className="w-full rounded-2xl border border-dashed border-sky-300 bg-sky-50/20 p-2.5 space-y-2">
                           {acceptedSteps.slice(0, 3).map((s, i) => (
                             <div key={i} className="space-y-1.5">
-                              <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-2 shadow-2xs">
+                              <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white p-2 shadow-2xs">
                                 <div className="flex items-center gap-2">
-                                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#6367FF] text-white">
+                                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-400 text-white">
                                     <MessageSquare size={12} />
                                   </div>
                                   <span className="truncate text-[11px] font-semibold text-gray-800">
@@ -353,7 +353,7 @@ export default function SequenceTemplatesTab() {
                               </div>
                               {s.delayMinutes > 0 && (
                                 <div className="flex justify-center">
-                                  <span className="flex items-center gap-1 rounded-full border border-purple-200 bg-[#F4F3FF] px-2 py-0.5 text-[9px] font-semibold text-[#6367FF]">
+                                  <span className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[9px] font-semibold text-indigo-500">
                                     <Clock size={9} />
                                     <span>{Math.round(s.delayMinutes / 1440)}d</span>
                                   </span>
@@ -364,13 +364,13 @@ export default function SequenceTemplatesTab() {
 
                           {/* Terminal Add/End node */}
                           <div className="flex justify-center pt-1">
-                            <div className="flex items-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xs">
-                              <div className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#6367FF]">
-                                <Plus size={10} className="text-[#6367FF]" />
+                            <div className="flex items-center overflow-hidden rounded-full border border-gray-200/90 bg-white shadow-2xs">
+                              <div className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-500">
+                                <Plus size={10} className="text-indigo-400" />
                                 <span>Add</span>
                               </div>
                               <div className="h-3 w-px bg-gray-200" />
-                              <div className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+                              <div className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-medium text-gray-400">
                                 <CircleSlash size={9} className="text-gray-400" />
                                 <span>End</span>
                               </div>
@@ -382,14 +382,14 @@ export default function SequenceTemplatesTab() {
                   </div>
                 ) : (
                   /* Vertical Linear Sequence Flow */
-                  <div className="mt-4 flex flex-col items-center rounded-2xl bg-gray-50/60 p-4">
+                  <div className="mt-4 flex flex-col items-center rounded-2xl border border-gray-200/90 bg-gray-50/60 p-4">
                     {tpl.steps?.map((st, i) => {
                       const Icon = getStepIcon(st.type);
                       return (
                         <div key={i} className="flex flex-col items-center w-full max-w-sm">
-                          <div className="flex w-full items-center justify-between rounded-xl border border-gray-100 bg-white p-2.5 shadow-xs">
+                          <div className="flex w-full items-center justify-between rounded-xl border border-gray-200/80 bg-white p-2.5 shadow-2xs">
                             <div className="flex items-center gap-2.5">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#6367FF] text-white shadow-2xs">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-400 text-white shadow-2xs">
                                 <Icon size={13} />
                               </div>
                               <span className="text-xs font-semibold text-gray-800">
@@ -404,7 +404,7 @@ export default function SequenceTemplatesTab() {
                             <div className="flex flex-col items-center my-1">
                               <div className="h-2 w-px border-l-2 border-dashed border-gray-300" />
                               {st.delayMinutes > 0 ? (
-                                <span className="my-0.5 flex items-center gap-1 rounded-full border border-purple-200 bg-[#F4F3FF] px-2 py-0.5 text-[9px] font-semibold text-[#6367FF]">
+                                <span className="my-0.5 flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-[9px] font-semibold text-indigo-500">
                                   <Clock size={9} />
                                   <span>{Math.round(st.delayMinutes / 1440)} days</span>
                                 </span>
@@ -424,8 +424,8 @@ export default function SequenceTemplatesTab() {
                 {isExpanded && (
                   <div className="mt-4 space-y-2 border-t border-gray-100 pt-3 text-xs">
                     {tpl.steps?.map((st, i) => (
-                      <div key={i} className="rounded-xl border border-gray-100 bg-gray-50 p-2.5">
-                        <span className="font-bold text-[#6367FF] text-[10px] uppercase block mb-1">
+                      <div key={i} className="rounded-xl border border-gray-200/80 bg-gray-50 p-2.5">
+                        <span className="font-bold text-indigo-500 text-[10px] uppercase block mb-1">
                           Step {i + 1}: {st.type}
                         </span>
                         {st.config?.subject && (
@@ -446,7 +446,7 @@ export default function SequenceTemplatesTab() {
               <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : tpl.id)}
-                  className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-900 transition"
+                  className="flex items-center gap-1 rounded-full border border-gray-200/90 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs hover:bg-gray-50 active:scale-95 transition cursor-pointer"
                 >
                   <span>{isExpanded ? "Hide Details" : "Preview Copy"}</span>
                   {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
@@ -457,7 +457,7 @@ export default function SequenceTemplatesTab() {
                     <button
                       onClick={() => handleDelete(tpl.id, tpl.name)}
                       disabled={deletingId === tpl.id}
-                      className="rounded-xl p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-600 transition disabled:opacity-40"
+                      className="rounded-full border border-rose-200/80 bg-white p-2 text-rose-500 hover:bg-rose-50 shadow-2xs transition active:scale-95 disabled:opacity-40 cursor-pointer"
                     >
                       {deletingId === tpl.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     </button>
@@ -465,7 +465,7 @@ export default function SequenceTemplatesTab() {
 
                   <button
                     onClick={() => handleUseInCampaign(tpl)}
-                    className="flex items-center gap-1.5 rounded-xl bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-gray-800"
+                    className="flex items-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer"
                   >
                     <span>Use in Campaign</span>
                   </button>

@@ -58,11 +58,11 @@ export default function FeatureRequestModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-gray-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shadow-2xs">
+            <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 border border-indigo-100 flex items-center justify-center shadow-2xs">
               <Sparkles size={16} />
             </div>
             <div>
@@ -74,7 +74,7 @@ export default function FeatureRequestModal({ isOpen, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-400 shadow-2xs hover:bg-gray-50 hover:text-gray-600 transition active:scale-95 cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -109,7 +109,7 @@ export default function FeatureRequestModal({ isOpen, onClose }) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Two-way Hubspot CRM sync, Custom SMTP rotation..."
-                className="w-full px-3.5 py-2.5 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition"
+                className="w-full px-3.5 py-2.5 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:bg-white transition"
               />
             </div>
 
@@ -118,7 +118,7 @@ export default function FeatureRequestModal({ isOpen, onClose }) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition"
+                className="w-full px-3.5 py-2.5 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:bg-white transition"
               >
                 <option value="Campaigns & Sequences">Campaigns & Sequences</option>
                 <option value="Inbox & Messaging">Inbox & Multi-Channel Messaging</option>
@@ -139,7 +139,7 @@ export default function FeatureRequestModal({ isOpen, onClose }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Explain what you would like to achieve and how this feature would benefit your outreach workflow..."
-                className="w-full px-3.5 py-2.5 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition resize-none"
+                className="w-full px-3.5 py-2.5 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:bg-white transition resize-none"
               />
             </div>
 
@@ -159,14 +159,14 @@ export default function FeatureRequestModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-gray-600 hover:bg-gray-100 transition cursor-pointer"
+                  className="px-4 py-2 rounded-full border border-gray-200/90 bg-white text-gray-700 hover:bg-gray-50 shadow-2xs text-xs font-semibold transition active:scale-95 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || !title.trim()}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6367FF] hover:bg-[#5254e8] text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? (
                     <>

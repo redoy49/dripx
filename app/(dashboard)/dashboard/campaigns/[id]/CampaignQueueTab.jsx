@@ -31,6 +31,30 @@ function formatRelativeTime(dateString) {
   return `In ${diffDays}d`;
 }
 
+function formatExactDateTime(dateString) {
+  if (!dateString) return "";
+  const now = new Date();
+  const date = new Date(dateString);
+  const timeStr = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  const isToday =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+
+  if (isToday) return `Today at ${timeStr}`;
+
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const isTomorrow =
+    date.getDate() === tomorrow.getDate() &&
+    date.getMonth() === tomorrow.getMonth() &&
+    date.getFullYear() === tomorrow.getFullYear();
+
+  if (isTomorrow) return `Tomorrow at ${timeStr}`;
+
+  return `${date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${timeStr}`;
+}
+
 function getChannelIcon(channel) {
   if (channel === "linkedin") return FaLinkedin;
   if (channel === "email") return Mail;
@@ -332,16 +356,39 @@ export default function CampaignQueueTab({ campaignId, onTriggerDispatch, dispat
 
                       {/* Scheduled Run */}
                       <td className="py-3.5 px-5">
-                        <span
-                          className={`inline-flex items-center gap-1 font-medium ${
-                            formatRelativeTime(job.runAfter) === "Due Now"
-                              ? "text-emerald-600 font-semibold"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          <Clock className="w-3 h-3 text-gray-400" />
-                          {formatRelativeTime(job.runAfter)}
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span
+                            className={`inline-flex items-center gap-1 font-semibold ${
+                              formatRelativeTime(job.runAfter) === "Due Now"
+                                ? "text-emerald-600"
+                                : "text-gray-900"
+                            }`}
+                          >
+                            <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                            {formatRelativeTime(job.runAfter)}
+                          </span>
+                          {job.runAfter && (
+                            <span className="text-[11px] text-gray-500 font-medium">
+                              {formatExactDateTime(job.runAfter)}
+                            </span>
+                          )}
+                          {job.lastError?.includes("Outside sending window") && (
+                            <span
+                              className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded mt-0.5 inline-block w-fit font-medium border border-amber-100"
+                              title={job.lastError}
+                            >
+                              Outside Working Hours
+                            </span>
+                          )}
+                          {job.lastError?.includes("Staggered") && (
+                            <span
+                              className="text-[10px] text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded mt-0.5 inline-block w-fit font-medium border border-violet-100"
+                              title={job.lastError}
+                            >
+                              4-8m Stagger
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Attempts */}

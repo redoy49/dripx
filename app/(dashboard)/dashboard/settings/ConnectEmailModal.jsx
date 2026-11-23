@@ -91,7 +91,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl transition-all">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-2xl transition-all">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-4">
           <div>
@@ -102,7 +102,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-400 shadow-2xs transition hover:bg-gray-50 hover:text-gray-600 active:scale-95 cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -135,7 +135,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider("google")}
-                  className="group flex flex-col items-start rounded-2xl border border-gray-200 p-4 text-left transition hover:border-[#6367FF] hover:bg-[#6367FF]/[0.02] hover:shadow-md"
+                  className="group flex flex-col items-start rounded-2xl border border-gray-200 p-4 text-left transition hover:border-indigo-400 hover:bg-indigo-50/40 hover:shadow-md cursor-pointer active:scale-95"
                 >
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
                     <Mail size={20} />
@@ -144,7 +144,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                   <span className="mt-1 text-[11px] text-gray-400">
                     Official OAuth 2.0 connection. Recommended for high inbox deliverability.
                   </span>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[#6367FF] group-hover:underline">
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-500 group-hover:underline">
                     Connect via Google <ArrowRight size={12} />
                   </span>
                 </button>
@@ -153,7 +153,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider("microsoft")}
-                  className="group flex flex-col items-start rounded-2xl border border-gray-200 p-4 text-left transition hover:border-[#6367FF] hover:bg-[#6367FF]/[0.02] hover:shadow-md"
+                  className="group flex flex-col items-start rounded-2xl border border-gray-200 p-4 text-left transition hover:border-indigo-400 hover:bg-indigo-50/40 hover:shadow-md cursor-pointer active:scale-95"
                 >
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Mail size={20} />
@@ -162,7 +162,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                   <span className="mt-1 text-[11px] text-gray-400">
                     Official Entra ID OAuth. Ideal for corporate Outlook/Exchange mailboxes.
                   </span>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[#6367FF] group-hover:underline">
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-500 group-hover:underline">
                     Connect via Microsoft <ArrowRight size={12} />
                   </span>
                 </button>
@@ -171,16 +171,16 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider("smtp")}
-                  className="group flex flex-col items-start rounded-2xl border border-gray-200 p-4 text-left transition hover:border-[#6367FF] hover:bg-[#6367FF]/[0.02] hover:shadow-md"
+                  className="group flex flex-col items-start rounded-2xl border border-gray-200 p-4 text-left transition hover:border-indigo-400 hover:bg-indigo-50/40 hover:shadow-md cursor-pointer active:scale-95"
                 >
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500 border border-indigo-100">
                     <Server size={20} />
                   </div>
                   <span className="text-xs font-bold text-gray-800">Custom SMTP Account</span>
                   <span className="mt-1 text-[11px] text-gray-400">
                     Connect via SMTP host credentials (Zoho, SES, Fastmail, or App Passwords).
                   </span>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[#6367FF] group-hover:underline">
+                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-500 group-hover:underline">
                     Configure SMTP <ArrowRight size={12} />
                   </span>
                 </button>
@@ -219,7 +219,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
 
               <div className="rounded-xl border border-gray-100 bg-white p-3.5 text-xs text-gray-600 space-y-1.5">
                 <div className="flex items-center gap-2 text-gray-700 font-semibold">
-                  <ShieldCheck size={14} className="text-[#6367FF]" />
+                  <ShieldCheck size={14} className="text-indigo-400" />
                   <span>Security &amp; Permissions Guarantee:</span>
                 </div>
                 <p className="text-gray-500 text-[11px]">
@@ -234,7 +234,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(null)}
-                  className="rounded-full px-5 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                  className="rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 active:scale-95 cursor-pointer"
                 >
                   ← Back
                 </button>
@@ -242,7 +242,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                   type="button"
                   onClick={() => handleStartOAuth("google")}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-full bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 px-5 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Sign in with Google</span>
@@ -269,7 +269,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
 
               <div className="rounded-xl border border-gray-100 bg-white p-3.5 text-xs text-gray-600 space-y-1.5">
                 <div className="flex items-center gap-2 text-gray-700 font-semibold">
-                  <ShieldCheck size={14} className="text-[#6367FF]" />
+                  <ShieldCheck size={14} className="text-indigo-400" />
                   <span>Permissions:</span>
                 </div>
                 <p className="text-gray-500 text-[11px]">
@@ -281,7 +281,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(null)}
-                  className="rounded-full px-5 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                  className="rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 active:scale-95 cursor-pointer"
                 >
                   ← Back
                 </button>
@@ -289,7 +289,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                   type="button"
                   onClick={() => handleStartOAuth("microsoft")}
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-full bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 px-5 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-60"
                 >
                   {loading && <Loader2 size={14} className="animate-spin" />}
                   <span>Sign in with Microsoft</span>
@@ -313,9 +313,9 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                       key={p.label}
                       type="button"
                       onClick={() => handleSelectPreset(i)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition cursor-pointer active:scale-95 ${
                         presetIndex === i
-                          ? "bg-[#6367FF] text-white"
+                          ? "bg-indigo-400 text-white font-bold"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
@@ -340,7 +340,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                       }))
                     }
                     placeholder="alex@company.com"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#6367FF]"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30"
                   />
                 </div>
                 <div>
@@ -350,7 +350,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                     value={smtpForm.name}
                     onChange={(e) => setSmtpForm((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Alex Bennett"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#6367FF]"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30"
                   />
                 </div>
               </div>
@@ -364,7 +364,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                     value={smtpForm.host}
                     onChange={(e) => setSmtpForm((prev) => ({ ...prev, host: e.target.value }))}
                     placeholder="smtp.example.com"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#6367FF]"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30"
                   />
                 </div>
                 <div>
@@ -375,7 +375,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                     value={smtpForm.port}
                     onChange={(e) => setSmtpForm((prev) => ({ ...prev, port: Number(e.target.value) }))}
                     placeholder="587"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#6367FF]"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30"
                   />
                 </div>
               </div>
@@ -389,7 +389,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                     value={smtpForm.user}
                     onChange={(e) => setSmtpForm((prev) => ({ ...prev, user: e.target.value }))}
                     placeholder="Username or email"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#6367FF]"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30"
                   />
                 </div>
                 <div>
@@ -402,7 +402,7 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                     value={smtpForm.pass}
                     onChange={(e) => setSmtpForm((prev) => ({ ...prev, pass: e.target.value }))}
                     placeholder="••••••••••••"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#6367FF]"
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/30"
                   />
                 </div>
               </div>
@@ -411,14 +411,14 @@ export default function ConnectEmailModal({ open, onClose, onConnected }) {
                 <button
                   type="button"
                   onClick={() => setSelectedProvider(null)}
-                  className="rounded-full px-5 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+                  className="rounded-full border border-gray-200/90 bg-white px-4 py-2 text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 active:scale-95 cursor-pointer"
                 >
                   ← Back
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 rounded-full bg-[#6367FF] px-6 py-2.5 text-xs font-semibold text-white shadow-md transition hover:bg-[#5254e8] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 px-5 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-60"
                 >
                   {loading && <Loader2 size={13} className="animate-spin" />}
                   <span>{loading ? "Verifying Handshake..." : "Verify & Save Account"}</span>

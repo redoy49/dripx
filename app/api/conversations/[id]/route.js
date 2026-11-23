@@ -8,6 +8,10 @@ export async function GET(req, { params }) {
     if (unauthorized) return unauthorized;
 
     const { id } = await params;
+    if (!id || !ObjectId.isValid(id)) {
+      return Response.json({ message: "Invalid conversation ID" }, { status: 400 });
+    }
+
     const conversations = await dbConnect("conversations");
     const conversation = await conversations.findOne({
       _id: new ObjectId(id),
@@ -81,6 +85,10 @@ export async function PATCH(req, { params }) {
     if (unauthorized) return unauthorized;
 
     const { id } = await params;
+    if (!id || !ObjectId.isValid(id)) {
+      return Response.json({ message: "Invalid conversation ID" }, { status: 400 });
+    }
+
     const body = await req.json();
     const update = {};
 
@@ -122,5 +130,46 @@ export async function PATCH(req, { params }) {
     console.error("Updating conversation failed:", error);
 
     return Response.json({ message: "Failed to update conversation" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req, { params }) {
+  try {
+    const { session, unauthorized } = await requireAuth();
+    if (unauthorized) return unauthorized;
+
+    const { id } = await params;
+    if (!id || !ObjectId.isValid(id)) {
+      return Response.json({ message: "Invalid conversation ID" }, { status: 400 });
+    }
+
+    const conversationObjectId = new ObjectId(id);
+    const workspaceObjectId = new ObjectId(session.workspaceId);
+
+    const conversations = await dbConnect("conversations");
+    const conversation = await conversations.findOne({
+      _id: conversationObjectId,
+      workspaceId: workspaceObjectId,
+    });
+
+    if (!conversation) {
+      return Response.json({ message: "Conversation not found" }, { status: 404 });
+    }
+
+    // Delete all messages belonging to this conversation
+    const messages = await dbConnect("messages");
+    await messages.deleteMany({ conversationId: conversationObjectId });
+
+    // Delete the conversation document
+    await conversations.deleteOne({ _id: conversationObjectId, workspaceId: workspaceObjectId });
+
+    return Response.json({
+      success: true,
+      deletedId: id,
+      message: "Conversation and messages successfully deleted",
+    });
+  } catch (error) {
+    console.error("Deleting conversation failed:", error);
+    return Response.json({ message: "Failed to delete conversation" }, { status: 500 });
   }
 }

@@ -10,6 +10,8 @@ import {
   isWithinSendingWindow,
   getNextWindowStart,
   calculateScheduledRunTime,
+  calculateStaggeredRunTime,
+  getRandomIntervalMs,
   resolveEffectiveSchedule,
 } from "./scheduleEngine.js";
 
@@ -225,13 +227,28 @@ export async function processJob(job) {
 
     if (!isWithinSendingWindow(effectiveSchedule, now)) {
       const nextWindow = getNextWindowStart(effectiveSchedule, now);
+      // Find latest queued job for this campaign scheduled for or after nextWindow to stagger
+      const latestQueued = await jobsCol.findOne(
+        {
+          campaignId: job.campaignId,
+          status: "queued",
+          _id: { $ne: job._id },
+          runAfter: { $gte: nextWindow },
+        },
+        { sort: { runAfter: -1 } },
+      );
+
+      const targetRunAfter = latestQueued
+        ? calculateStaggeredRunTime(latestQueued.runAfter, 0, effectiveSchedule, lead, 4, 8)
+        : nextWindow;
+
       await jobsCol.updateOne(
         { _id: job._id },
         {
           $set: {
             status: "queued",
-            runAfter: nextWindow,
-            lastError: `Postponed: Outside sending window (${effectiveSchedule.startTime}-${effectiveSchedule.endTime} ${effectiveSchedule.timezone}). Rescheduled to ${nextWindow.toISOString()}`,
+            runAfter: targetRunAfter,
+            lastError: `Postponed: Outside sending window (${effectiveSchedule.startTime}-${effectiveSchedule.endTime} ${effectiveSchedule.timezone}). Rescheduled to ${targetRunAfter.toISOString()}`,
           },
         },
       );
@@ -241,7 +258,7 @@ export async function processJob(job) {
         leadName: leadDisplayName,
         stepTitle: step.type,
         channel: step.type,
-        nextWindow: nextWindow.toISOString(),
+        nextWindow: targetRunAfter.toISOString(),
         timezone: effectiveSchedule.timezone,
       };
     }
@@ -268,7 +285,7 @@ export async function processJob(job) {
 
       const senderDoc = await emailAccountsCol.findOne(targetQuery);
       if (senderDoc) {
-        const { canAccountSendToday } = await import("@/app/lib/rampUpEngine");
+        const { canAccountSendToday } = await import("./rampUpEngine.js");
         const quota = canAccountSendToday(senderDoc);
 
         if (!quota.canSend) {
@@ -349,7 +366,7 @@ export async function processJob(job) {
 
       const senderDoc = await emailAccountsCol.findOne(targetQuery);
       if (senderDoc) {
-        const { shouldResetDailyCount } = await import("@/app/lib/rampUpEngine");
+        const { shouldResetDailyCount } = await import("./rampUpEngine.js");
         const isNewDay = shouldResetDailyCount(senderDoc.lastSentAt, senderDoc.todaySentResetAt);
         const now = new Date();
 
@@ -369,12 +386,23 @@ export async function processJob(job) {
     );
 
     if (nextStep) {
-      const scheduledRunAfter = calculateScheduledRunTime(
-        new Date(),
+      const baseDate = job.runAfter && new Date(job.runAfter) > new Date() ? new Date(job.runAfter) : new Date();
+      const baseRunAfter = calculateScheduledRunTime(
+        baseDate,
         delayMs,
         effectiveSchedule,
         lead,
       );
+      const scheduledRunAfter = delayMs > 0
+        ? baseRunAfter
+        : calculateStaggeredRunTime(
+            baseRunAfter,
+            0,
+            effectiveSchedule,
+            lead,
+            5,
+            6,
+          );
 
       await jobsCol.insertOne({
         workspaceId: job.workspaceId,
@@ -507,10 +535,35 @@ export async function runDueJobs(batchSize = 50, campaignId = null, forceDue = f
     logs: [],
   };
 
+  const processedCampaigns = new Set();
+
   for (const job of due) {
+    const campaignKey = job.campaignId?.toString();
+    if (campaignKey && processedCampaigns.has(campaignKey) && !forceDue) {
+      // Enforce 4-8 minute spacing: another job for this campaign was already processed in this batch!
+      const staggerMs = getRandomIntervalMs(4, 8);
+      const staggeredRunAfter = new Date(Date.now() + staggerMs);
+      await jobsCol.updateOne(
+        { _id: job._id },
+        {
+          $set: {
+            runAfter: staggeredRunAfter,
+            status: "queued",
+            lastError: `Staggered: 4-8 minute interval enforced between campaign actions. Rescheduled to ${staggeredRunAfter.toISOString()}`,
+          },
+        },
+      );
+      results.skipped++;
+      continue;
+    }
+
     const outcome = await claimAndProcessJob(job, workerId, forceDue);
     if (outcome.status === "already_claimed") {
       continue;
+    }
+
+    if (campaignKey && (outcome.status === "done" || outcome.status === "retrying")) {
+      processedCampaigns.add(campaignKey);
     }
 
     results.processed++;

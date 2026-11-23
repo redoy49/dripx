@@ -65,6 +65,14 @@ export async function PATCH(req, { params }) {
 
     if (!result) return Response.json({ message: "Campaign not found" }, { status: 404 });
 
+    // If schedule or status was modified, realign pending queued jobs to the active schedule with 4-8 min staggering
+    if (update.scheduleOverride !== undefined || update.status === "active") {
+      const { realignCampaignJobs } = await import("@/app/lib/scheduleEngine");
+      await realignCampaignJobs(id).catch((err) =>
+        console.error("Auto realign campaign jobs failed:", err)
+      );
+    }
+
     return Response.json(await serializeCampaign(result, campaignLeads));
   } catch (error) {
     console.error("Updating campaign failed:", error);

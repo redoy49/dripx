@@ -48,6 +48,32 @@ export async function syncAccountReplies(account) {
     });
 
     if (!fetchRes.success) {
+      const isInvalidGrant =
+        Boolean(fetchRes.isInvalidGrant) ||
+        /invalid_grant|token has been expired|authentication failure/i.test(fetchRes.error || "");
+
+      if (isInvalidGrant) {
+        console.warn(`[EmailSync] Google OAuth invalid_grant detected for ${account.email}. Marking as needs_reconnect.`);
+        await emailAccountsCol.updateOne(
+          { _id: account._id },
+          {
+            $set: {
+              status: "needs_reconnect",
+              lastError: "Google OAuth session expired. Please reconnect in Settings > Email Accounts.",
+              lastSyncError: fetchRes.error,
+              lastSyncAttemptAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }
+        );
+        return {
+          count: 0,
+          error: "Google OAuth session expired. Please reconnect in Settings > Email Accounts.",
+          needsReconnect: true,
+          isInvalidGrant: true,
+        };
+      }
+
       await emailAccountsCol.updateOne(
         { _id: account._id },
         { $set: { lastSyncError: fetchRes.error, lastSyncAttemptAt: new Date() } }
@@ -212,7 +238,27 @@ export async function syncAccountReplies(account) {
     };
   } catch (error) {
     console.error(`[EmailSync] syncAccountReplies failed for ${account.email}:`, error);
-    return { count: 0, error: error.message };
+    const isInvalidGrant = /invalid_grant|token has been expired/i.test(error?.message || "");
+    if (isInvalidGrant && account?._id) {
+      try {
+        const emailAccountsCol = await dbConnect("email_accounts");
+        await emailAccountsCol.updateOne(
+          { _id: account._id },
+          {
+            $set: {
+              status: "needs_reconnect",
+              lastError: "Google OAuth session expired. Please reconnect in Settings > Email Accounts.",
+              lastSyncError: error.message,
+              lastSyncAttemptAt: new Date(),
+              updatedAt: new Date(),
+            },
+          }
+        );
+      } catch (dbErr) {
+        console.error("[EmailSync] Failed to mark account as needs_reconnect:", dbErr.message);
+      }
+    }
+    return { count: 0, error: error.message, isInvalidGrant };
   }
 }
 
@@ -238,6 +284,8 @@ export async function syncAllConnectedEmailAccounts(workspaceId = null) {
   const results = [];
 
   for (const account of accounts) {
+    if (account.status !== "connected") continue;
+
     const outcome = await syncAccountReplies(account);
     totalNewReplies += outcome.count || 0;
     results.push({
@@ -245,6 +293,7 @@ export async function syncAllConnectedEmailAccounts(workspaceId = null) {
       email: account.email,
       newReplies: outcome.count || 0,
       error: outcome.error || null,
+      needsReconnect: outcome.needsReconnect || false,
     });
   }
 

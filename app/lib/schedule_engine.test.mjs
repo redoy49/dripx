@@ -6,6 +6,8 @@
 import assert from "node:assert";
 import {
   DEFAULT_SENDING_SCHEDULE,
+  POPULAR_TIMEZONES,
+  WEEKDAYS,
   getZonedParts,
   zonedTimeToUtc,
   parseTimeToMinutes,
@@ -15,6 +17,7 @@ import {
   detectLeadTimezone,
   resolveEffectiveSchedule,
 } from "./scheduleEngine.js";
+import * as scheduleConstants from "./scheduleConstants.js";
 
 console.log("=== RUNNING WORKING HOURS & SENDING SCHEDULE TESTS ===\n");
 
@@ -38,6 +41,12 @@ console.log("1. Testing Timezone Date Parts & Weekday Extraction...");
   // Europe/London (UTC+1 in October BST) -> 15:30 (3:30 PM) Wednesday
   const londonParts = getZonedParts(sampleUtc, "Europe/London");
   assert.strictEqual(londonParts.hour, 15, "London hour should be 15");
+
+  // Asia/Dhaka (UTC+6) -> 20:30 (8:30 PM) Wednesday
+  const dhakaParts = getZonedParts(sampleUtc, "Asia/Dhaka");
+  assert.strictEqual(dhakaParts.hour, 20, "Dhaka hour should be 20 (UTC+6)");
+  assert.strictEqual(dhakaParts.minute, 30, "Dhaka minute should be 30");
+  assert.strictEqual(dhakaParts.weekdayIndex, 3, "Dhaka should be Wednesday");
 
   console.log("✓ Timezone date parts and weekday extraction verified across global timezones");
 }
@@ -153,6 +162,16 @@ console.log("\n5. Testing Lead Timezone Auto-Detection...");
   const leadJapan = { country: "Japan", location: "Tokyo" };
   assert.strictEqual(detectLeadTimezone(leadJapan), "Asia/Tokyo", "Tokyo should map to Asia/Tokyo");
 
+  // Bangladesh & Dhaka Lead Detection
+  const leadDhaka = { country: "Bangladesh", location: "Dhaka" };
+  assert.strictEqual(detectLeadTimezone(leadDhaka), "Asia/Dhaka", "Dhaka, Bangladesh should map to Asia/Dhaka");
+
+  const leadBD = { country: "BD", location: "Chittagong" };
+  assert.strictEqual(detectLeadTimezone(leadBD), "Asia/Dhaka", "Chittagong, BD should map to Asia/Dhaka");
+
+  const leadSylhet = { country: "", location: "Sylhet" };
+  assert.strictEqual(detectLeadTimezone(leadSylhet), "Asia/Dhaka", "Sylhet should map to Asia/Dhaka");
+
   const leadExplicit = { timezone: "Australia/Melbourne" };
   assert.strictEqual(detectLeadTimezone(leadExplicit), "Australia/Melbourne", "Explicit timezone should be preserved");
 
@@ -205,6 +224,46 @@ console.log("\n6. Testing Effective Schedule Resolution & Override Hierarchy..."
   console.log("✓ Schedule inheritance and smart override hierarchy verified");
 }
 
+// 7. Testing Dhaka Timezone Configuration & Client-Safe Constants Separation
+console.log("\n7. Testing Dhaka Timezone Configuration & Client-Safe Constants...");
+{
+  // Verify Asia/Dhaka exists in POPULAR_TIMEZONES
+  const dhakaEntry = POPULAR_TIMEZONES.find((tz) => tz.value === "Asia/Dhaka");
+  assert.ok(dhakaEntry, "Asia/Dhaka must be present in POPULAR_TIMEZONES");
+  assert.strictEqual(dhakaEntry.offset, "UTC+6", "Dhaka offset must be UTC+6");
+  assert.strictEqual(dhakaEntry.label, "Bangladesh Standard Time (Dhaka)");
+
+  // Verify scheduleConstants exports match scheduleEngine exports
+  assert.strictEqual(scheduleConstants.POPULAR_TIMEZONES, POPULAR_TIMEZONES);
+  assert.strictEqual(scheduleConstants.DEFAULT_SENDING_SCHEDULE, DEFAULT_SENDING_SCHEDULE);
+  assert.strictEqual(scheduleConstants.WEEKDAYS, WEEKDAYS);
+  assert.strictEqual(typeof scheduleConstants.detectLeadTimezone, "function");
+  assert.strictEqual(typeof scheduleConstants.getZonedParts, "function");
+  assert.strictEqual(typeof scheduleConstants.zonedTimeToUtc, "function");
+  assert.strictEqual(typeof scheduleConstants.parseTimeToMinutes, "function");
+
+  // Verify Dhaka sending window math
+  const dhakaSchedule = {
+    timezone: "Asia/Dhaka",
+    days: [1, 2, 3, 4, 5],
+    startTime: "09:00",
+    endTime: "18:00",
+  };
+
+  // 09:00 AM in Dhaka on Wednesday, October 14, 2026 -> 03:00 AM UTC
+  const dhakaMorningUtc = zonedTimeToUtc(2026, 10, 14, 9, 0, "Asia/Dhaka");
+  assert.strictEqual(dhakaMorningUtc.getUTCHours(), 3, "9:00 AM Dhaka must equal 3:00 AM UTC (UTC+6)");
+  assert.strictEqual(dhakaMorningUtc.getUTCMinutes(), 0);
+  assert.strictEqual(isWithinSendingWindow(dhakaSchedule, dhakaMorningUtc), true, "9:00 AM Dhaka is within window");
+
+  // 18:00 (6:00 PM) in Dhaka -> 12:00 PM UTC (outside window since endTime is exclusive)
+  const dhakaEveningUtc = zonedTimeToUtc(2026, 10, 14, 18, 0, "Asia/Dhaka");
+  assert.strictEqual(dhakaEveningUtc.getUTCHours(), 12);
+  assert.strictEqual(isWithinSendingWindow(dhakaSchedule, dhakaEveningUtc), false, "18:00 Dhaka is outside window");
+
+  console.log("✓ Asia/Dhaka configuration, UTC+6 offset, and client-safe constants verified");
+}
+
 console.log("\n=================================================");
-console.log("ALL WORKING HOURS & SCHEDULE TESTS PASSED (6/6)!");
+console.log("ALL WORKING HOURS & SCHEDULE TESTS PASSED (7/7)!");
 console.log("=================================================");

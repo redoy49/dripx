@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Mail,
@@ -17,6 +18,7 @@ import {
   TrendingUp,
   Activity,
   Flame,
+  Info,
 } from "lucide-react";
 import ConnectEmailModal from "./ConnectEmailModal";
 import DnsDiagnosticsModal from "./DnsDiagnosticsModal";
@@ -36,7 +38,7 @@ const PROVIDER_INFO = {
   },
   smtp: {
     label: "Custom SMTP",
-    badgeClass: "bg-violet-50 text-violet-600 border-violet-200",
+    badgeClass: "bg-indigo-50 text-indigo-600 border-indigo-200",
     icon: Server,
   },
   resend: {
@@ -194,7 +196,7 @@ export default function EmailAccountsTab() {
       )}
 
       {/* Header Banner */}
-      <div className="flex flex-col gap-4 rounded-3xl border border-gray-100 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-[26px] border border-gray-200/90 bg-white p-6 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-800">Email Infrastructure & Deliverability</h2>
           <p className="mt-1 text-xs text-gray-400 max-w-xl">
@@ -205,12 +207,34 @@ export default function EmailAccountsTab() {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-[#6367FF] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#5254e8]"
+          className="inline-flex items-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer"
         >
           <Plus size={15} />
           <span>Connect Email Account</span>
         </button>
       </div>
+
+      {/* Google OAuth Session Expiry Alert Banner */}
+      {accounts.some((a) => a.status === "needs_reconnect") && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50/90 p-4 shadow-xs">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold text-rose-900">Google OAuth Reconnection Required</h4>
+              <p className="text-xs text-rose-700 mt-0.5">
+                One or more Google Workspace / Gmail sender sessions have expired. Automatic inbox sync and email dispatches are paused until re-authenticated.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/api/email-accounts/google/auth"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+          >
+            <RefreshCw size={13} />
+            <span>Reconnect Google Account</span>
+          </Link>
+        </div>
+      )}
 
       {/* Deliverability Health Overview KPIs Bar */}
       {summary && (
@@ -229,10 +253,10 @@ export default function EmailAccountsTab() {
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-2xs">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-gray-400">Deliverability Index</span>
-              <ShieldCheck size={16} className="text-[#6367FF]" />
+              <ShieldCheck size={16} className="text-indigo-400" />
             </div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-black text-[#6367FF]">
+              <span className="text-2xl font-black text-indigo-400">
                 {summary.averageDnsScore}%
               </span>
               <span className="text-[11px] font-bold text-gray-500">
@@ -280,12 +304,12 @@ export default function EmailAccountsTab() {
       {/* Accounts List */}
       {loading ? (
         <div className="flex items-center justify-center rounded-2xl border border-gray-100 bg-white py-16 text-xs text-gray-400">
-          <Loader2 size={18} className="animate-spin mr-2 text-[#6367FF]" />
+          <Loader2 size={18} className="animate-spin mr-2 text-indigo-400" />
           <span>Loading sender accounts and deliverability records...</span>
         </div>
       ) : accounts.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-12 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#6367FF]/10 text-[#6367FF]">
+        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-2xs">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100 text-indigo-400">
             <Mail size={24} />
           </div>
           <h3 className="mt-4 text-sm font-bold text-gray-800">No email accounts connected yet</h3>
@@ -294,7 +318,7 @@ export default function EmailAccountsTab() {
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#6367FF] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#5254e8]"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer"
           >
             <Plus size={14} /> Connect your first mailbox
           </button>
@@ -316,7 +340,7 @@ export default function EmailAccountsTab() {
             return (
               <div
                 key={acc.id ? `${acc.id}-${accIdx}` : accIdx}
-                className="flex flex-col gap-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-2xs transition hover:border-gray-200 lg:flex-row lg:items-center lg:justify-between"
+                className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-2xs transition hover:border-gray-200 lg:flex-row lg:items-center lg:justify-between"
               >
                 {/* Mailbox Identity */}
                 <div className="flex items-start gap-3.5 min-w-[260px]">
@@ -326,7 +350,7 @@ export default function EmailAccountsTab() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-bold text-gray-800">{acc.email}</p>
-                      <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${pInfo.badgeClass}`}>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${pInfo.badgeClass}`}>
                         {pInfo.label}
                       </span>
                     </div>
@@ -334,6 +358,12 @@ export default function EmailAccountsTab() {
                       <span>{acc.name ? `Sender: ${acc.name}` : "Personal Outreach"}</span>
                       {acc.smtpConfig && <span>Host: {acc.smtpConfig.host}</span>}
                     </div>
+                    {acc.lastError && (
+                      <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-rose-600 truncate max-w-md">
+                        <AlertCircle size={12} className="shrink-0" />
+                        <span>{acc.lastError}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -343,9 +373,25 @@ export default function EmailAccountsTab() {
                   <div className="flex items-center gap-2">
                     {isConnected ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         Connected
                       </span>
+                    ) : acc.status === "needs_reconnect" ? (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700">
+                          <AlertCircle size={12} className="text-rose-500 animate-pulse" />
+                          Session Expired
+                        </span>
+                        {acc.provider === "google" && (
+                          <Link
+                            href="/api/email-accounts/google/auth"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer"
+                          >
+                            <RefreshCw size={12} />
+                            <span>Reconnect Google Account</span>
+                          </Link>
+                        )}
+                      </div>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                         <AlertTriangle size={12} />
@@ -357,7 +403,7 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => setDnsModalAccount(acc)}
                       title="Click to inspect DNS records"
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border transition hover:opacity-85 ${
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border shadow-2xs transition hover:opacity-90 active:scale-95 cursor-pointer ${
                         dnsRating === "optimal"
                           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                           : dnsRating === "good"
@@ -383,7 +429,7 @@ export default function EmailAccountsTab() {
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                       <div
-                        className="h-full bg-linear-to-r from-amber-400 to-[#6367FF] transition-all"
+                        className="h-full bg-gradient-to-r from-amber-400 to-indigo-400 transition-all"
                         style={{ width: `${rampUp.progressPct || 100}%` }}
                       />
                     </div>
@@ -399,7 +445,7 @@ export default function EmailAccountsTab() {
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                       <div
-                        className="h-full bg-[#6367FF] transition-all"
+                        className="h-full bg-indigo-400 transition-all"
                         style={{ width: `${sentPct}%` }}
                       />
                     </div>
@@ -411,7 +457,7 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => setDnsModalAccount(acc)}
                       title="Inspect SPF, DKIM, DMARC, MX"
-                      className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
+                      className="flex items-center gap-1 rounded-full border border-gray-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 active:scale-95 cursor-pointer"
                     >
                       <ShieldCheck size={13} />
                       <span>DNS</span>
@@ -421,7 +467,7 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => setRampUpModalAccount(acc)}
                       title="Adjust sending ramp-up and daily caps"
-                      className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
+                      className="flex items-center gap-1 rounded-full border border-gray-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 active:scale-95 cursor-pointer"
                     >
                       <TrendingUp size={13} />
                       <span>Ramp-Up</span>
@@ -431,9 +477,9 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => setTestModalAccount(acc)}
                       title="Test real outbound and inbound delivery"
-                      className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-violet-50 hover:border-violet-200 hover:text-[#6367FF]"
+                      className="flex items-center gap-1.5 rounded-full border border-gray-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs transition hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 active:scale-95 cursor-pointer"
                     >
-                      <Zap size={13} className="text-[#6367FF]" />
+                      <Zap size={13} className="text-indigo-400" />
                       <span>Test & Verify</span>
                     </button>
 
@@ -441,7 +487,7 @@ export default function EmailAccountsTab() {
                     <button
                       onClick={() => handleDeleteAccount(acc.id, acc.email)}
                       title="Disconnect mailbox"
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-rose-50 hover:text-rose-600"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-400 shadow-2xs transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 active:scale-95 cursor-pointer"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -452,6 +498,53 @@ export default function EmailAccountsTab() {
           })}
         </div>
       )}
+
+      {/* Google Cloud OAuth Production Mode Documentation Guide */}
+      <div className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-2xs">
+        <div className="flex items-start gap-3.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-400 border border-indigo-100">
+            <Info size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-bold text-gray-800">
+              Preventing 7-Day Google OAuth Token Expiration (invalid_grant)
+            </h3>
+            <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+              Google Cloud projects with an OAuth consent screen set to <strong>&ldquo;Testing&rdquo;</strong> status automatically expire refresh tokens after exactly <strong>7 days</strong>. When this happens, Google API calls fail with <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px] font-mono text-rose-600">invalid_grant</code> and synchronization is paused.
+            </p>
+
+            <div className="mt-3.5 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Step 1</span>
+                <p className="mt-1 text-xs font-semibold text-gray-800">Open Google Cloud Console</p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  Go to <strong>APIs &amp; Services</strong> &rarr; <strong>OAuth consent screen</strong>.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Step 2</span>
+                <p className="mt-1 text-xs font-semibold text-gray-800">Switch to In Production</p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  Under <em>Publishing status</em>, click <strong>&ldquo;PUBLISH APP&rdquo;</strong> and confirm the prompt.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Step 3</span>
+                <p className="mt-1 text-xs font-semibold text-gray-800">Permanent Authorization</p>
+                <p className="mt-0.5 text-[11px] text-gray-500">
+                  Tokens remain active indefinitely without the 7-day expiration cutoff.
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-3 text-[11px] text-gray-400">
+              * Note: Verification by Google is optional for internal workspaces (up to 100 test users). If an &ldquo;unverified app&rdquo; screen appears during consent, click <em>Advanced &rarr; Go to DripX (unsafe)</em> to proceed.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Connect Email Modal */}
       <ConnectEmailModal

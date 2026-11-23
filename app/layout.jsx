@@ -8,14 +8,22 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  title: "DripX",
+  title: "DripX — 100% Ban-Proof Cloud Sequence Engine",
   description:
-    "DripX is a cloud-based LinkedIn automation tool designed for sales, marketing, and recruiting professionals to automate lead generation and prospecting, such as sending connection requests, personalized messages, and follow-ups",
+    "DripX is a cloud-based multi-channel sales engagement platform. Automate LinkedIn outreach, cold emails, and inbox unification with dedicated static residential proxies and zero browser crashes.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} h-full antialiased`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

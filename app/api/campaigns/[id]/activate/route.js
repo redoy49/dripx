@@ -5,6 +5,13 @@ import { requireRole } from "@/app/lib/rbac";
 import { resolveFirstExecutableStep } from "@/app/lib/sequenceEngine";
 import { serializeCampaign } from "@/app/api/campaigns/route";
 import { runDueJobs } from "@/app/lib/jobProcessor";
+import {
+  calculateStaggeredRunTime,
+  calculateScheduledRunTime,
+  resolveEffectiveSchedule,
+  isWithinSendingWindow,
+  getNextWindowStart,
+} from "@/app/lib/scheduleEngine";
 
 // Finds the lead's "replied" state for condition steps at activation time (mirrors the
 // same check jobProcessor uses once the campaign is running).
@@ -120,15 +127,38 @@ export async function POST(req, { params }) {
       .find({ campaignId: campaign._id, status: "pending" })
       .toArray();
 
+    const sendingSchedulesCol = await dbConnect("sending_schedules");
+    const workspaceScheduleDoc = await sendingSchedulesCol.findOne({
+      workspaceId: campaign.workspaceId,
+    });
+    const effectiveSchedule = resolveEffectiveSchedule(
+      workspaceScheduleDoc,
+      campaign.scheduleOverride,
+    );
+
+    let cursor = new Date();
+    if (!isWithinSendingWindow(effectiveSchedule, cursor)) {
+      cursor = getNextWindowStart(effectiveSchedule, cursor);
+    }
+
     const jobsCol = await dbConnect("jobs");
     let queuedCount = 0;
 
-    for (const campaignLead of pendingLeads) {
+    for (let i = 0; i < pendingLeads.length; i++) {
+      const campaignLead = pendingLeads[i];
       const { nextStep, delayMs } = await resolveFirstExecutableStep(steps, (conditionStep) =>
         evaluateHasReplied(campaignLead.leadId, campaignLead.enrolledAt),
       );
 
       if (!nextStep) continue;
+
+      let runAfter;
+      if (i === 0) {
+        runAfter = calculateScheduledRunTime(cursor, delayMs, effectiveSchedule, null);
+      } else {
+        runAfter = calculateStaggeredRunTime(cursor, delayMs, effectiveSchedule, null, 4, 8);
+      }
+      cursor = runAfter;
 
       await jobsCol.insertOne({
         workspaceId: campaign.workspaceId,
@@ -136,7 +166,7 @@ export async function POST(req, { params }) {
         campaignLeadId: campaignLead._id,
         stepId: nextStep._id,
         type: nextStep.type,
-        runAfter: new Date(Date.now() + delayMs),
+        runAfter,
         status: "queued",
         attempts: 0,
         lastError: null,

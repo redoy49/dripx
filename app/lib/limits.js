@@ -1,8 +1,8 @@
 import { ObjectId } from "mongodb";
-import { dbConnect } from "@/app/lib/mongoDb";
-import { DEFAULT_DAILY_LIMITS, ACTION_TYPE_TO_LIMIT_FIELD } from "@/app/lib/limits.constants";
+import { dbConnect } from "./mongoDb.js";
+import { DEFAULT_DAILY_LIMITS, ACTION_TYPE_TO_LIMIT_FIELD } from "./limits.constants.js";
 
-export { DEFAULT_DAILY_LIMITS, DAILY_LIMIT_MAX, ACTION_TYPE_TO_LIMIT_FIELD } from "@/app/lib/limits.constants";
+export { DEFAULT_DAILY_LIMITS, DAILY_LIMIT_MAX, ACTION_TYPE_TO_LIMIT_FIELD } from "./limits.constants.js";
 
 export async function getWorkspaceLimits(workspaceId) {
   const dailyLimits = await dbConnect("daily_limits");

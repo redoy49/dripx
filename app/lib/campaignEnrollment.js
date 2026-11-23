@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { dbConnect } from "@/app/lib/mongoDb";
+import { dbConnect } from "./mongoDb.js";
 
 // Enrolls a set of leads into a campaign as campaign_leads rows, skipping leads already
 // enrolled in that campaign. currentStepId starts null — set once the campaign is activated
@@ -41,8 +41,36 @@ export async function enrollLeads(campaignId, leadIds) {
       const steps = await sequenceSteps.find({ campaignId: campaignObjectId }).sort({ order: 1 }).toArray();
 
       if (steps.length > 0) {
-        const { resolveFirstExecutableStep } = await import("@/app/lib/sequenceEngine");
+        const { resolveFirstExecutableStep } = await import("./sequenceEngine.js");
+        const {
+          calculateStaggeredRunTime,
+          resolveEffectiveSchedule,
+          isWithinSendingWindow,
+          getNextWindowStart,
+        } = await import("./scheduleEngine.js");
+
+        const sendingSchedulesCol = await dbConnect("sending_schedules");
+        const workspaceScheduleDoc = await sendingSchedulesCol.findOne({
+          workspaceId: campaign.workspaceId,
+        });
+        const effectiveSchedule = resolveEffectiveSchedule(
+          workspaceScheduleDoc,
+          campaign.scheduleOverride,
+        );
+
         const jobsCol = await dbConnect("jobs");
+        const latestJob = await jobsCol.findOne(
+          { campaignId: campaignObjectId, status: "queued" },
+          { sort: { runAfter: -1 } },
+        );
+
+        let cursor = latestJob?.runAfter && new Date(latestJob.runAfter) > new Date()
+          ? new Date(latestJob.runAfter)
+          : new Date();
+
+        if (!isWithinSendingWindow(effectiveSchedule, cursor)) {
+          cursor = getNextWindowStart(effectiveSchedule, cursor);
+        }
 
         const insertedIds = Object.values(insertResult.insertedIds);
         const newEnrollments = await campaignLeads.find({ _id: { $in: insertedIds } }).toArray();
@@ -50,13 +78,16 @@ export async function enrollLeads(campaignId, leadIds) {
         for (const cl of newEnrollments) {
           const { nextStep, delayMs } = await resolveFirstExecutableStep(steps, () => false);
           if (nextStep) {
+            const runAfter = calculateStaggeredRunTime(cursor, delayMs, effectiveSchedule, null, 4, 8);
+            cursor = runAfter;
+
             await jobsCol.insertOne({
               workspaceId: campaign.workspaceId,
               campaignId: campaignObjectId,
               campaignLeadId: cl._id,
               stepId: nextStep._id,
               type: nextStep.type,
-              runAfter: new Date(Date.now() + delayMs),
+              runAfter,
               status: "queued",
               attempts: 0,
               lastError: null,

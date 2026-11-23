@@ -120,27 +120,23 @@ export default function CampaignPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-[#F2F2F6] p-4">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 p-4 mb-4 flex items-center justify-between gap-4">
-        <h1
-          className="text-2xl font-semibold"
-          style={{
-            background: "linear-gradient(90deg, #ee7aee 0%, #fe9b85 100%)",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-        >
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 p-4 mb-4 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
           Campaigns
         </h1>
 
-        <button className="p-2 transition-colors rounded-full hover:ring bg-gray-100 hover:ring-gray-200 ">
+        <button
+          title="Notifications"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
+        >
           <BellIcon />
         </button>
       </div>
 
       {/* Toolbar + Table */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden ">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 overflow-hidden">
         {/* Toolbar */}
         <div className="grid grid-cols-[2fr_1.2fr_1.4fr_0.8fr] items-center gap-4 px-6 py-4 border-b border-gray-100">
           {/* Search */}
@@ -151,20 +147,20 @@ export default function CampaignPage() {
 
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search campaigns..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-4 py-2.5 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-violet-200"
+              className="w-full pl-9 pr-4 py-2 text-xs text-gray-700 bg-white border border-gray-200/90 rounded-full shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400/40 transition"
             />
           </div>
 
           {/* Active Only */}
-          <label className="flex items-center gap-2 text-sm text-gray-500">
+          <label className="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer">
             <input
               type="checkbox"
               checked={activeOnly}
               onChange={() => setActiveOnly(!activeOnly)}
-              className="rounded border-gray-300 text-violet-500 focus:ring-violet-200"
+              className="rounded-sm border-gray-300 text-indigo-400 focus:ring-indigo-400/40 cursor-pointer"
             />
             Active only
           </label>
@@ -175,12 +171,9 @@ export default function CampaignPage() {
           <button
             onClick={createCampaign}
             disabled={creating}
-            className="px-5 py-2.5 rounded-full text-sm font-medium text-white transition-all duration-200 shadow-xs disabled:opacity-60"
-            style={{
-              background: "linear-gradient(to right, #7f64f5, #ae79f8)",
-            }}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-60 cursor-pointer"
           >
-            {creating ? "Creating..." : "New campaign"}
+            <span>{creating ? "Creating..." : "New campaign"}</span>
           </button>
         </div>
 
@@ -243,7 +236,7 @@ export default function CampaignPage() {
                         : `/dashboard/campaigns/${campaign.id}`,
                     )
                   }
-                  className="text-[15px] font-semibold text-gray-800 mb-2 hover:text-[#6367FF] transition-colors text-left"
+                  className="text-[15px] font-semibold text-gray-800 mb-2 hover:text-indigo-400 transition-colors text-left cursor-pointer"
                 >
                   {campaign.name}
                 </button>
@@ -257,7 +250,7 @@ export default function CampaignPage() {
                   <span>·</span>
                   <button
                     onClick={() => router.push(`/dashboard/campaigns/${campaign.id}`)}
-                    className="text-violet-600 hover:text-violet-700 font-semibold transition"
+                    className="text-indigo-400 hover:text-indigo-500 font-semibold transition cursor-pointer"
                   >
                     View Analytics →
                   </button>
@@ -268,7 +261,7 @@ export default function CampaignPage() {
               <div className="pr-8 space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-gray-500">All leads</span>
-                  <span className="text-[15px] font-medium text-violet-500">{campaign.leadCount}</span>
+                  <span className="text-[15px] font-semibold text-indigo-400">{campaign.leadCount}</span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-gray-500">Channels</span>
@@ -304,7 +297,7 @@ export default function CampaignPage() {
                   <span className="text-gray-300">·</span>
                   <button
                     onClick={() => router.push(`/dashboard/new-campaign?id=${campaign.id}&tab=2`)}
-                    className="text-xs text-gray-400 hover:text-gray-700 transition"
+                    className="text-xs font-semibold text-gray-500 hover:text-indigo-400 transition cursor-pointer"
                     title="Edit campaign sequence in canvas"
                   >
                     Edit

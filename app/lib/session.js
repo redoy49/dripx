@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { verifyToken } from "@/app/lib/auth";
+import { verifyToken } from "./auth.js";
 
 export const SESSION_COOKIE = "dripx_session";
 

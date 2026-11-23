@@ -67,74 +67,66 @@ const fallbackOverview = [
 ];
 
 const colors = [
-  "bg-violet-500",
-  "bg-red-500",
+  "bg-indigo-400",
+  "bg-violet-400",
+  "bg-sky-400",
+  "bg-emerald-400",
   "bg-amber-400",
-  "bg-lime-300",
-  "bg-pink-400",
-  "bg-cyan-400",
-  "bg-green-500",
+  "bg-rose-400",
+  "bg-slate-400",
 ];
 
 function BellIcon() {
   return (
     <svg
-      width="20"
-      height="20"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className="text-gray-500"
     >
-      <path
-        d="M13.6 20H10.4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M17 10V10C17 7.239 14.761 5 12 5 9.239 5 7 7.239 7 10V12.504C7 12.828 6.817 13.123 6.528 13.268L6.025 13.519C5.397 13.834 5 14.476 5 15.178 5 16.202 5.83 17.032 6.854 17.032H17.146C18.17 17.032 19 16.202 19 15.178 19 14.476 18.603 13.834 17.975 13.52L17.472 13.269C17.183 13.123 17 12.828 17 12.504V10Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M10.268 21a2 2 0 0 0 3.464 0" />
+      <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" />
     </svg>
   );
 }
 
 function StatCard({ item }) {
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5">
-      <div className="flex items-start justify-between mb-5">
-        <span className="text-[11px] uppercase tracking-wide font-medium text-gray-400">
+    <div className="rounded-2xl border border-gray-200/90 bg-white p-5 shadow-2xs">
+      <div className="flex items-start justify-between mb-4">
+        <span className="text-[11px] uppercase tracking-wide font-bold text-gray-400">
           {item.title}
         </span>
 
         {item.right && (
-          <span className="text-xs font-medium text-red-400">{item.right}</span>
+          <span className="text-xs font-semibold text-rose-500">{item.right}</span>
         )}
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-[15px] font-semibold text-gray-700">
+          <span className="text-base font-bold text-gray-800">
             {item.value}
           </span>
 
           {item.badge && (
-            <span className="px-2.5 py-1 rounded-full bg-green-50 text-green-500 text-xs font-medium">
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-500 text-xs font-bold">
               {item.badge}
             </span>
           )}
 
-          {item.icon && <Info className="w-4 h-4 text-gray-400" />}
+          {item.icon && <Info className="w-3.5 h-3.5 text-gray-400" />}
         </div>
 
         {item.dropdown && <ChevronDown className="w-4 h-4 text-gray-400" />}
 
         {item.link && (
-          <button className="text-sm font-medium text-violet-500 hover:text-violet-600 transition-colors">
+          <button className="text-xs font-bold text-indigo-400 hover:text-indigo-500 transition-colors cursor-pointer">
             {item.link}
           </button>
         )}
@@ -146,11 +138,11 @@ function StatCard({ item }) {
 function OverviewCard({ item, border }) {
   return (
     <div className={`p-5 ${border ? "border-r border-gray-100" : ""}`}>
-      <div className="text-[11px] uppercase tracking-wide leading-[16px] font-medium text-gray-400 whitespace-pre-line mb-4">
+      <div className="text-[11px] uppercase tracking-wide leading-[16px] font-bold text-gray-400 whitespace-pre-line mb-3">
         {item.label}
       </div>
 
-      <div className="text-[30px] leading-none font-semibold text-gray-700 tracking-tight">
+      <div className="text-2xl font-bold text-gray-800 tracking-tight">
         {item.value}
       </div>
     </div>
@@ -217,29 +209,29 @@ export default function TeamsPage() {
   const activityData = profile?.activity || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6 space-y-6">
       {/* Top Header */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 p-4 mb-4 flex items-center justify-between gap-4">
-        <button
-          className="text-2xl font-semibold tracking-tight"
-          style={{
-            background:
-              "linear-gradient(90deg, rgb(238, 122, 238) 0%, rgb(254, 155, 133) 100%)",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-        >
-          ← Back to Team
-        </button>
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 p-4 sm:p-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">
+            Team & Identity
+          </h1>
+          <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-500">
+            Workspace
+          </span>
+        </div>
 
-        <button className="p-2 transition-colors rounded-full hover:ring bg-gray-100 hover:ring-gray-200 ">
+        <button
+          title="Notifications"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
+        >
           <BellIcon />
         </button>
       </div>
 
       {/* Sub-tabs */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 mb-4 px-6">
-        <nav className="flex">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="inline-flex p-1 rounded-full border border-gray-200/90 bg-white shadow-2xs gap-1">
           {[
             { key: "profile", label: "My Profile" },
             { key: "members", label: "Members" },
@@ -247,16 +239,16 @@ export default function TeamsPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
+              className={`rounded-full px-5 py-2 text-xs font-bold transition cursor-pointer ${
                 tab === t.key
-                  ? "border-indigo-600 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-800"
+                  ? "bg-indigo-400 text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
               {t.label}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {tab === "members" && <MembersTab currentRole={me?.role || "member"} />}
@@ -264,15 +256,15 @@ export default function TeamsPage() {
       {tab === "profile" && (
       <>
       {/* Profile Section */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 overflow-hidden">
         <div className="p-6">
           {/* Top */}
-          <div className="flex items-start justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Left */}
             <div className="flex items-center gap-4">
               <img
                 alt="avatar"
-                className="w-14 h-14 rounded-full object-cover"
+                className="w-14 h-14 rounded-full object-cover border border-gray-200/90 shadow-2xs"
                 src={
                   profile?.user?.avatarUrl ||
                   me?.user?.avatarUrl ||
@@ -280,28 +272,28 @@ export default function TeamsPage() {
                 }
               />
 
-              <div className="flex items-center gap-2">
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-700 tracking-tight">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
                     {profile?.user?.name || me?.user?.name || "Redoy Al Hasan"}
-                  </h1>
-                  {profile?.user?.headline && (
-                    <p className="text-xs text-gray-400 mt-0.5">{profile.user.headline}</p>
-                  )}
-                </div>
+                  </h2>
 
-                <button
-                  onClick={() => setEditModalOpen(true)}
-                  title="Edit profile & LinkedIn link"
-                  className="text-gray-400 hover:text-gray-600 transition-colors ml-1"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
+                  <button
+                    onClick={() => setEditModalOpen(true)}
+                    title="Edit profile & LinkedIn link"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-400 hover:text-gray-700 shadow-2xs transition active:scale-95 cursor-pointer"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                {profile?.user?.headline && (
+                  <p className="text-xs text-gray-400 mt-0.5">{profile.user.headline}</p>
+                )}
               </div>
             </div>
 
             {/* Right */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <button
                 onClick={() => {
                   const url = profile?.user?.linkedinUrl;
@@ -311,10 +303,10 @@ export default function TeamsPage() {
                     setEditModalOpen(true);
                   }
                 }}
-                className="h-11 px-5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-600"
+                className="rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 shadow-2xs active:scale-95 transition flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer"
               >
-                View on LinkedIn
-                <ExternalLink className="w-4 h-4" />
+                <span>View on LinkedIn</span>
+                <ExternalLink className="w-3.5 h-3.5" />
               </button>
 
               <button
@@ -325,10 +317,7 @@ export default function TeamsPage() {
                     window.location.href = "/api/integrations/unipile/connect";
                   }
                 }}
-                className="h-11 px-7 rounded-full text-sm font-medium text-white transition-all duration-200 shadow-xs"
-                style={{
-                  background: "linear-gradient(to right, #7f64f5, #ae79f8)",
-                }}
+                className="rounded-full bg-indigo-400 hover:bg-indigo-500 px-6 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer"
               >
                 {profile?.isLinkedInConnected ? "Connected ✓" : "Sign in →"}
               </button>
@@ -336,14 +325,14 @@ export default function TeamsPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
             {statsData.map((item, index) => (
               <StatCard key={index} item={item} />
             ))}
           </div>
 
           {/* Overview */}
-          <div className="grid grid-cols-6 border border-gray-100 rounded-xl overflow-hidden mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border border-gray-200/90 rounded-2xl bg-white shadow-2xs overflow-hidden mt-4">
             {overviewData.map((item, index) => (
               <OverviewCard
                 key={index}
@@ -356,17 +345,17 @@ export default function TeamsPage() {
       </div>
 
       {/* Activity */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden mt-4">
+      <div className="bg-white rounded-2xl shadow-2xs border border-gray-200/90 overflow-hidden">
         <div className="p-6">
           {/* Toolbar */}
-          <div className="flex items-center justify-between gap-4 mb-8">
-            <h2 className="text-full font-semibold text-gray-700 tracking-tight">
-              Activity
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <h2 className="text-base font-bold text-gray-900 tracking-tight">
+              Outreach Activity
             </h2>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
               {/* Tabs */}
-              <div className="flex items-center border border-gray-100 rounded-full overflow-hidden bg-white">
+              <div className="inline-flex p-1 rounded-full border border-gray-200/90 bg-white shadow-2xs gap-1">
                 {[
                   { key: "today", label: "Today" },
                   { key: "yesterday", label: "Yesterday" },
@@ -378,10 +367,10 @@ export default function TeamsPage() {
                   <button
                     key={t.key}
                     onClick={() => handleRangeChange(t.key)}
-                    className={`px-4 h-11 text-sm font-medium transition-colors border-r border-gray-100 last:border-r-0 ${
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                       activeRange === t.key
-                        ? "bg-gray-50 text-gray-700"
-                        : "text-gray-400 hover:bg-gray-50"
+                        ? "bg-indigo-400 text-white shadow-xs font-bold"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                   >
                     {t.label}
@@ -390,18 +379,18 @@ export default function TeamsPage() {
               </div>
 
               {/* Filter */}
-              <button className="h-11 px-4 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm font-medium text-gray-500">
-                All campaigns
-                <ChevronDown className="w-4 h-4" />
+              <button className="rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 shadow-2xs active:scale-95 transition flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                <span>All campaigns</span>
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
 
               {/* Export */}
               <button
                 onClick={handleExportActivity}
-                className="h-11 px-5 rounded-full border border-violet-200 bg-white hover:bg-violet-50 transition-colors flex items-center gap-2 text-sm font-medium text-violet-500"
+                className="rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 shadow-2xs active:scale-95 transition flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-700 cursor-pointer"
               >
-                Export
-                <Download className="w-4 h-4" />
+                <span>Export CSV</span>
+                <Download className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -452,14 +441,12 @@ export default function TeamsPage() {
 
       {/* Floating Chat */}
       <button
-        className="fixed bottom-5 right-5 w-14 h-14 rounded-full flex items-center justify-center shadow-xs text-white"
-        style={{
-          background: "linear-gradient(to right, #7f64f5, #ae79f8)",
-        }}
+        className="fixed bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center bg-indigo-400 hover:bg-indigo-500 shadow-md text-white transition active:scale-95 cursor-pointer"
+        title="Team Chat"
       >
         <Mail className="w-5 h-5" />
 
-        <span className="absolute top-0 right-0 w-5 h-5 rounded-full bg-red-400 text-[10px] flex items-center justify-center">
+        <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-rose-400 text-[10px] font-bold flex items-center justify-center text-white">
           1
         </span>
       </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, ExternalLink, Archive, Star, Mail, Loader2 } from "lucide-react";
+import { Send, ExternalLink, Archive, Star, Mail, Loader2, Trash2 } from "lucide-react";
 import { FaLinkedin } from "react-icons/fa";
 
 function stripQuotedContent(text) {
@@ -15,7 +15,12 @@ function stripQuotedContent(text) {
   return text.trim();
 }
 
-export default function ConversationThread({ conversationId, onStatusChange, onConversationLoaded }) {
+export default function ConversationThread({
+  conversationId,
+  onStatusChange,
+  onConversationLoaded,
+  onDeleteConversation,
+}) {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
@@ -194,11 +199,11 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
   const isEmail = conversation.channel === "email";
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5 bg-white shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-violet-50 text-violet-700 font-semibold flex items-center justify-center text-sm border border-violet-100">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 font-bold flex items-center justify-center text-sm border border-indigo-100 shadow-2xs">
             {(lead?.firstName?.[0] || "?").toUpperCase()}
           </div>
           <div>
@@ -215,7 +220,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
               )}
               <span>·</span>
               <span className="inline-flex items-center gap-1 font-medium capitalize text-gray-600">
-                {isEmail ? <Mail className="w-3 h-3 text-blue-500" /> : <FaLinkedin className="w-3 h-3 text-[#0A66C2]" />}
+                {isEmail ? <Mail className="w-3 h-3 text-sky-500" /> : <FaLinkedin className="w-3 h-3 text-[#0A66C2]" />}
                 {conversation.channel}
               </span>
             </div>
@@ -225,31 +230,50 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setStatus(conversation.status === "important" ? "open" : "important")}
-            className={`rounded-full p-2 transition ${
+            className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer ${
               conversation.status === "important"
-                ? "bg-amber-50 text-amber-500"
-                : "text-gray-400 hover:bg-gray-100"
+                ? "border-amber-200 bg-amber-50 text-amber-500"
+                : ""
             }`}
             title="Mark important"
           >
-            <Star size={16} />
+            <Star size={15} />
           </button>
           <button
             onClick={() => setStatus(conversation.status === "archived" ? "open" : "archived")}
-            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
             title="Archive"
           >
-            <Archive size={16} />
+            <Archive size={15} />
+          </button>
+          <button
+            onClick={async () => {
+              if (!confirm("Are you sure you want to delete this conversation and all its messages?")) return;
+              try {
+                const res = await fetch(`/api/conversations/${conversationId}`, { method: "DELETE" });
+                if (res.ok) {
+                  onDeleteConversation?.(conversationId);
+                } else {
+                  alert("Failed to delete conversation");
+                }
+              } catch (err) {
+                console.error("Delete conversation failed:", err);
+              }
+            }}
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 shadow-2xs transition active:scale-95 cursor-pointer"
+            title="Delete conversation"
+          >
+            <Trash2 size={15} />
           </button>
           {lead?.linkedinUrl && (
             <a
               href={lead.linkedinUrl}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-gray-200/90 bg-white text-gray-500 hover:text-[#0A66C2] hover:border-[#0A66C2]/30 shadow-2xs transition hover:bg-gray-50 active:scale-95 cursor-pointer"
               title="View on LinkedIn"
             >
-              <ExternalLink size={16} />
+              <ExternalLink size={15} />
             </a>
           )}
         </div>
@@ -269,7 +293,7 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
               <div
                 className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-2xs ${
                   isOutbound
-                    ? "bg-[#6367FF] text-white rounded-br-xs"
+                    ? "bg-indigo-400 text-white rounded-br-xs"
                     : "bg-white text-gray-800 border border-gray-100 rounded-bl-xs"
                 }`}
               >
@@ -299,13 +323,13 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
         <div className="flex items-center justify-between text-[11px] text-gray-400 px-1">
           <div className="flex items-center gap-1.5 font-medium text-gray-600">
             {isEmail ? (
-              <span className="inline-flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                <Mail className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1 text-sky-700 bg-sky-50 border border-sky-100 px-2.5 py-0.5 rounded-full text-xs font-medium">
+                <Mail className="w-3 h-3 text-sky-500" />
                 Replying via Email
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[#0A66C2] bg-blue-50 px-2 py-0.5 rounded-full">
-                <FaLinkedin className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1 text-[#0A66C2] bg-sky-50 border border-sky-100 px-2.5 py-0.5 rounded-full text-xs font-medium">
+                <FaLinkedin className="w-3 h-3 text-[#0A66C2]" />
                 Replying via LinkedIn
               </span>
             )}
@@ -331,13 +355,12 @@ export default function ConversationThread({ conversationId, onStatusChange, onC
                 ? `Reply to ${lead?.firstName || "lead"} via Email...`
                 : `Send a message to ${lead?.firstName || "lead"} via LinkedIn...`
             }
-            className="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none transition-all focus:border-violet-300 focus:bg-white focus:ring-2 focus:ring-violet-100"
+            className="flex-1 resize-none rounded-2xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-400/30"
           />
           <button
             onClick={send}
             disabled={sending || !draft.trim()}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white shadow-xs transition-all disabled:opacity-40 hover:opacity-95"
-            style={{ background: "linear-gradient(to right, #6367FF, #7f64f5)" }}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-400 hover:bg-indigo-500 text-white shadow-sm transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
             title="Send reply (Enter)"
           >
             {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

@@ -11,7 +11,13 @@ function formatStepTitle(step) {
   if (step.type === "follow_up") return `Step ${step.order}: Follow-up`;
   if (step.type === "profile_visit") return `Step ${step.order}: Visit Profile`;
   if (step.type === "like_post") return `Step ${step.order}: Like Post`;
-  if (step.type === "delay") return `Step ${step.order}: Delay (${step.config?.delayDays || 1}d)`;
+  if (step.type === "delay") {
+    if (step.config?.amount !== undefined) {
+      const u = step.config.unit || "days";
+      return `Step ${step.order}: Delay (${step.config.amount} ${u})`;
+    }
+    return `Step ${step.order}: Delay (${step.config?.delayDays || 1}d)`;
+  }
   if (step.type === "condition") return `Step ${step.order}: Has Replied?`;
   return `Step ${step.order}: ${step.type}`;
 }
@@ -39,6 +45,7 @@ export async function GET(req, { params }) {
     const activityLogs = await dbConnect("activity_logs");
     const conversations = await dbConnect("conversations");
     const leads = await dbConnect("leads");
+    const jobsCol = await dbConnect("jobs");
 
     // 1. Parallel execution of core counts and aggregations
     const [
@@ -52,6 +59,7 @@ export async function GET(req, { params }) {
       stepsList,
       actionCounts,
       recentLogs,
+      nextQueuedJob,
     ] = await Promise.all([
       campaignLeads.countDocuments({ campaignId: campaignObjectId }),
       campaignLeads.countDocuments({ campaignId: campaignObjectId, status: "pending" }),
@@ -72,6 +80,10 @@ export async function GET(req, { params }) {
         .sort({ occurredAt: -1 })
         .limit(15)
         .toArray(),
+      jobsCol.findOne(
+        { campaignId: campaignObjectId, status: "queued" },
+        { sort: { runAfter: 1 } },
+      ),
     ]);
 
     // Map action counts
@@ -192,6 +204,14 @@ export async function GET(req, { params }) {
         },
       },
       stepMetrics,
+      nextScheduledJob: nextQueuedJob
+        ? {
+            id: nextQueuedJob._id.toString(),
+            type: nextQueuedJob.type,
+            runAfter: nextQueuedJob.runAfter,
+            lastError: nextQueuedJob.lastError || null,
+          }
+        : null,
       recentActivity: formattedActivity,
     });
   } catch (error) {

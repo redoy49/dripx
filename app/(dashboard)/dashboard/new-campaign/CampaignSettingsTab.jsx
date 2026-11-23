@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Play, Pause, Clock, Globe2, Sparkles } from "lucide-react";
 import { ToggleGreen } from "@/app/components/ui/Toggle";
 import Badge from "@/app/components/ui/Badge";
-import { POPULAR_TIMEZONES, WEEKDAYS } from "@/app/lib/scheduleEngine";
+import { POPULAR_TIMEZONES, WEEKDAYS } from "@/app/lib/scheduleConstants";
 
 const CHANNELS = [
   { key: "linkedin", label: "LinkedIn" },
