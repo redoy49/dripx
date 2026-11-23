@@ -171,6 +171,7 @@ export async function POST(req, { params }) {
       sentByUserId: new ObjectId(session.userId),
       sentAt: new Date(),
       providerMessageId: result.providerMessageId || null,
+      messageIdHeader: result.messageIdHeader || null,
       threadId: resolvedThreadId,
       inReplyTo: inReplyTo || null,
       references: references || null,

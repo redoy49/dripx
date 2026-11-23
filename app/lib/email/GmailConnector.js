@@ -225,10 +225,30 @@ export class GmailConnector extends EmailConnector {
         requestBody,
       });
 
+      // Retrieve the actual RFC 2822 Message-ID assigned by Gmail so recipients can thread replies
+      let messageIdHeader = null;
+      try {
+        const meta = await this.gmail.users.messages.get({
+          userId: "me",
+          id: res.data.id,
+          format: "metadata",
+          metadataHeaders: ["Message-ID", "Message-Id"],
+        });
+        const header = meta?.data?.payload?.headers?.find(
+          (h) => h.name.toLowerCase() === "message-id"
+        );
+        if (header?.value) {
+          messageIdHeader = header.value.trim();
+        }
+      } catch (metaErr) {
+        console.warn("[GmailConnector] Failed to retrieve sent Message-ID metadata:", metaErr.message);
+      }
+
       return {
         success: true,
         providerMessageId: res.data.id,
         threadId: res.data.threadId,
+        messageIdHeader: messageIdHeader || null,
       };
     } catch (err) {
       const isInvalidGrant = isInvalidGrantError(err);

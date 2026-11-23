@@ -19,7 +19,14 @@ export { handleLeadReplied } from "./leadReplied.js";
 
 // Finds/creates the unified-inbox conversation for a lead+channel and appends a message to it.
 async function recordOutboundMessage(workspaceId, leadId, channel, body, subject, options = {}) {
-  const { providerMessageId = null, threadId = null, senderEmailAccountId = null } = options;
+  const {
+    providerMessageId = null,
+    threadId = null,
+    senderEmailAccountId = null,
+    messageIdHeader = null,
+    inReplyTo = null,
+    references = null,
+  } = options;
   const conversations = await dbConnect("conversations");
   const messages = await dbConnect("messages");
 
@@ -59,7 +66,9 @@ async function recordOutboundMessage(workspaceId, leadId, channel, body, subject
     sentAt: new Date(),
     providerMessageId: providerMessageId || null,
     threadId: threadId || conversation.threadId || null,
-    messageIdHeader: providerMessageId ? `<${providerMessageId}@mail.gmail.com>` : null,
+    messageIdHeader: messageIdHeader || null,
+    inReplyTo: inReplyTo || null,
+    references: references || null,
   });
 }
 
@@ -181,6 +190,41 @@ async function dispatchAction(step, lead, campaign) {
           inReplyTo = lastMsg.messageIdHeader || null;
           references = lastMsg.references || null;
 
+          // If messageIdHeader is missing or is the legacy fake pattern (<hex@mail.gmail.com>),
+          // dynamically retrieve the true RFC 2822 Message-ID from the provider metadata
+          const isLegacyFake = inReplyTo && lastMsg.providerMessageId && inReplyTo.includes(lastMsg.providerMessageId);
+          if ((!inReplyTo || isLegacyFake) && lastMsg.providerMessageId && campaign.senderEmailAccountId) {
+            try {
+              const { getEmailConnector } = await import("./email/index.js");
+              const connector = await getEmailConnector({
+                accountId: campaign.senderEmailAccountId,
+                workspaceId: campaign.workspaceId,
+                purpose: "campaign",
+              });
+              if (connector?.gmail) {
+                const meta = await connector.gmail.users.messages.get({
+                  userId: "me",
+                  id: lastMsg.providerMessageId,
+                  format: "metadata",
+                  metadataHeaders: ["Message-ID", "Message-Id"],
+                });
+                const found = meta?.data?.payload?.headers?.find(
+                  (h) => h.name.toLowerCase() === "message-id"
+                );
+                if (found?.value) {
+                  inReplyTo = found.value.trim();
+                  if (!references) references = inReplyTo;
+                  await messagesCol.updateOne(
+                    { _id: lastMsg._id },
+                    { $set: { messageIdHeader: inReplyTo } }
+                  );
+                }
+              }
+            } catch (fetchErr) {
+              console.warn("[jobProcessor] Could not resolve real parent Message-ID from Gmail:", fetchErr.message);
+            }
+          }
+
           if (!inReplyTo && lastMsg.providerMessageId) {
             inReplyTo = `<${lastMsg.providerMessageId}@mail.gmail.com>`;
             if (!references) references = inReplyTo;
@@ -223,6 +267,9 @@ async function dispatchAction(step, lead, campaign) {
         subject,
         channel: "email",
         threadId: result.threadId || resolvedThreadId,
+        messageIdHeader: result.messageIdHeader || null,
+        inReplyTo,
+        references,
       };
     }
     default:
@@ -415,6 +462,9 @@ export async function processJob(job) {
         providerMessageId: result.providerMessageId || null,
         threadId: result.threadId || null,
         senderEmailAccountId: campaign.senderEmailAccountId || null,
+        messageIdHeader: result.messageIdHeader || null,
+        inReplyTo: result.inReplyTo || null,
+        references: result.references || null,
       });
       await maybeSimulateReply(job.workspaceId, job.campaignId, lead._id, result.channel);
     }

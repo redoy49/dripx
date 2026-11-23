@@ -29,6 +29,7 @@ export class MockEmailConnector extends EmailConnector {
     return {
       success: true,
       providerMessageId: messageId,
+      messageIdHeader: `<${messageId}@mock.dripx.app>`,
       threadId: threadId || `mock_thread_${Date.now()}`,
       inReplyTo: inReplyTo || null,
       references: references || null,

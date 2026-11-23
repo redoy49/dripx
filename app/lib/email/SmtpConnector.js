@@ -47,6 +47,7 @@ export class SmtpConnector extends EmailConnector {
       return {
         success: true,
         providerMessageId: info.messageId,
+        messageIdHeader: info.messageId,
         response: info.response,
       };
     } catch (err) {
