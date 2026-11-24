@@ -1,12 +1,20 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Users, Settings, FileText, Plus, Trash2 } from "lucide-react";
 import LeadSourceModal from "@/app/(dashboard)/dashboard/new-campaign/LeadSourceModal";
-import SequenceBuilder from "@/app/(dashboard)/dashboard/new-campaign/SequenceBuilder";
 import CampaignSettingsTab from "@/app/(dashboard)/dashboard/new-campaign/CampaignSettingsTab";
-import NewCampaignLoading from "./loading";
+import NewCampaignLoading, { FlowCanvasSkeleton } from "./loading";
+
+const SequenceBuilder = dynamic(
+  () => import("@/app/(dashboard)/dashboard/new-campaign/SequenceBuilder"),
+  {
+    loading: () => <FlowCanvasSkeleton />,
+    ssr: false,
+  }
+);
 
 // Module-scoped deduplication guard: prevents React StrictMode (double mount) or concurrent renders
 // from firing multiple POST /api/campaigns requests when landing on /dashboard/new-campaign without an ID
