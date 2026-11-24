@@ -203,7 +203,7 @@ export default function CampaignCommandCenterPage({ params }) {
   const isDraft = campaign.status === "draft";
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 space-y-6">
+    <div className="min-h-screen bg-[#F2F2F6] p-4 md:p-6 space-y-6">
       {/* 1. Header & Quick Controls Bar */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left: Breadcrumb & Title */}
