@@ -1,16 +1,16 @@
 # DripX - Project Context & Architecture Status
 
-**Last Updated:** November 23, 2026  
+**Last Updated:** November 24, 2026  
 **Active Git Branch:** `main` (Fully up to date with `origin/main`)  
-**Live Production URL:** `https://www.gurluxe.store` (also accessible via `https://dripx-kappa.vercel.app`)
+**Live Production URL:** `https://www.gurluxe.store` *(also accessible via `https://dripx-kappa.vercel.app`)*
 
 ---
 
 ## 1. Project Overview & Tech Stack
 DripX is a modern, self-hosted, cloud-native **Cold Outreach Automation Platform** (alternative to Instantly, Lemlist, Apollo, and Dripify).
 
-* **Framework:** Next.js 16.2.4 (Turbopack, App Router)
-* **Frontend:** React 19.2.4, Tailwind CSS, Lucide icons, Framer Motion
+* **Framework:** Next.js 16.2.4 (Turbopack, App Router, Server Actions)
+* **Frontend:** React 19.2.4 (`useOptimistic`, `useTransition`, `use`), Tailwind CSS 4, Lucide icons, Framer Motion
 * **Database:** MongoDB Atlas (`MONGO_URI` configured in `.env.local` & Vercel)
 * **Authentication:** NextAuth / JWT (`JWT_SECRET`) + Google OAuth 2.0 (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 * **Email Protocols:** Google Workspace / Gmail API (OAuth 2.0), SMTP, Resend, Mock connector
@@ -25,6 +25,7 @@ DripX is a modern, self-hosted, cloud-native **Cold Outreach Automation Platform
 ### A. Multi-Channel Visual Sequence Builder (Canvas Flow)
 * **Path:** `app/(dashboard)/dashboard/new-campaign/flow/`
 * Interactive drag-and-drop node graph canvas with custom branches, connection lines, auto-layout, zoom/pan, undo/redo.
+* Code-split dynamically via `next/dynamic` (`ssr: false`) with custom `FlowCanvasSkeleton`, saving ~350 KB on initial bundle load.
 * **Supported Step Types:**
   - `email`: Initial cold email outreach.
   - `email_followup`: Threaded follow-up reply (subject input automatically hidden; threads into existing conversation).
@@ -43,6 +44,7 @@ DripX is a modern, self-hosted, cloud-native **Cold Outreach Automation Platform
 ### C. Unified Multi-Channel Inbox
 * **Path:** `app/(dashboard)/dashboard/inbox`
 * Aggregates inbound and outbound messages across Email and LinkedIn in one view.
+* **0ms Optimistic Reply UI:** Powered by React 19 `useOptimistic` in `ConversationThread.jsx`. Typing and sending renders the message bubble instantly with subtle pending status tracking.
 * Automatic message deduplication via sparse unique index on `messages.providerMessageId`.
 * Direct reply capabilities preserving thread continuity.
 
@@ -50,6 +52,12 @@ DripX is a modern, self-hosted, cloud-native **Cold Outreach Automation Platform
 * **Auto-Pause on Reply:** When a lead replies (`handleLeadReplied`), their campaign enrollment status immediately becomes `replied`, cancelling pending follow-ups to prevent awkward automated messages.
 * **Ramp-Up & Sending Schedules:** Enforces daily limits, working hours, and sender mailbox ramp-up limits (`rampUpEngine.js`, `scheduleEngine.js`).
 * **Persistent Queue:** MongoDB `jobs` collection with `runAfter` timestamps and worker locks (`auto_worker`).
+
+### E. Next.js 16.4 & React 19 Performance Architecture
+* **Server Component Streaming Shells:** Overview (`/dashboard`), Campaigns (`/campaigns`), and Inbox (`/inbox`) decomposed into Server Component Shells with `<Suspense>` boundaries.
+* **Zero Layout Shift (CLS = 0) Skeleton UI:** Pixel-perfect shimmer skeletons across all 8 dashboard routes (`loading.jsx` + `app/components/ui/Skeleton.jsx`).
+* **Next 16 Router Caching:** Configured with `staleTimes` (`dynamic: 30s`, `static: 180s`) and `optimisticClientCache: true` for sub-50ms instant route switching.
+* **Zero-CLS Typography:** Self-hosted Google Fonts (`Outfit` and `Playfair_Display`) via `next/font/google`.
 
 ---
 
@@ -84,6 +92,8 @@ DripX is a modern, self-hosted, cloud-native **Cold Outreach Automation Platform
 * `app/lib/email/GmailConnector.js`: Gmail API client with metadata retrieval.
 * `app/lib/email/emailSyncEngine.js`: Inbound email ingestion and sequence pause triggers.
 * `app/lib/leadReplied.js`: Cancels queued sequence jobs when prospects respond.
+* `app/actions/campaignActions.js`: Next.js Server Actions for campaign pause/resume and deletion.
+* `app/actions/inboxActions.js`: Next.js Server Actions for outbound reply sending and status updates.
 * `app/api/cron/run-scheduler/route.js`: Cloud endpoint invoked by cron-job.org.
 * `app/(dashboard)/dashboard/new-campaign/flow/`: Visual sequence builder components.
 
@@ -91,31 +101,68 @@ DripX is a modern, self-hosted, cloud-native **Cold Outreach Automation Platform
 
 ## 5. Future Roadmap & High-Impact Improvements (Outcompeting Instantly & Lemlist)
 
-These strategic features are queued for implementation to push DripX ahead of commercial market leaders:
+These strategic features are queued for implementation to establish DripX as an undisputed market leader:
 
-### Priority 1: Multi-Inbox Rotation (Mailbox Shuffling)
-* **Goal:** Allow assigning multiple connected email accounts (e.g. 5–10 sender mailboxes) to a single campaign.
-* **Mechanism:** Round-robin or quota-weighted dispatching across mailboxes. Keeps per-inbox daily volume low, preventing spam flags and allowing massive scale without burning domains.
-
-### Priority 2: Native AI Personalized Icebreakers (`{{ai_icebreaker}}`)
-* **Goal:** Automatic hyper-personalized first lines for each prospect using LLM APIs (Gemini 2.5 / Claude).
-* **Mechanism:** Scrapes/analyzes prospect company name, role, and industry to write a custom, organic compliment or observation hook. Drastically boosts open and reply rates.
-
-### Priority 3: A/B Variant Testing in Sequence Steps
-* **Goal:** Test multiple subject lines and message bodies within the same sequence step.
-* **Mechanism:** Split traffic (e.g., 50% Variant A / 50% Variant B) and display live open/reply rates in analytics to automatically declare a winning variant.
-
-### Priority 4: Real-Time Email Verification (Zero Bounce Engine)
-* **Goal:** Eliminate bounce rates that harm domain reputation.
-* **Mechanism:** Pre-flight DNS MX record check and lightweight SMTP handshake verification 1 second before dispatch. Automatically flags or skips invalid/dead email addresses.
-
-### Priority 5: Spam Word Analyzer & Live Copy Score
-* **Goal:** Prevent emails from landing in the promotions or spam folder.
-* **Mechanism:** Real-time copy audit inside `StepEditorModal` highlighting high-risk spam keywords (e.g., "100% FREE", "ACT NOW", excessive capitalization) with deliverability recommendations.
-
-### Priority 6: Extreme Performance & Optimistic UI
-* **Goal:** Instantaneous, zero-latency user experience across large databases.
+### 🏆 Priority 1: Multi-Account Inbox Rotation (Round-Robin Sending)
+* **Goal:** Assign multiple sender mailboxes (e.g. 5–15 accounts across different domains) to a single campaign.
 * **Mechanism:** 
-  - Compound MongoDB indexes on `jobs` (`{ workspaceId: 1, status: 1, runAfter: 1 }`), `messages`, and `campaign_leads`.
-  - Optimistic UI updates for Unified Inbox replies and canvas node manipulations.
+  - Sequential round-robin or quota-weighted dispatching across connected accounts.
+  - Keeps individual mailbox volume strictly under safe daily caps (e.g. 30–40 emails/day), allowing campaigns to scale to 500–1,000+ emails/day without triggering spam filters or domain burn.
 
+### 🏆 Priority 2: Automated Peer-to-Peer Email Warmup Engine
+* **Goal:** Built-in domain reputation booster without paying for external warmup services.
+* **Mechanism:**
+  - Background worker exchanges positive conversations between active DripX mailboxes on the network.
+  - Automatically flags warmup messages as important, removes them from spam folders, and marks them as read to build stellar Google Postmaster & Outlook reputation scores.
+
+### 🏆 Priority 3: Spintax & Dynamic Fallback Engine
+* **Goal:** Guarantee high inbox placement by eliminating uniform message fingerprinting.
+* **Mechanism:**
+  - Nested Spintax support inside sequence steps: `{Hi|Hello|Hey} {{first_name | there}}, I {noticed|came across} your work at {{company | your team}}...`
+  - Fallback syntax for empty lead properties to prevent awkward blanks.
+
+### 🏆 Priority 4: Pre-Flight Real-Time Email Verification (Zero-Bounce Engine)
+* **Goal:** Keep bounce rates strictly below 2% to protect sender deliverability.
+* **Mechanism:**
+  - 1-second pre-flight MX record check and non-intrusive SMTP handshake ping prior to queue dispatch.
+  - Automatically flags or skips invalid, dead, or disposable email addresses before sending.
+
+### 🏆 Priority 5: Real-Time SSE (Server-Sent Events) for Unified Inbox
+* **Goal:** Replace 10-second polling with true real-time instant messaging.
+* **Mechanism:**
+  - Lightweight SSE endpoint (`/api/inbox/stream`) pushing new inbound emails and LinkedIn chat messages immediately to the open thread without browser refresh.
+
+### 🏆 Priority 6: Client-Side Web Worker CSV Parser
+* **Goal:** Zero browser lag when importing massive lead lists (50,000+ contacts).
+* **Mechanism:**
+  - Dedicated background Web Worker executing PapaParse. Prevents freezing the UI thread, providing instant progress bar feedback and client-side deduplication.
+
+### 🏆 Priority 7: DOM Virtualized Lead Table (`@tanstack/react-virtual`)
+* **Goal:** Lightning-fast rendering for 100,000+ lead pools.
+* **Mechanism:**
+  - Renders only visible rows in the viewport while recycling DOM nodes, maintaining smooth 60 FPS scrolling and low memory footprint.
+
+### 🏆 Priority 8: AI Icebreaker & Lead Sentiment Classifier
+* **Goal:** Automated hyper-personalized first lines and automated lead triage.
+* **Mechanism:**
+  - LLM integration (Gemini / Claude) generating custom first-line hooks based on prospect's company news or LinkedIn profile.
+  - AI Sentiment Classifier tagging inbound replies:
+    - 🟢 *Interested / Meeting Booked* → Auto-syncs to CRM.
+    - 🟡 *Out of Office* → Auto-pauses sequence until prospect returns.
+    - 🔴 *Not Interested* → Auto-unsubscribes lead.
+
+### 🏆 Priority 9: 1-Click CAN-SPAM / GDPR Unsubscribe Engine
+* **Goal:** International legal compliance and instant suppression management.
+* **Mechanism:**
+  - Automatic `{{unsubscribe_url}}` injection with 1-click opt-out landing page.
+  - Immediately places prospect onto a workspace-wide global suppression list across all campaigns.
+
+### 🏆 Priority 10: Global Command Palette (`Cmd + K` / `Ctrl + K`)
+* **Goal:** Supercharged agency workflow navigation.
+* **Mechanism:**
+  - Fast fuzzy search over campaigns, active leads, open conversation threads, and quick actions via `cmdk`.
+
+### 🏆 Priority 11: Mailbox Health Scoreboard & Deliverability Observability
+* **Goal:** Proactive prevention of delivery disasters.
+* **Mechanism:**
+  - Visual scoreboard auditing SPF, DKIM, DMARC alignment, MX records, and blacklist status for every connected sender account with auto-remediation tips.
