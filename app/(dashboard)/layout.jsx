@@ -325,6 +325,7 @@ export default function DashboardLayout({ children }) {
               <Link
                 key={i}
                 href={item.href}
+                prefetch={true}
                 onMouseEnter={() => handlePrefetch(item.href)}
                 onTouchStart={() => handlePrefetch(item.href)}
                 title={collapsed ? item.name : undefined}
