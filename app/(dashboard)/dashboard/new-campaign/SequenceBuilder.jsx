@@ -52,6 +52,7 @@ import DelayEditorModal from "./flow/DelayEditorModal";
 import TemplateGalleryModal from "./flow/TemplateGalleryModal";
 import SaveTemplateModal from "./flow/SaveTemplateModal";
 import { instantiateTemplateSteps } from "@/app/lib/sequenceTemplates";
+import { FlowCanvasSkeleton } from "./loading";
 
 function serverStepsToLocal(items) {
   return (items || []).map((s) => ({
@@ -416,7 +417,7 @@ function FlowCanvasInner({ campaignId }) {
   };
 
   if (loading) {
-    return <div className="py-20 text-center text-sm text-gray-400">Loading sequence...</div>;
+    return <FlowCanvasSkeleton />;
   }
 
   return (

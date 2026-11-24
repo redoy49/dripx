@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import MembersTab from "@/app/(dashboard)/dashboard/teams/MembersTab";
 import EditProfileModal from "@/app/(dashboard)/dashboard/teams/EditProfileModal";
+import TeamsLoading from "./loading";
 
 const fallbackStats = [
   {
@@ -207,6 +208,10 @@ export default function TeamsPage() {
   const statsData = profile?.stats || fallbackStats;
   const overviewData = profile?.overview || fallbackOverview;
   const activityData = profile?.activity || [];
+
+  if (!profile && !me) {
+    return <TeamsLoading />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6 space-y-6">

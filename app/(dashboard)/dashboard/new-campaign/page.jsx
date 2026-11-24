@@ -6,6 +6,7 @@ import { Users, Settings, FileText, Plus, Trash2 } from "lucide-react";
 import LeadSourceModal from "@/app/(dashboard)/dashboard/new-campaign/LeadSourceModal";
 import SequenceBuilder from "@/app/(dashboard)/dashboard/new-campaign/SequenceBuilder";
 import CampaignSettingsTab from "@/app/(dashboard)/dashboard/new-campaign/CampaignSettingsTab";
+import NewCampaignLoading from "./loading";
 
 // Module-scoped deduplication guard: prevents React StrictMode (double mount) or concurrent renders
 // from firing multiple POST /api/campaigns requests when landing on /dashboard/new-campaign without an ID
@@ -104,11 +105,7 @@ function NewCampaignInner() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-full items-center justify-center rounded-2xl border border-gray-100 bg-white py-28 text-sm text-gray-400">
-        Loading campaign...
-      </div>
-    );
+    return <NewCampaignLoading />;
   }
 
   return (

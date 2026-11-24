@@ -8,6 +8,7 @@ import IntegrationsTab from "@/app/(dashboard)/dashboard/settings/IntegrationsTa
 import EmailAccountsTab from "@/app/(dashboard)/dashboard/settings/EmailAccountsTab";
 import WorkingHoursTab from "@/app/(dashboard)/dashboard/settings/WorkingHoursTab";
 import SequenceTemplatesTab from "@/app/(dashboard)/dashboard/settings/SequenceTemplatesTab";
+import { SettingsLimitsSkeleton } from "./loading";
 
 const TABS = [
   "Limits & Activity control",
@@ -297,7 +298,7 @@ function SettingsPageContent() {
 
           {activeTab === 0 &&
             (loading || !limits ? (
-              <div className="py-20 text-center text-sm text-gray-400">Loading limits...</div>
+              <SettingsLimitsSkeleton />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_320px] gap-0 p-8">
                 {/* Left: Sliders */}

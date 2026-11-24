@@ -21,6 +21,7 @@ import {
   getZonedParts,
   parseTimeToMinutes,
 } from "@/app/lib/scheduleConstants";
+import { WorkingHoursSkeleton } from "./loading";
 
 export default function WorkingHoursTab() {
   const [schedule, setSchedule] = useState({ ...DEFAULT_SENDING_SCHEDULE });
@@ -159,12 +160,7 @@ export default function WorkingHoursTab() {
   const endHourNum = Math.floor(parseTimeToMinutes(schedule.endTime) / 60);
 
   if (loading) {
-    return (
-      <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-        <span className="text-xs font-medium text-gray-400">Loading sending schedule...</span>
-      </div>
-    );
+    return <WorkingHoursSkeleton />;
   }
 
   return (

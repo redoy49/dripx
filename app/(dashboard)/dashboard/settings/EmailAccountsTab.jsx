@@ -24,6 +24,7 @@ import ConnectEmailModal from "./ConnectEmailModal";
 import DnsDiagnosticsModal from "./DnsDiagnosticsModal";
 import RampUpSettingsModal from "./RampUpSettingsModal";
 import TestEmailModal from "./TestEmailModal";
+import { EmailAccountsSkeleton } from "./loading";
 
 const PROVIDER_INFO = {
   google: {
@@ -303,10 +304,7 @@ export default function EmailAccountsTab() {
 
       {/* Accounts List */}
       {loading ? (
-        <div className="flex items-center justify-center rounded-2xl border border-gray-100 bg-white py-16 text-xs text-gray-400">
-          <Loader2 size={18} className="animate-spin mr-2 text-indigo-400" />
-          <span>Loading sender accounts and deliverability records...</span>
-        </div>
+        <EmailAccountsSkeleton />
       ) : accounts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-2xs">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100 text-indigo-400">

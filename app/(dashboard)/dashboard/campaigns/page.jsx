@@ -194,22 +194,62 @@ export default function CampaignPage() {
         {loading ? (
           <div className="divide-y divide-gray-100 animate-pulse">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="grid grid-cols-[2fr_1.2fr_1.4fr_0.8fr] px-6 py-5 items-center gap-4">
-                <div className="space-y-1.5 pr-8">
-                  <div className="h-4 w-40 bg-gray-200 rounded" />
-                  <div className="h-3 w-24 bg-gray-100 rounded" />
+              <div
+                key={i}
+                className="grid grid-cols-[2fr_1.2fr_1.4fr_0.8fr] px-6 py-5 items-center gap-4"
+              >
+                {/* Overview & Progress Bar */}
+                <div className="pr-8 space-y-2.5">
+                  <div className="h-4 w-44 bg-gray-200/80 rounded" />
+                  <div className="h-2 w-full max-w-sm bg-gray-100 rounded-full overflow-hidden flex gap-0.5">
+                    <div className="h-full w-2/5 bg-emerald-200/80" />
+                    <div className="h-full w-1/5 bg-cyan-200/80" />
+                    <div className="h-full w-1/5 bg-orange-200/80" />
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="h-3 w-20 bg-gray-200/60 rounded" />
+                    <span className="text-gray-300">·</span>
+                    <div className="h-3 w-20 bg-gray-200/60 rounded" />
+                    <span className="text-gray-300">·</span>
+                    <div className="h-3 w-24 bg-indigo-200/70 rounded" />
+                  </div>
                 </div>
-                <div className="space-y-2 pr-8">
-                  <div className="h-3 w-20 bg-gray-100 rounded" />
-                  <div className="h-3 w-16 bg-gray-100 rounded" />
+
+                {/* Leads & Channels */}
+                <div className="pr-8 space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="h-3.5 w-14 bg-gray-200/60 rounded" />
+                    <div className="h-4 w-10 bg-indigo-200/80 rounded" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="h-3.5 w-14 bg-gray-200/60 rounded" />
+                    <div className="h-3.5 w-24 bg-gray-200/70 rounded" />
+                  </div>
                 </div>
-                <div className="space-y-2 pr-8">
-                  <div className="h-3 w-24 bg-gray-100 rounded" />
-                  <div className="h-3 w-20 bg-gray-100 rounded" />
+
+                {/* Progress Detail */}
+                <div className="pr-8 space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="h-3.5 w-14 bg-gray-200/60 rounded" />
+                    <div className="h-4 w-8 bg-gray-200/80 rounded" />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="h-3.5 w-16 bg-gray-200/60 rounded" />
+                    <div className="h-4 w-8 bg-gray-200/80 rounded" />
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="h-6 w-11 bg-gray-200 rounded-full" />
-                  <div className="h-3 w-12 bg-gray-100 rounded" />
+
+                {/* Status Toggle & Badge */}
+                <div className="flex flex-col items-end gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-5 w-9 bg-gray-200/80 rounded-full" />
+                    <div className="w-5 h-5 bg-gray-100 rounded" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3.5 w-12 bg-gray-200/60 rounded" />
+                    <span className="text-gray-300">·</span>
+                    <div className="h-3.5 w-8 bg-gray-200/60 rounded" />
+                  </div>
                 </div>
               </div>
             ))}

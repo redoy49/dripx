@@ -425,11 +425,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-28 text-center text-xs text-gray-400 space-y-3">
-          <Loader2 size={28} className="animate-spin text-indigo-400" />
-          <p className="font-semibold text-gray-500">Loading live telemetry and campaign analytics...</p>
-        </div>
+      {loading && !summary ? (
+        <DashboardLoading />
       ) : (
         <>
           {/* ── 2. Upper Grid: Statistics & Recent Activity (Matches Reference Video) ── */}

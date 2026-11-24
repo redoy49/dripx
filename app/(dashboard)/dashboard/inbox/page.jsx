@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Info, Search, Mail, RefreshCw, Trash2 } from "lucide-react";
 import ConversationThread from "@/app/(dashboard)/dashboard/inbox/ConversationThread";
 import LeadDetailPanel from "@/app/(dashboard)/dashboard/inbox/LeadDetailPanel";
+import InboxLoading from "./loading";
 import { FaLinkedin } from "react-icons/fa";
 
 const TABS = [
@@ -262,6 +263,10 @@ export default function InboxPage() {
   });
 
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+
+  if (loading && conversations.length === 0) {
+    return <InboxLoading />;
+  }
 
   return (
     <div className="h-full min-h-0 flex flex-col p-4 bg-[#F2F2F6] overflow-hidden">

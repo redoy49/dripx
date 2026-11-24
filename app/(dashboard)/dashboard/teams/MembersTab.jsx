@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { UserPlus, ExternalLink } from "lucide-react";
 import Badge from "@/app/components/ui/Badge";
 import InviteMemberModal from "@/app/(dashboard)/dashboard/teams/InviteMemberModal";
+import { MembersTableSkeleton } from "./loading";
 
 const ROLE_BADGE = { owner: "violet", admin: "green", member: "gray" };
 
@@ -59,7 +60,7 @@ export default function MembersTab({ currentRole }) {
         </div>
 
         {loading ? (
-          <p className="py-10 text-center text-xs font-medium text-gray-400">Loading members...</p>
+          <MembersTableSkeleton />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-gray-200/90 shadow-2xs">
             <div className="grid grid-cols-[2fr_1fr_1fr_auto] bg-gray-50/70 px-5 py-3 text-xs font-bold text-gray-500">

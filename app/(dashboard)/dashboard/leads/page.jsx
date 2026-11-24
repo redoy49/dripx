@@ -27,6 +27,7 @@ import LeadSourceModal from "@/app/(dashboard)/dashboard/new-campaign/LeadSource
 import LeadDetailModal from "@/app/(dashboard)/dashboard/leads/LeadDetailModal";
 import BulkEnrollModal from "@/app/(dashboard)/dashboard/leads/BulkEnrollModal";
 import BulkTagModal from "@/app/(dashboard)/dashboard/leads/BulkTagModal";
+import LeadsLoading from "./loading";
 
 const SOURCE_LABELS = {
   manual: "Manual",
@@ -252,6 +253,10 @@ export default function LeadsPage() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const isAllSelected = leads.length > 0 && selectedIds.length === leads.length;
   const isPartiallySelected = selectedIds.length > 0 && selectedIds.length < leads.length;
+
+  if (loading && leads.length === 0) {
+    return <LeadsLoading />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F2F2F6] p-4 md:p-6 space-y-4">

@@ -22,6 +22,7 @@ import CampaignLeadsTab from "./CampaignLeadsTab";
 import CampaignActivityTab from "./CampaignActivityTab";
 import CampaignQueueTab from "./CampaignQueueTab";
 import CampaignSimulatorModal from "./CampaignSimulatorModal";
+import CampaignDetailsLoading from "./loading";
 
 const TABS = [
   { id: "analytics", label: "Analytics Overview", icon: BarChart3 },
@@ -179,12 +180,7 @@ export default function CampaignCommandCenterPage({ params }) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-        <span className="text-xs text-gray-400 font-medium">Loading Campaign Command Center...</span>
-      </div>
-    );
+    return <CampaignDetailsLoading />;
   }
 
   if (!analytics) {
