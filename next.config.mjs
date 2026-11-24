@@ -6,6 +6,13 @@ const nextConfig = {
   // across restarts; the specific host is kept too in case the wildcard match ever
   // doesn't apply to a given request type.
   allowedDevOrigins: ["*.ngrok-free.app", "36f5-42-0-4-192.ngrok-free.app"],
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+    optimisticClientCache: true,
+  },
   async redirects() {
     return [
       {

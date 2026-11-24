@@ -3,8 +3,6 @@ import crypto from "node:crypto";
 import { google } from "googleapis";
 import { signToken } from "@/app/lib/auth";
 
-export const dynamic = "force-dynamic";
-
 export const GOOGLE_OAUTH_COOKIE = "google_oauth_state";
 
 export function getRedirectUri(req) {

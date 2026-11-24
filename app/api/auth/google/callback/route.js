@@ -7,8 +7,6 @@ import { setSessionCookie } from "@/app/lib/session";
 import { DEFAULT_DAILY_LIMITS } from "@/app/lib/limits";
 import { GOOGLE_OAUTH_COOKIE, getRedirectUri } from "../route";
 
-export const dynamic = "force-dynamic";
-
 function getSafeRedirectUrl(redirectTo, base) {
   if (!redirectTo || typeof redirectTo !== "string") {
     return new URL("/dashboard", base);
