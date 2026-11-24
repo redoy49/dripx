@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { getCached, setCached } from "@/app/lib/swrCache";
 import BellIcon from "@/app/components/ui/BellIcon";
@@ -63,6 +63,24 @@ export default function CampaignPage() {
     return !getCached("/api/campaigns");
   });
   const [creating, setCreating] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const [optimisticCampaigns, setOptimisticCampaigns] = useOptimistic(
+    campaignList,
+    (currentList, update) => {
+      if (update.type === "toggle") {
+        return currentList.map((c) =>
+          c.id === update.id
+            ? { ...c, status: c.status === "active" ? "paused" : "active" }
+            : c
+        );
+      }
+      if (update.type === "delete") {
+        return currentList.filter((c) => c.id !== update.id);
+      }
+      return currentList;
+    }
+  );
 
   const load = useCallback(() => {
     fetch("/api/campaigns")
@@ -83,22 +101,42 @@ export default function CampaignPage() {
     load();
   }, [load]);
 
-  const toggleCampaign = async (campaign) => {
-    if (campaign.status === "active") {
-      await fetch(`/api/campaigns/${campaign.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "paused" }),
-      });
-    } else {
-      await fetch(`/api/campaigns/${campaign.id}/activate`, { method: "POST" });
-    }
-    load();
+  const toggleCampaign = (campaign) => {
+    startTransition(async () => {
+      setOptimisticCampaigns({ type: "toggle", id: campaign.id });
+      try {
+        if (campaign.status === "active") {
+          await fetch(`/api/campaigns/${campaign.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "paused" }),
+          });
+        } else {
+          await fetch(`/api/campaigns/${campaign.id}/activate`, { method: "POST" });
+        }
+        load();
+      } catch (err) {
+        console.error("Failed to toggle campaign:", err);
+        load();
+      }
+    });
   };
 
-  const deleteCampaign = async (id) => {
-    setCampaignList((prev) => prev.filter((c) => c.id !== id));
-    await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+  const deleteCampaign = (id) => {
+    startTransition(async () => {
+      setOptimisticCampaigns({ type: "delete", id });
+      try {
+        const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setCampaignList((prev) => prev.filter((c) => c.id !== id));
+        } else {
+          load();
+        }
+      } catch (err) {
+        console.error("Failed to delete campaign:", err);
+        load();
+      }
+    });
   };
 
   const createCampaign = async () => {
@@ -113,7 +151,7 @@ export default function CampaignPage() {
     if (res.ok) router.push(`/dashboard/new-campaign?id=${data.id}`);
   };
 
-  const filtered = campaignList.filter((c) => {
+  const filtered = optimisticCampaigns.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
     const matchesActive = activeOnly ? c.status === "active" : true;
     return matchesSearch && matchesActive;

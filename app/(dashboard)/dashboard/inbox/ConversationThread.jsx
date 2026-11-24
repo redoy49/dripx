@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useOptimistic, useTransition } from "react";
 import { Send, ExternalLink, Archive, Star, Mail, Loader2, Trash2 } from "lucide-react";
 import { FaLinkedin } from "react-icons/fa";
 
@@ -26,6 +26,12 @@ export default function ConversationThread({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
+
+  const [, startTransition] = useTransition();
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+    messages,
+    (current, newMsg) => [...current, newMsg]
+  );
 
   // Derived so switching conversations never flashes the previous thread's content
   const loading = !conversation || conversation.id !== conversationId;
@@ -132,32 +138,48 @@ export default function ConversationThread({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [optimisticMessages]);
 
   const send = async () => {
-    if (!draft.trim() || sending) return;
+    const text = draft.trim();
+    if (!text || sending) return;
     setSending(true);
-    try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: draft }),
-      });
-      if (res.ok) {
-        const msg = await res.json();
-        setMessages((prev) => [...prev, msg]);
-        setDraft("");
-        onStatusChangeRef.current?.();
-      } else {
-        const data = await res.json();
-        alert(data.message || "Failed to send message");
+    setDraft("");
+
+    const optimisticMsg = {
+      id: `optimistic-${Date.now()}`,
+      direction: "outbound",
+      channel: conversation?.channel || "email",
+      body: text,
+      sentAt: new Date().toISOString(),
+      isPending: true,
+    };
+
+    startTransition(async () => {
+      addOptimisticMessage(optimisticMsg);
+      try {
+        const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body: text }),
+        });
+        if (res.ok) {
+          const msg = await res.json();
+          setMessages((prev) => [...prev, msg]);
+          onStatusChangeRef.current?.();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || "Failed to send message");
+          setDraft(text);
+        }
+      } catch (err) {
+        console.error("Sending message failed:", err);
+        alert("Network error: Failed to send message");
+        setDraft(text);
+      } finally {
+        setSending(false);
       }
-    } catch (err) {
-      console.error("Sending message failed:", err);
-      alert("Network error: Failed to send message");
-    } finally {
-      setSending(false);
-    }
+    });
   };
 
   const setStatus = async (status) => {
@@ -281,10 +303,10 @@ export default function ConversationThread({
 
       {/* Messages */}
       <div className="flex-1 space-y-3.5 overflow-y-auto px-5 py-4 bg-gray-50/30">
-        {messages.length === 0 && (
+        {optimisticMessages.length === 0 && (
           <p className="py-12 text-center text-sm text-gray-400">No messages in this thread yet.</p>
         )}
-        {messages.map((m) => {
+        {optimisticMessages.map((m) => {
           const isOutbound = m.direction === "outbound";
           const cleanBody = stripQuotedContent(m.body);
 
@@ -293,7 +315,7 @@ export default function ConversationThread({
               <div
                 className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-2xs ${
                   isOutbound
-                    ? "bg-indigo-400 text-white rounded-br-xs"
+                    ? `bg-indigo-400 text-white rounded-br-xs ${m.isPending ? "opacity-85" : ""}`
                     : "bg-white text-gray-800 border border-gray-100 rounded-bl-xs"
                 }`}
               >
@@ -309,7 +331,11 @@ export default function ConversationThread({
                   ) : (
                     <FaLinkedin className="w-2.5 h-2.5" />
                   )}
-                  <span>{new Date(m.sentAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
+                  {m.isPending ? (
+                    <span className="italic font-medium">Sending...</span>
+                  ) : (
+                    <span>{new Date(m.sentAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
+                  )}
                 </div>
               </div>
             </div>
