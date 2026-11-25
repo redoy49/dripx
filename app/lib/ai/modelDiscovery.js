@@ -44,9 +44,12 @@ function mapRawModels(rawItems, sourceProviderId) {
   const mapped = [];
 
   for (const item of rawItems || []) {
-    const id = typeof item === "string" ? item : item?.id || item?.name?.replace(/^models\//, "");
+    const id =
+      typeof item === "string"
+        ? item.trim()
+        : item?.id || item?.model || item?.model_id || item?.slug || item?.name?.replace(/^models\//, "");
     if (!id || seen.has(id) || NON_CHAT_REGEX.test(id)) continue;
-    if (item?.type && item.type !== "language") continue;
+    if (item?.type && /(embedding|image|audio|video|moderation|tts|whisper)/i.test(String(item.type))) continue;
     if (Array.isArray(item?.supportedGenerationMethods) && !item.supportedGenerationMethods.includes("generateContent")) {
       continue;
     }
@@ -66,11 +69,18 @@ function mapRawModels(rawItems, sourceProviderId) {
   return mapped;
 }
 
+export function parseManualModelIds(rawText = "") {
+  return String(rawText)
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /**
  * Authenticates against a provider's live /models endpoint using the supplied API key
  * and returns the list of chat-capable models unlocked for that key.
  */
-export async function fetchProviderModels({ providerId, apiKey, baseUrl }) {
+export async function fetchProviderModels({ providerId, apiKey, baseUrl, manualModels = "" }) {
   const preset = getProviderPreset(providerId);
   if (!preset) throw new Error(`Unknown provider: ${providerId}`);
   if (!apiKey || !apiKey.trim()) throw new Error("API key is required");
@@ -81,9 +91,10 @@ export async function fetchProviderModels({ providerId, apiKey, baseUrl }) {
     : preset.defaultBaseUrl;
 
   if (!resolvedBase) {
-    throw new Error("A valid HTTPS Base URL is required for custom OpenAI-compatible providers.");
+    throw new Error(`A valid HTTPS Base URL is required for ${preset.label}.`);
   }
 
+  const manualList = mapRawModels(parseManualModelIds(manualModels), providerId);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 9000);
 
@@ -94,6 +105,10 @@ export async function fetchProviderModels({ providerId, apiKey, baseUrl }) {
     if (preset.kind === "anthropic") {
       headers["x-api-key"] = trimmedKey;
       headers["anthropic-version"] = "2023-06-01";
+    } else if (preset.kind === "anthropic-compatible") {
+      headers["x-api-key"] = trimmedKey;
+      headers["anthropic-version"] = "2023-06-01";
+      headers.Authorization = `Bearer ${trimmedKey}`;
     } else if (preset.kind === "google") {
       url = `${resolvedBase}/models?key=${encodeURIComponent(trimmedKey)}`;
     } else {
@@ -108,6 +123,9 @@ export async function fetchProviderModels({ providerId, apiKey, baseUrl }) {
     } catch {}
 
     if (!res.ok) {
+      if ((res.status === 404 || res.status === 405) && manualList.length > 0) {
+        return { ok: true, baseUrl: resolvedBase, models: manualList };
+      }
       const apiErr = json?.error?.message || json?.message || `HTTP ${res.status}`;
       throw new Error(`${preset.label} rejected key: ${apiErr}`);
     }
@@ -116,13 +134,23 @@ export async function fetchProviderModels({ providerId, apiKey, baseUrl }) {
       ? json.data
       : Array.isArray(json.models)
       ? json.models
+      : Array.isArray(json.result)
+      ? json.result
+      : Array.isArray(json.data?.models)
+      ? json.data.models
+      : Array.isArray(json.data?.data)
+      ? json.data.data
       : Array.isArray(json)
       ? json
       : [];
 
-    const models = mapRawModels(rawList, providerId);
+    const discovered = mapRawModels(rawList, providerId);
+    const models = discovered.length > 0 ? discovered : manualList;
+
     if (models.length === 0) {
-      throw new Error(`Connected to ${preset.label}, but no chat models were returned for this key.`);
+      throw new Error(
+        `Connected to ${preset.label}, but /models returned 0 models. Enter Manual Model IDs below (e.g. claude-sonnet-4-5, gpt-4o) and try again.`
+      );
     }
 
     return { ok: true, baseUrl: resolvedBase, models };

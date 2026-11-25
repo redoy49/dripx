@@ -47,7 +47,7 @@ export async function PUT(req) {
     const { ok, forbidden } = await requireRole(session, ["owner", "admin"]);
     if (!ok) return forbidden;
 
-    const { providerId, apiKey, baseUrl, customName } = await req.json();
+    const { providerId, apiKey, baseUrl, customName, manualModels } = await req.json();
     const preset = getProviderPreset(providerId);
     if (!preset) return Response.json({ message: "Unknown provider preset" }, { status: 400 });
 
@@ -55,6 +55,7 @@ export async function PUT(req) {
       providerId,
       apiKey,
       baseUrl: baseUrl || preset.defaultBaseUrl,
+      manualModels,
     });
 
     const col = await dbConnect("ai_provider_configs");

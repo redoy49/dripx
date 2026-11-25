@@ -92,7 +92,17 @@ export const PROVIDER_PRESETS = [
     defaultBaseUrl: "",
     keyPrefix: "",
     placeholder: "sk-... or provider token",
-    hint: "Any OpenAI-compatible provider or proxy URL supporting /v1/models",
+    hint: "Any OpenAI-compatible provider or proxy URL (e.g. https://coarena.ai/api/v1)",
+    allowCustomBaseUrl: true,
+  },
+  {
+    id: "custom-anthropic",
+    label: "Custom Anthropic-Compatible",
+    kind: "anthropic-compatible",
+    defaultBaseUrl: "",
+    keyPrefix: "",
+    placeholder: "sk-ant-... or provider token",
+    hint: "Any Anthropic-compatible provider or proxy URL (e.g. https://coarena.ai/api)",
     allowCustomBaseUrl: true,
   },
 ];

@@ -66,6 +66,8 @@ function instantiateAdapter(providerId, modelId, apiKey, baseUrl) {
       return (apiKey ? createGateway({ apiKey }) : gateway)(modelId);
     case "anthropic":
       return createAnthropic({ apiKey })(modelId);
+    case "anthropic-compatible":
+      return createAnthropic({ baseURL: baseUrl, apiKey })(modelId);
     case "deepseek":
       return createDeepSeek({ apiKey })(modelId);
     case "google":
