@@ -1,39 +1,7 @@
-import { ObjectId } from "mongodb";
-import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
 import { requireRole } from "@/app/lib/rbac";
-import { resolveFirstExecutableStep } from "@/app/lib/sequenceEngine";
-import { serializeCampaign } from "@/app/api/campaigns/route";
-import { runDueJobs } from "@/app/lib/jobProcessor";
-import {
-  calculateStaggeredRunTime,
-  calculateScheduledRunTime,
-  resolveEffectiveSchedule,
-  isWithinSendingWindow,
-  getNextWindowStart,
-} from "@/app/lib/scheduleEngine";
+import { activateCampaignForWorkspace } from "@/app/lib/campaignActivation";
 
-// Finds the lead's "replied" state for condition steps at activation time (mirrors the
-// same check jobProcessor uses once the campaign is running).
-async function evaluateHasReplied(leadId, enrolledAt) {
-  const conversations = await dbConnect("conversations");
-  const messages = await dbConnect("messages");
-
-  const leadConversations = await conversations.find({ leadId }).project({ _id: 1 }).toArray();
-  if (leadConversations.length === 0) return false;
-
-  const count = await messages.countDocuments({
-    conversationId: { $in: leadConversations.map((c) => c._id) },
-    direction: "inbound",
-    sentAt: { $gte: enrolledAt },
-  });
-
-  return count > 0;
-}
-
-// Flips a campaign to "active" and creates the first queued job for every pending lead.
-// Only the FIRST job is created here — as each job completes, jobProcessor enqueues the
-// next one — because branching means later steps aren't knowable until earlier ones resolve.
 export async function POST(req, { params }) {
   try {
     const { session, unauthorized } = await requireAuth();
@@ -43,180 +11,17 @@ export async function POST(req, { params }) {
     if (!ok) return forbidden;
 
     const { id } = await params;
-    const campaigns = await dbConnect("campaigns");
-    const campaign = await campaigns.findOne({
-      _id: new ObjectId(id),
-      workspaceId: new ObjectId(session.workspaceId),
-    });
-    if (!campaign) return Response.json({ message: "Campaign not found" }, { status: 404 });
-
-    const sequenceSteps = await dbConnect("sequence_steps");
-    const steps = await sequenceSteps.find({ campaignId: campaign._id }).sort({ order: 1 }).toArray();
-
-    if (steps.length === 0) {
-      return Response.json(
-        { message: "Add at least one step to the sequence before activating" },
-        { status: 400 },
-      );
+    const result = await activateCampaignForWorkspace(id, session.workspaceId);
+    if (!result.ok) {
+      return Response.json({ message: result.message }, { status: result.status });
     }
-
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i];
-      if (step.type === "email_followup") {
-        if (!step.config?.template?.trim()) {
-          return Response.json(
-            { message: "Configure the message body for your Email Follow-up step before activating" },
-            { status: 400 },
-          );
-        }
-      } else if (step.type === "email") {
-        const isFollowUpEmail = steps.slice(0, i).some((s) => s.type === "email" || s.type === "email_followup");
-        if (!step.config?.template?.trim()) {
-          return Response.json(
-            { message: "Configure the message body for your email step before activating" },
-            { status: 400 },
-          );
-        }
-        if (!isFollowUpEmail && !step.config?.subject?.trim()) {
-          return Response.json(
-            { message: "Configure the subject line for your initial email step before activating" },
-            { status: 400 },
-          );
-        }
-      } else if (step.type === "inmail") {
-        if (!step.config?.template?.trim() || !step.config?.subject?.trim()) {
-          return Response.json(
-            {
-              message: "Configure the subject line and message body for your inmail step before activating",
-            },
-            { status: 400 },
-          );
-        }
-      } else if (
-        (step.type === "message" || step.type === "follow_up") &&
-        !step.config?.template?.trim()
-      ) {
-        return Response.json(
-          {
-            message: `Configure the message template for your ${step.type} step before activating`,
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    const hasEmailSteps = steps.some((s) => s.type === "email" || s.type === "email_followup");
-    if (hasEmailSteps) {
-      const emailAccountsCol = await dbConnect("email_accounts");
-      let senderAccount = null;
-
-      if (campaign.senderEmailAccountId) {
-        senderAccount = await emailAccountsCol.findOne({
-          _id: new ObjectId(campaign.senderEmailAccountId),
-          workspaceId: new ObjectId(session.workspaceId),
-        });
-      } else {
-        senderAccount = await emailAccountsCol.findOne({
-          workspaceId: new ObjectId(session.workspaceId),
-          status: "connected",
-        });
-      }
-
-      if (!senderAccount && !process.env.RESEND_API_KEY) {
-        return Response.json(
-          {
-            message:
-              "Connect and select an active email sender account in Campaign Settings before activating email steps.",
-          },
-          { status: 400 },
-        );
-      }
-
-      if (senderAccount && senderAccount.status !== "connected") {
-        return Response.json(
-          {
-            message: `Selected sender account (${senderAccount.email}) requires reconnection. Check Settings > Email Accounts.`,
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    const campaignLeadsCol = await dbConnect("campaign_leads");
-    const pendingLeads = await campaignLeadsCol
-      .find({ campaignId: campaign._id, status: "pending" })
-      .toArray();
-
-    const sendingSchedulesCol = await dbConnect("sending_schedules");
-    const workspaceScheduleDoc = await sendingSchedulesCol.findOne({
-      workspaceId: campaign.workspaceId,
-    });
-    const effectiveSchedule = resolveEffectiveSchedule(
-      workspaceScheduleDoc,
-      campaign.scheduleOverride,
-    );
-
-    let cursor = new Date();
-    if (!isWithinSendingWindow(effectiveSchedule, cursor)) {
-      cursor = getNextWindowStart(effectiveSchedule, cursor);
-    }
-
-    const jobsCol = await dbConnect("jobs");
-    let queuedCount = 0;
-
-    for (let i = 0; i < pendingLeads.length; i++) {
-      const campaignLead = pendingLeads[i];
-      const { nextStep, delayMs } = await resolveFirstExecutableStep(steps, (conditionStep) =>
-        evaluateHasReplied(campaignLead.leadId, campaignLead.enrolledAt),
-      );
-
-      if (!nextStep) continue;
-
-      let runAfter;
-      if (i === 0) {
-        runAfter = calculateScheduledRunTime(cursor, delayMs, effectiveSchedule, null);
-      } else {
-        runAfter = calculateStaggeredRunTime(cursor, delayMs, effectiveSchedule, null, 4, 8);
-      }
-      cursor = runAfter;
-
-      await jobsCol.insertOne({
-        workspaceId: campaign.workspaceId,
-        campaignId: campaign._id,
-        campaignLeadId: campaignLead._id,
-        stepId: nextStep._id,
-        type: nextStep.type,
-        runAfter,
-        status: "queued",
-        attempts: 0,
-        lastError: null,
-        createdAt: new Date(),
-      });
-      await campaignLeadsCol.updateOne(
-        { _id: campaignLead._id },
-        { $set: { currentStepId: nextStep._id, status: "in_progress" } },
-      );
-      queuedCount++;
-    }
-
-    const updated = await campaigns.findOneAndUpdate(
-      { _id: campaign._id },
-      { $set: { status: "active" } },
-      { returnDocument: "after" },
-    );
-
-    // Asynchronously kick off due jobs immediately so active leads dispatch without waiting for cron
-    runDueJobs(25, campaign._id, false, "activation_dispatch").catch((err) =>
-      console.error("[Activation] Background dispatch error:", err)
-    );
 
     return Response.json({
-      campaign: await serializeCampaign(updated, campaignLeadsCol),
-      queuedLeads: queuedCount,
+      campaign: result.campaign,
+      queuedLeads: result.queuedLeads,
     });
   } catch (error) {
     console.error("Activating campaign failed:", error);
-
     return Response.json({ message: "Failed to activate campaign" }, { status: 500 });
   }
 }

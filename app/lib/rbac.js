@@ -30,3 +30,33 @@ export async function requireRole(session, allowedRoles) {
 
   return { ok: true, role };
 }
+
+/**
+ * Checks if the user can access the DripX AI Agent.
+ * Owners and admins always have access; members require explicit `aiAgentAccess: true`
+ * granted by an owner or admin in Teams.
+ */
+export async function requireAiAgentAccess(session) {
+  const teamMembers = await dbConnect("team_members");
+  const membership = await teamMembers.findOne({
+    userId: new ObjectId(session.userId),
+    workspaceId: new ObjectId(session.workspaceId),
+    status: "active",
+  });
+
+  const role = membership?.role || "member";
+  const allowed = role === "owner" || role === "admin" || Boolean(membership?.aiAgentAccess);
+
+  if (!allowed) {
+    return {
+      ok: false,
+      role,
+      forbidden: Response.json(
+        { message: "AI Agent access requires Owner/Admin permission. Ask your workspace admin in Teams." },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return { ok: true, role };
+}

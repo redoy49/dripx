@@ -36,6 +36,15 @@ export default function MembersTab({ currentRole }) {
     load();
   };
 
+  const toggleAiAgentAccess = async (id, nextAccess) => {
+    await fetch(`/api/team/members/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ aiAgentAccess: nextAccess }),
+    });
+    load();
+  };
+
   const removeMember = async (id) => {
     await fetch(`/api/team/members/${id}`, { method: "DELETE" });
     load();
@@ -63,16 +72,17 @@ export default function MembersTab({ currentRole }) {
           <MembersTableSkeleton />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-gray-200/90 shadow-2xs">
-            <div className="grid grid-cols-[2fr_1fr_1fr_auto] bg-gray-50/70 px-5 py-3 text-xs font-bold text-gray-500">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] bg-gray-50/70 px-5 py-3 text-xs font-bold text-gray-500">
               <span>Member</span>
               <span>Role</span>
               <span>Status</span>
+              <span>AI Agent</span>
               <span className="text-right">Actions</span>
             </div>
             {members.map((m, idx) => (
               <div
                 key={m.id}
-                className={`grid grid-cols-[2fr_1fr_1fr_auto] items-center px-5 py-4 ${
+                className={`grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-5 py-4 ${
                   idx !== members.length - 1 ? "border-b border-gray-100" : ""
                 }`}
               >
@@ -126,6 +136,33 @@ export default function MembersTab({ currentRole }) {
 
                 <div>
                   <Badge color={m.status === "active" ? "green" : "amber"}>{m.status}</Badge>
+                </div>
+
+                <div>
+                  {m.role === "owner" || m.role === "admin" ? (
+                    <span className="text-[11px] font-semibold text-indigo-500">Full Access</span>
+                  ) : canManage ? (
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={Boolean(m.aiAgentAccess)}
+                      onClick={() => toggleAiAgentAccess(m.id, !m.aiAgentAccess)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border transition cursor-pointer ${
+                        m.aiAgentAccess
+                          ? "bg-indigo-50 text-indigo-600 border-indigo-200"
+                          : "bg-gray-50 text-gray-400 border-gray-200 hover:text-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${m.aiAgentAccess ? "bg-indigo-500" : "bg-gray-300"}`}
+                      />
+                      {m.aiAgentAccess ? "Allowed" : "Restricted"}
+                    </button>
+                  ) : (
+                    <span className="text-[11px] text-gray-400">
+                      {m.aiAgentAccess ? "Allowed" : "Restricted"}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex justify-end">

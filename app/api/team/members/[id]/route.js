@@ -14,8 +14,18 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
     const body = await req.json();
 
-    if (!["admin", "member"].includes(body.role)) {
-      return Response.json({ message: "Invalid role" }, { status: 400 });
+    const update = {};
+    if (body.role !== undefined) {
+      if (!["admin", "member"].includes(body.role)) {
+        return Response.json({ message: "Invalid role" }, { status: 400 });
+      }
+      update.role = body.role;
+    }
+    if (typeof body.aiAgentAccess === "boolean") {
+      update.aiAgentAccess = body.aiAgentAccess;
+    }
+    if (Object.keys(update).length === 0) {
+      return Response.json({ message: "No valid fields to update" }, { status: 400 });
     }
 
     const teamMembers = await dbConnect("team_members");
@@ -24,17 +34,21 @@ export async function PATCH(req, { params }) {
       workspaceId: new ObjectId(session.workspaceId),
     });
     if (!target) return Response.json({ message: "Member not found" }, { status: 404 });
-    if (target.role === "owner") {
+    if (target.role === "owner" && update.role) {
       return Response.json({ message: "The workspace owner's role can't be changed" }, { status: 400 });
     }
 
     const result = await teamMembers.findOneAndUpdate(
       { _id: target._id },
-      { $set: { role: body.role } },
+      { $set: update },
       { returnDocument: "after" },
     );
 
-    return Response.json({ id: result._id.toString(), role: result.role });
+    return Response.json({
+      id: result._id.toString(),
+      role: result.role,
+      aiAgentAccess: result.role === "owner" || result.role === "admin" || Boolean(result.aiAgentAccess),
+    });
   } catch (error) {
     console.error("Updating team member failed:", error);
 

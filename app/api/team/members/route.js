@@ -28,6 +28,7 @@ export async function GET() {
         id: m._id.toString(),
         role: m.role,
         status: m.status,
+        aiAgentAccess: m.role === "owner" || m.role === "admin" || Boolean(m.aiAgentAccess),
         invitedEmail: m.invitedEmail,
         invitedAt: m.invitedAt,
         joinedAt: m.joinedAt,

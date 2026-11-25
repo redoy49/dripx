@@ -8,6 +8,7 @@ import IntegrationsTab from "@/app/(dashboard)/dashboard/settings/IntegrationsTa
 import EmailAccountsTab from "@/app/(dashboard)/dashboard/settings/EmailAccountsTab";
 import WorkingHoursTab from "@/app/(dashboard)/dashboard/settings/WorkingHoursTab";
 import SequenceTemplatesTab from "@/app/(dashboard)/dashboard/settings/SequenceTemplatesTab";
+import AiProvidersTab from "@/app/(dashboard)/dashboard/settings/AiProvidersTab";
 import { SettingsLimitsSkeleton } from "./loading";
 
 const TABS = [
@@ -16,6 +17,7 @@ const TABS = [
   "Integrations",
   "Working hours",
   "Sequence templates",
+  "AI Providers",
   "Data scrubber",
   "Lead tagging",
 ];
@@ -218,7 +220,8 @@ function SettingsPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams?.get("tab");
   const shouldOpenEmail = tabParam === "Email Accounts" || searchParams?.get("connected") || searchParams?.get("error");
-  const [activeTab, setActiveTab] = useState(shouldOpenEmail ? 1 : 0);
+  const initialTab = shouldOpenEmail ? 1 : tabParam === "AI Providers" ? 5 : 0;
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [limits, setLimits] = useState(null);
   const [loading, setLoading] = useState(true);
   const saveTimeout = useRef(null);
@@ -387,14 +390,15 @@ function SettingsPageContent() {
           {activeTab === 2 && <IntegrationsTab />}
           {activeTab === 3 && <WorkingHoursTab />}
           {activeTab === 4 && <SequenceTemplatesTab />}
-          {activeTab === 5 && (
+          {activeTab === 5 && <AiProvidersTab />}
+          {activeTab === 6 && (
             <ComingSoonPanel
               icon={ShieldCheck}
               title="Data scrubber"
               description="Automatic PII cleanup rules for imported lead data are on the roadmap."
             />
           )}
-          {activeTab === 6 && (
+          {activeTab === 7 && (
             <ComingSoonPanel
               icon={Tag}
               title="Lead tagging"

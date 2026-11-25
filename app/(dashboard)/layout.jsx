@@ -20,6 +20,7 @@ import {
   ArrowUpRight,
   Bell,
   BadgeCheck,
+  Sparkles,
 } from "lucide-react";
 
 const menu = [
@@ -29,6 +30,7 @@ const menu = [
   { name: "Leads", href: "/dashboard/leads", icon: Database },
   { name: "Teams", href: "/dashboard/teams", icon: Users },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "AI Agent", href: "/dashboard/agent", icon: Sparkles },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -177,6 +179,8 @@ export default function DashboardLayout({ children }) {
       prefetchData("/api/leads?page=1&limit=25");
     } else if (href === "/dashboard/inbox") {
       prefetchData("/api/conversations?filter=all");
+    } else if (href === "/dashboard/agent") {
+      prefetchData("/api/agent/threads");
     }
   };
 
@@ -442,7 +446,7 @@ export default function DashboardLayout({ children }) {
       <main className="flex-1 h-full rounded-[26px] border border-gray-200/90 bg-[#FAFAFC] shadow-2xs overflow-hidden flex flex-col min-w-0">
         <div
           className={`flex-1 min-h-0 ${
-            pathname === "/dashboard/inbox"
+            pathname === "/dashboard/inbox" || pathname === "/dashboard/agent"
               ? "h-full overflow-hidden flex flex-col"
               : "h-full overflow-y-auto"
           }`}
