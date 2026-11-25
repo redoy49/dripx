@@ -4,7 +4,7 @@ import { requireAuth } from "@/app/lib/session";
 import { requireAiAgentAccess } from "@/app/lib/rbac";
 import { formatAgentStreamError, resolveAgentModel } from "@/app/lib/ai/modelResolver";
 import { createDripXAgent } from "@/app/lib/ai/createDripXAgent";
-import { hydrateContextRefs, saveAgentThread } from "@/app/lib/ai/threadStore";
+import { hydrateContextRefs, sanitizeUIMessages, saveAgentThread } from "@/app/lib/ai/threadStore";
 
 export const maxDuration = 60;
 
@@ -17,7 +17,7 @@ export async function POST(req) {
     if (!ok) return forbidden;
 
     const body = await req.json();
-    const messages = Array.isArray(body.messages) ? body.messages : [];
+    const messages = sanitizeUIMessages(body.messages);
     if (messages.length === 0) {
       return Response.json({ message: "Messages are required" }, { status: 400 });
     }

@@ -1,5 +1,8 @@
 import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
+import { sanitizeUIMessages } from "./sanitizeMessages.js";
+
+export { sanitizeUIMessages };
 
 /**
  * Extracts a concise title from the first user UIMessage.
@@ -23,13 +26,14 @@ export async function saveAgentThread({
   const wsId = new ObjectId(workspaceId);
   const uId = new ObjectId(userId);
   const now = new Date();
-  const title = deriveThreadTitle(messages);
+  const cleanMessages = sanitizeUIMessages(messages);
+  const title = deriveThreadTitle(cleanMessages);
 
   if (threadId && ObjectId.isValid(threadId)) {
     const existing = await col.findOneAndUpdate(
       { _id: new ObjectId(threadId), workspaceId: wsId, userId: uId },
       {
-        $set: { messages, modelId, mode, title, updatedAt: now },
+        $set: { messages: cleanMessages, modelId, mode, title, updatedAt: now },
         $setOnInsert: { createdAt: now },
       },
       { upsert: true, returnDocument: "after" }
@@ -43,7 +47,7 @@ export async function saveAgentThread({
     title,
     modelId,
     mode,
-    messages,
+    messages: cleanMessages,
     createdAt: now,
     updatedAt: now,
   });

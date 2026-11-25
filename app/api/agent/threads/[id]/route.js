@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
 import { requireAiAgentAccess } from "@/app/lib/rbac";
+import { sanitizeUIMessages } from "@/app/lib/ai/threadStore";
 
 export async function GET(req, { params }) {
   try {
@@ -29,7 +30,7 @@ export async function GET(req, { params }) {
       title: doc.title,
       modelId: doc.modelId,
       mode: doc.mode,
-      messages: doc.messages || [],
+      messages: sanitizeUIMessages(doc.messages || []),
     });
   } catch (error) {
     console.error("[AgentThread] GET error:", error);
