@@ -1,7 +1,7 @@
 import { requireAuth } from "@/app/lib/session";
 import { requireAiAgentAccess } from "@/app/lib/rbac";
 import { listAgentThreads } from "@/app/lib/ai/threadStore";
-import { getWorkspaceAiKeys } from "@/app/lib/ai/modelResolver";
+import { getWorkspaceAvailableModels, getWorkspaceProviderConfigs } from "@/app/lib/ai/modelResolver";
 
 export async function GET() {
   try {
@@ -14,25 +14,22 @@ export async function GET() {
         hasAccess: false,
         role: access.role,
         threads: [],
-        configuredProviders: [],
+        availableModels: [],
       });
     }
 
-    const [threads, workspaceKeys] = await Promise.all([
+    const [threads, availableModels, configs] = await Promise.all([
       listAgentThreads(session.workspaceId, session.userId),
-      getWorkspaceAiKeys(session.workspaceId),
+      getWorkspaceAvailableModels(session.workspaceId),
+      getWorkspaceProviderConfigs(session.workspaceId),
     ]);
-
-    const hasGateway = Boolean(
-      workspaceKeys.gateway || process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
-    );
 
     return Response.json({
       hasAccess: true,
       role: access.role,
       threads,
-      hasGateway,
-      configuredProviders: Object.keys(workspaceKeys),
+      availableModels,
+      connectedProviderCount: Object.keys(configs).length,
     });
   } catch (error) {
     console.error("[AgentThreads] GET error:", error);

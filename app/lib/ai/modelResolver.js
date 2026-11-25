@@ -7,123 +7,133 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { decryptCredentials } from "@/app/lib/crypto";
-import { getModelConfig } from "./models";
+import { getProviderPreset } from "./providers.js";
+import { PLATFORM_FALLBACK_MODELS } from "./models.js";
 
-const BYOK_GATEWAY_SLUGS = {
-  anthropic: "anthropic",
-  openai: "openai",
-  deepseek: "deepseek",
-  google: "google",
-};
-
-const ENV_PROVIDER_KEYS = {
-  anthropic: () => process.env.ANTHROPIC_API_KEY,
-  openai: () => process.env.OPENAI_API_KEY,
-  deepseek: () => process.env.DEEPSEEK_API_KEY,
-  google: () => process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY,
-};
-
-/**
- * Loads decrypted BYOK API keys saved for a workspace in `ai_provider_configs`.
- * Keys stay strictly server-side and are never returned to clients.
- */
-export async function getWorkspaceAiKeys(workspaceId) {
+export async function getWorkspaceProviderConfigs(workspaceId) {
   const col = await dbConnect("ai_provider_configs");
   const doc = await col.findOne({ workspaceId: new ObjectId(workspaceId) });
   if (!doc?.providers) return {};
 
   const resolved = {};
-  for (const [provider, encrypted] of Object.entries(doc.providers)) {
-    const plain = decryptCredentials(encrypted);
-    if (typeof plain === "string" && plain.trim()) {
-      resolved[provider] = plain.trim();
-    } else if (plain?.apiKey && typeof plain.apiKey === "string") {
-      resolved[provider] = plain.apiKey.trim();
-    }
+  for (const [providerId, entry] of Object.entries(doc.providers)) {
+    const encryptedPayload = entry?.credentials || (entry?.encryptedData ? entry : null);
+    const decrypted = decryptCredentials(encryptedPayload);
+    const apiKey = typeof decrypted === "string" ? decrypted.trim() : decrypted?.apiKey?.trim();
+    if (!apiKey) continue;
+
+    const preset = getProviderPreset(providerId);
+    resolved[providerId] = {
+      providerId,
+      label: entry?.customName || preset?.label || providerId,
+      apiKey,
+      baseUrl: (typeof decrypted === "object" && decrypted?.baseUrl) || entry?.baseUrl || preset?.defaultBaseUrl || "",
+      syncedModels: Array.isArray(entry?.syncedModels) ? entry.syncedModels : [],
+    };
   }
   return resolved;
 }
 
-function buildDirectModel(provider, directModelId, apiKey) {
-  switch (provider) {
+/**
+ * Returns ONLY models unlocked on the workspace's active provider key(s),
+ * or platform AI Gateway models when a server-wide Gateway key/OIDC token is configured.
+ */
+export async function getWorkspaceAvailableModels(workspaceId) {
+  const configs = await getWorkspaceProviderConfigs(workspaceId);
+  const models = [];
+
+  for (const cfg of Object.values(configs)) {
+    for (const m of cfg.syncedModels) {
+      models.push({ ...m, sourceProviderId: cfg.providerId, sourceLabel: cfg.label });
+    }
+  }
+
+  if (models.length > 0) return models;
+
+  if (process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN) {
+    return PLATFORM_FALLBACK_MODELS.map((m) => ({ ...m, sourceLabel: "Platform AI Gateway" }));
+  }
+
+  return [];
+}
+
+function instantiateAdapter(providerId, modelId, apiKey, baseUrl) {
+  const preset = getProviderPreset(providerId);
+  const kind = preset?.kind || "openai-compatible";
+
+  switch (kind) {
+    case "gateway":
+      return (apiKey ? createGateway({ apiKey }) : gateway)(modelId);
     case "anthropic":
-      return createAnthropic({ apiKey })(directModelId);
-    case "openai":
-      return createOpenAI({ apiKey })(directModelId);
+      return createAnthropic({ apiKey })(modelId);
     case "deepseek":
-      return createDeepSeek({ apiKey })(directModelId);
+      return createDeepSeek({ apiKey })(modelId);
     case "google":
-      return createGoogleGenerativeAI({ apiKey })(directModelId);
+      return createGoogleGenerativeAI({ apiKey })(modelId);
+    case "openai":
+      return createOpenAI({ apiKey }).chat(modelId);
+    case "openai-compatible":
     default:
-      throw new Error(`Unsupported direct AI provider: ${provider}`);
+      return createOpenAI({ baseURL: baseUrl, apiKey }).chat(modelId);
   }
 }
 
-/**
- * Hybrid AI Model Resolver:
- * 1. Uses Vercel AI Gateway (workspace gateway key, AI_GATEWAY_API_KEY, or VERCEL_OIDC_TOKEN)
- *    with request-scoped BYOK (`providerOptions.gateway.byok`) when workspace provider keys exist.
- * 2. Falls back to direct @ai-sdk/* provider adapters if no Gateway token is configured
- *    but a workspace BYOK key or direct provider env key is present.
- */
+export function formatAgentStreamError(err) {
+  const raw =
+    err?.data?.error?.message ||
+    err?.responseBody ||
+    err?.message ||
+    "Failed to get a response from the selected AI provider.";
+
+  return String(raw)
+    .replace(/\b(sk-[A-Za-z0-9_-]{6,}|rv_[A-Za-z0-9_-]{6,}|vck_[A-Za-z0-9_-]{6,}|AIza[A-Za-z0-9_-]{6,})\b/g, "[REDACTED_KEY]")
+    .replace(/Bearer\s+\S+/gi, "Bearer [REDACTED]")
+    .slice(0, 320);
+}
+
 export async function resolveAgentModel({
   workspaceId,
   modelId,
+  sourceProviderId,
   reasoningEffort = "high",
 }) {
-  const config = getModelConfig(modelId);
-  const workspaceKeys = await getWorkspaceAiKeys(workspaceId);
+  const configs = await getWorkspaceProviderConfigs(workspaceId);
+  const available = await getWorkspaceAvailableModels(workspaceId);
 
-  const gatewayKey = workspaceKeys.gateway || process.env.AI_GATEWAY_API_KEY;
-  const hasOidc = Boolean(process.env.VERCEL_OIDC_TOKEN);
-  const directKey = workspaceKeys[config.provider] || ENV_PROVIDER_KEYS[config.provider]?.();
+  if (available.length === 0) {
+    const err = new Error("No active AI models found. Add and verify an API key in Settings > AI Providers.");
+    err.code = "MISSING_AI_CREDENTIALS";
+    throw err;
+  }
 
-  const safetyIdentifier = crypto
-    .createHash("sha256")
-    .update(String(workspaceId))
-    .digest("hex")
-    .slice(0, 32);
+  const chosen =
+    available.find((m) => m.id === modelId && (!sourceProviderId || m.sourceProviderId === sourceProviderId)) ||
+    available.find((m) => m.id === modelId) ||
+    available[0];
 
-  if (gatewayKey || hasOidc) {
-    const gw = workspaceKeys.gateway
-      ? createGateway({ apiKey: workspaceKeys.gateway })
-      : gateway;
+  const cfg = configs[chosen.sourceProviderId];
+  const safetyId = crypto.createHash("sha256").update(String(workspaceId)).digest("hex").slice(0, 32);
 
-    const gatewayOptions = {
-      caching: "auto",
-      safetyIdentifier,
-      tags: ["feature:dripx-agent"],
-    };
-
-    const byokSlug = BYOK_GATEWAY_SLUGS[config.provider];
-    if (workspaceKeys[config.provider] && byokSlug) {
-      gatewayOptions.byok = {
-        [byokSlug]: [{ apiKey: workspaceKeys[config.provider] }],
-      };
-    }
-
+  if (cfg) {
+    const isGateway = getProviderPreset(cfg.providerId)?.kind === "gateway";
     return {
-      model: gw(config.id),
-      config,
-      routeMode: workspaceKeys[config.provider] ? "gateway-byok" : "gateway",
-      reasoning: config.supportsReasoning ? reasoningEffort : undefined,
-      providerOptions: { gateway: gatewayOptions },
+      model: instantiateAdapter(cfg.providerId, chosen.id, cfg.apiKey, cfg.baseUrl),
+      modelMeta: chosen,
+      routeMode: isGateway ? "gateway-byok" : `byok:${cfg.providerId}`,
+      reasoning: isGateway && chosen.supportsReasoning ? reasoningEffort : undefined,
+      providerOptions: isGateway
+        ? { gateway: { caching: "auto", safetyIdentifier: safetyId, tags: ["feature:dripx-agent"] } }
+        : undefined,
     };
   }
 
-  if (directKey) {
-    return {
-      model: buildDirectModel(config.provider, config.directModelId, directKey),
-      config,
-      routeMode: workspaceKeys[config.provider] ? "direct-byok" : "direct-env",
-      reasoning: config.supportsReasoning ? reasoningEffort : undefined,
-      providerOptions: undefined,
-    };
-  }
-
-  const err = new Error(
-    `No AI credentials configured for ${config.label}. Add an AI Gateway key or ${config.provider} API key in Settings > AI Providers.`
-  );
-  err.code = "MISSING_AI_CREDENTIALS";
-  throw err;
+  return {
+    model: gateway(chosen.id),
+    modelMeta: chosen,
+    routeMode: "gateway-platform",
+    reasoning: chosen.supportsReasoning ? reasoningEffort : undefined,
+    providerOptions: {
+      gateway: { caching: "auto", safetyIdentifier: safetyId, tags: ["feature:dripx-agent"] },
+    },
+  };
 }

@@ -13,10 +13,10 @@ Key rules:
 - Always surface direct DripX dashboard links when you create or inspect a campaign (e.g. [Open in Flow Builder](/dashboard/new-campaign?id=...)).
 - When a tool approval request is denied by the user, accept the decision gracefully and do not re-trigger the denied tool automatically.`;
 
-function buildModeInstructions(mode, hydratedContext) {
+function buildModeInstructions(mode, hydratedContext, toolsEnabled) {
   const modeNote =
-    mode === "ask"
-      ? "Mode: ASK (Fast direct assistant — answer concisely without modifying workspace data)."
+    mode === "ask" || !toolsEnabled
+      ? "Mode: ASK (Fast direct assistant — answer concisely without workspace tool calls)."
       : mode === "plan"
       ? "Mode: PLAN (Read-only strategist — inspect workspace data and propose a detailed plan without executing writes)."
       : "Mode: BUILD (Full DripX Agent — inspect data, create draft campaigns/sequences, enroll leads into drafts, and request user approval before activating campaigns, sending live replies, or deleting records).";
@@ -39,8 +39,9 @@ export function createDripXAgent({
   const draftTools = createDraftTools(workspaceId, userId);
   const guardedTools = createGuardedTools(workspaceId, userId);
 
+  const supportsTools = resolvedModel.modelMeta?.supportsTools !== false;
   let tools = {};
-  if (resolvedModel.config.supportsTools) {
+  if (supportsTools) {
     if (mode === "plan") {
       tools = readTools;
     } else if (mode === "build") {
@@ -50,12 +51,12 @@ export function createDripXAgent({
 
   return new ToolLoopAgent({
     model: resolvedModel.model,
-    instructions: buildModeInstructions(mode, hydratedContext),
+    instructions: buildModeInstructions(mode, hydratedContext, supportsTools),
     tools,
     stopWhen: isStepCount(12),
     ...(resolvedModel.reasoning ? { reasoning: resolvedModel.reasoning } : {}),
     ...(resolvedModel.providerOptions ? { providerOptions: resolvedModel.providerOptions } : {}),
-    ...(mode === "build" && resolvedModel.config.supportsTools
+    ...(mode === "build" && supportsTools
       ? {
           toolApproval: {
             activateCampaign: "user-approval",

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
 import { PanelLeft, ShieldAlert, KeyRound, Sparkles } from "lucide-react";
-import { DEFAULT_MODEL_ID } from "@/app/lib/ai/models";
 import AgentThreadSidebar from "./AgentThreadSidebar";
 import AgentMessageList from "./AgentMessageList";
 import AgentComposer from "./AgentComposer";
@@ -20,13 +19,13 @@ export default function AgentWorkspaceClient() {
   const [threadId, setThreadId] = useState(() => createHexObjectId());
   const [threads, setThreads] = useState([]);
   const [hasAccess, setHasAccess] = useState(true);
-  const [hasGateway, setHasGateway] = useState(false);
-  const [configuredProviders, setConfiguredProviders] = useState([]);
+  const [availableModels, setAvailableModels] = useState([]);
   const [mobileSidebar, setMobileSidebar] = useState(false);
 
   const [input, setInput] = useState("");
   const [mode, setMode] = useState("build");
-  const [modelId, setModelId] = useState(DEFAULT_MODEL_ID);
+  const [modelId, setModelId] = useState("");
+  const [sourceProviderId, setSourceProviderId] = useState("");
   const [reasoningEffort, setReasoningEffort] = useState("high");
   const [contextRefs, setContextRefs] = useState([]);
 
@@ -36,9 +35,18 @@ export default function AgentWorkspaceClient() {
       if (!res.ok) return;
       const data = await res.json();
       setHasAccess(Boolean(data.hasAccess));
-      setHasGateway(Boolean(data.hasGateway));
-      setConfiguredProviders(data.configuredProviders || []);
+      const models = data.availableModels || [];
+      setAvailableModels(models);
       setThreads(data.threads || []);
+
+      if (models.length > 0) {
+        setModelId((prev) => {
+          const valid = models.some((m) => m.id === prev);
+          if (valid) return prev;
+          setSourceProviderId(models[0].sourceProviderId || "");
+          return models[0].id;
+        });
+      }
     } catch {}
   }, []);
 
@@ -48,7 +56,7 @@ export default function AgentWorkspaceClient() {
     });
   }, [refreshThreads]);
 
-  const { messages, setMessages, sendMessage, status, stop, error, addToolApprovalResponse } = useChat({
+  const { messages, setMessages, sendMessage, status, stop, error, clearError, addToolApprovalResponse } = useChat({
     id: threadId,
     transport: new DefaultChatTransport({ api: "/api/agent/chat" }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
@@ -60,9 +68,10 @@ export default function AgentWorkspaceClient() {
   const handleSend = (overrideText) => {
     const text = (typeof overrideText === "string" ? overrideText : input).trim();
     if (!text && contextRefs.length === 0) return;
+    if (error) clearError?.();
     sendMessage(
       { text: text || "Analyze the attached context." },
-      { body: { threadId, modelId, mode, reasoningEffort, contextRefs } }
+      { body: { threadId, modelId, sourceProviderId, mode, reasoningEffort, contextRefs } }
     );
     if (typeof overrideText !== "string") setInput("");
     setContextRefs([]);
@@ -73,7 +82,11 @@ export default function AgentWorkspaceClient() {
     if (!res.ok) return;
     const data = await res.json();
     setThreadId(data.id);
-    if (data.modelId) setModelId(data.modelId);
+    if (data.modelId && availableModels.some((m) => m.id === data.modelId)) {
+      const found = availableModels.find((m) => m.id === data.modelId);
+      setModelId(found.id);
+      setSourceProviderId(found.sourceProviderId || "");
+    }
     if (data.mode) setMode(data.mode);
     setMessages(data.messages || []);
   };
@@ -135,7 +148,7 @@ export default function AgentWorkspaceClient() {
             className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 px-3 py-1 text-[11px] font-semibold text-gray-600 transition"
           >
             <KeyRound size={12} />
-            <span>{hasGateway || configuredProviders.length ? "Keys Active" : "Add API Keys"}</span>
+            <span>{availableModels.length > 0 ? `${availableModels.length} Models Active` : "Add API Keys"}</span>
           </Link>
         </header>
 
@@ -163,7 +176,11 @@ export default function AgentWorkspaceClient() {
           mode={mode}
           setMode={setMode}
           modelId={modelId}
-          setModelId={setModelId}
+          sourceProviderId={sourceProviderId}
+          setModelId={(nextId, nextProvider) => {
+            setModelId(nextId);
+            setSourceProviderId(nextProvider || "");
+          }}
           reasoningEffort={reasoningEffort}
           setReasoningEffort={setReasoningEffort}
           contextRefs={contextRefs}
@@ -171,8 +188,7 @@ export default function AgentWorkspaceClient() {
           status={status}
           onSend={() => handleSend()}
           onStop={stop}
-          hasGateway={hasGateway}
-          configuredProviders={configuredProviders}
+          availableModels={availableModels}
         />
       </div>
     </div>

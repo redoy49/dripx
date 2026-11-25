@@ -1,22 +1,38 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AI_MODELS, DEFAULT_MODEL_ID, isAllowedModel, getModelConfig } from "./models.js";
+import { detectProviderFromKey, normalizeSafeBaseUrl } from "./providers.js";
+import { classifyModelBrand, formatModelLabel } from "./modelDiscovery.js";
 import { encryptCredentials, decryptCredentials } from "../crypto.js";
 
-test("AI model catalog validates allowed providers and rejects unknown slugs", () => {
-  assert.ok(AI_MODELS.length >= 10);
-  assert.equal(isAllowedModel("anthropic/claude-fable-5"), true);
-  assert.equal(isAllowedModel("openai/gpt-6.2-sol"), true);
-  assert.equal(isAllowedModel("deepseek/deepseek-v4-pro"), true);
-  assert.equal(isAllowedModel("google/gemini-4-hydrogen"), true);
-  assert.equal(isAllowedModel("evil/arbitrary-model"), false);
-  assert.equal(getModelConfig("invalid").id, DEFAULT_MODEL_ID);
+test("detectProviderFromKey identifies River AI, OpenRouter, Anthropic, Gateway, and Gemini keys", () => {
+  assert.equal(detectProviderFromKey("rv_123456"), "river");
+  assert.equal(detectProviderFromKey("sk-or-v1-abc"), "openrouter");
+  assert.equal(detectProviderFromKey("sk-ant-api03-xyz"), "anthropic");
+  assert.equal(detectProviderFromKey("vck_abc123"), "gateway");
+  assert.equal(detectProviderFromKey("AIzaSyTest123"), "google");
+  assert.equal(detectProviderFromKey("unknown_key"), null);
+});
+
+test("normalizeSafeBaseUrl blocks SSRF private/http URLs and allows valid HTTPS endpoints", () => {
+  assert.equal(normalizeSafeBaseUrl("https://api.river.ai/v1/"), "https://api.river.ai/v1");
+  assert.equal(normalizeSafeBaseUrl("http://api.river.ai/v1"), null);
+  assert.equal(normalizeSafeBaseUrl("https://localhost:3000/v1"), null);
+  assert.equal(normalizeSafeBaseUrl("https://127.0.0.1/v1"), null);
+  assert.equal(normalizeSafeBaseUrl("https://192.168.1.5/v1"), null);
+});
+
+test("classifyModelBrand and formatModelLabel categorize multi-provider models accurately", () => {
+  assert.equal(classifyModelBrand("deepseek-ai/DeepSeek-V4.1-Flash"), "deepseek");
+  assert.equal(classifyModelBrand("google/gemini-4-hydrogen"), "google");
+  assert.equal(classifyModelBrand("anthropic/claude-fable-5"), "anthropic");
+  assert.equal(classifyModelBrand("openai/gpt-6.2-sol"), "openai");
+  assert.equal(classifyModelBrand("zai-org/GLM-5.3-Flash"), "other");
+  assert.equal(formatModelLabel("deepseek-ai/DeepSeek-V4.1-Flash"), "DeepSeek V4.1 Flash");
 });
 
 test("BYOK credentials encrypt and decrypt cleanly via AES-256-GCM", () => {
-  const sampleKey = "sk-ant-api03-example-byok-secret-123456";
-  const encrypted = encryptCredentials(sampleKey);
+  const payload = { apiKey: "rv_test_secret_1234", baseUrl: "https://api.river.ai/v1" };
+  const encrypted = encryptCredentials(payload);
   assert.ok(encrypted.encryptedData && encrypted.iv && encrypted.authTag);
-  assert.notEqual(encrypted.encryptedData, sampleKey);
-  assert.equal(decryptCredentials(encrypted), sampleKey);
+  assert.deepEqual(decryptCredentials(encrypted), payload);
 });

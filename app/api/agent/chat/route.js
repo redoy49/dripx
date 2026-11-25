@@ -2,8 +2,7 @@ import { ObjectId } from "mongodb";
 import { createAgentUIStreamResponse } from "ai";
 import { requireAuth } from "@/app/lib/session";
 import { requireAiAgentAccess } from "@/app/lib/rbac";
-import { DEFAULT_MODEL_ID, isAllowedModel } from "@/app/lib/ai/models";
-import { resolveAgentModel } from "@/app/lib/ai/modelResolver";
+import { formatAgentStreamError, resolveAgentModel } from "@/app/lib/ai/modelResolver";
 import { createDripXAgent } from "@/app/lib/ai/createDripXAgent";
 import { hydrateContextRefs, saveAgentThread } from "@/app/lib/ai/threadStore";
 
@@ -23,7 +22,6 @@ export async function POST(req) {
       return Response.json({ message: "Messages are required" }, { status: 400 });
     }
 
-    const modelId = isAllowedModel(body.modelId) ? body.modelId : DEFAULT_MODEL_ID;
     const mode = ["plan", "build", "ask"].includes(body.mode) ? body.mode : "build";
     const reasoningEffort = ["low", "medium", "high"].includes(body.reasoningEffort)
       ? body.reasoningEffort
@@ -37,7 +35,8 @@ export async function POST(req) {
     const [resolvedModel, hydratedContext] = await Promise.all([
       resolveAgentModel({
         workspaceId: session.workspaceId,
-        modelId,
+        modelId: body.modelId,
+        sourceProviderId: body.sourceProviderId,
         reasoningEffort,
       }),
       hydrateContextRefs(session.workspaceId, body.contextRefs),
@@ -59,13 +58,20 @@ export async function POST(req) {
       headers: {
         "X-Agent-Thread-Id": activeThreadId,
       },
+      onError: (err) => {
+        const msg = formatAgentStreamError(err);
+        if (/tool|function.?call/i.test(msg) && mode !== "ask") {
+          return `${msg} — Tip: Switch mode from Build to Ask for models without tool calling.`;
+        }
+        return msg;
+      },
       onFinish: async ({ messages: finalMessages }) => {
         try {
           await saveAgentThread({
             threadId: activeThreadId,
             workspaceId: session.workspaceId,
             userId: session.userId,
-            modelId,
+            modelId: resolvedModel.modelMeta.id,
             mode,
             messages: finalMessages,
           });
@@ -79,7 +85,7 @@ export async function POST(req) {
     const status = error.code === "MISSING_AI_CREDENTIALS" ? 400 : 500;
     return Response.json(
       {
-        message: error.message || "Failed to execute AI Agent",
+        message: formatAgentStreamError(error),
         code: error.code || "AGENT_ERROR",
       },
       { status }

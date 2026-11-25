@@ -12,6 +12,7 @@ export default function AgentComposer({
   mode,
   setMode,
   modelId,
+  sourceProviderId,
   setModelId,
   reasoningEffort,
   setReasoningEffort,
@@ -20,8 +21,7 @@ export default function AgentComposer({
   status,
   onSend,
   onStop,
-  hasGateway,
-  configuredProviders,
+  availableModels,
 }) {
   const [trigger, setTrigger] = useState({ type: null, query: "" });
   const [listening, setListening] = useState(false);
@@ -137,11 +137,11 @@ export default function AgentComposer({
 
               <AgentModelPicker
                 modelId={modelId}
+                sourceProviderId={sourceProviderId}
                 reasoningEffort={reasoningEffort}
                 onChangeModel={setModelId}
                 onChangeReasoning={setReasoningEffort}
-                hasGateway={hasGateway}
-                configuredProviders={configuredProviders}
+                availableModels={availableModels}
               />
             </div>
 
