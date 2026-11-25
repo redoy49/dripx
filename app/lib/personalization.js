@@ -3,6 +3,8 @@
 // and by the job processor at send-time, so preview always matches what actually sends.
 
 const VARIABLE_RE = /\{\{\s*([\w.]+)\s*(?:\|([^}]*))?\s*\}\}/g;
+// Matches innermost {opt1|opt2|...} blocks containing at least one "|" so non-spintax braces stay untouched.
+const SPINTAX_RE = /\{([^{}]*\|[^{}]*)\}/g;
 
 export const BUILT_IN_VARIABLES = [
   { key: "firstName", label: "First name" },
@@ -66,14 +68,37 @@ function resolveVariable(key, lead) {
   return "";
 }
 
-// Renders a message template against a lead, substituting {{variable}} tokens.
+/**
+ * Resolves single-brace Spintax blocks like `{Hi|Hello|Hey}` (including nested blocks)
+ * by randomly choosing one variant per block.
+ */
+export function resolveSpintax(text, rng = Math.random) {
+  if (!text || typeof text !== "string" || !text.includes("|")) return text || "";
+
+  let current = text;
+  for (let pass = 0; pass < 10; pass++) {
+    let changed = false;
+    current = current.replace(SPINTAX_RE, (_match, inner) => {
+      changed = true;
+      const options = inner.split("|");
+      const idx = Math.floor(rng() * options.length);
+      return options[Math.min(Math.max(idx, 0), options.length - 1)];
+    });
+    if (!changed) break;
+  }
+
+  return current;
+}
+
+// Renders a message template against a lead, substituting {{variable}} tokens
+// and resolving {option1|option2} Spintax blocks.
 // A missing/empty value falls back to the token's own |fallback text if present,
 // otherwise "there" for name-like fields, otherwise an empty string.
-export function renderTemplate(template, lead) {
+export function renderTemplate(template, lead, { rng = Math.random } = {}) {
   if (!template) return "";
   if (!lead) lead = {};
 
-  return template.replace(VARIABLE_RE, (_match, key, fallback) => {
+  const withVariables = template.replace(VARIABLE_RE, (_match, key, fallback) => {
     const value = resolveVariable(key.trim(), lead);
 
     if (value) return value;
@@ -82,6 +107,8 @@ export function renderTemplate(template, lead) {
 
     return "";
   });
+
+  return resolveSpintax(withVariables, rng);
 }
 
 // A synthetic sample lead for previewing templates before any real lead is enrolled.
