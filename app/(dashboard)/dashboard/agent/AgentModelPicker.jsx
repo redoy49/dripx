@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Check, Sparkles, KeyRound, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, Sparkles, KeyRound, Search } from "lucide-react";
 import { BRAND_GROUPS } from "@/app/lib/ai/models";
 
 const REASONING_LEVELS = [
@@ -21,6 +21,7 @@ export default function AgentModelPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [expandedProvider, setExpandedProvider] = useState(null);
   const rootRef = useRef(null);
 
   const current =
@@ -47,29 +48,29 @@ export default function AgentModelPicker({
 
   const q = filter.trim().toLowerCase();
   const filteredModels = availableModels.filter(
-    (m) => !q || m.label.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)
+    (m) => !q || `${m.label} ${m.id} ${m.sourceLabel || m.sourceProviderId || ""}`.toLowerCase().includes(q)
   );
 
-  const populatedGroups = BRAND_GROUPS.map((g) => ({
-    ...g,
-    models: filteredModels.filter((m) => (m.brand || "other") === g.id),
-  })).filter((g) => g.models.length > 0);
+  const providerGroups = Object.values(
+    filteredModels.reduce((acc, m) => {
+      const id = m.sourceProviderId || "default";
+      if (!acc[id]) acc[id] = { id, label: m.sourceLabel || id, models: [] };
+      acc[id].models.push(m);
+      return acc;
+    }, {})
+  );
 
   return (
     <div ref={rootRef} className="relative">
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((v) => (!v && setExpandedProvider(null), !v))}
         className="inline-flex items-center gap-1.5 rounded-full border border-gray-200/90 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-2xs transition cursor-pointer"
       >
         <span className={`w-2.5 h-2.5 rounded-full ${current ? currentBrand.dot : "bg-amber-400"} shrink-0`} />
-        <span className="max-w-[160px] truncate">
-          {current ? current.label : "No Active Models"}
-        </span>
-        {current?.supportsReasoning && (
-          <span className="text-gray-400 font-medium capitalize">{reasoningEffort}</span>
-        )}
+        <span className="max-w-[160px] truncate">{current ? current.label : "No Active Models"}</span>
+        {current?.supportsReasoning && <span className="text-gray-400 font-medium capitalize">{reasoningEffort}</span>}
         <ChevronDown size={13} className="text-gray-400 shrink-0" />
       </button>
 
@@ -82,7 +83,7 @@ export default function AgentModelPicker({
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="Filter available models..."
+                placeholder="Filter providers or models..."
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-8 pr-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-indigo-400"
               />
             </div>
@@ -108,44 +109,63 @@ export default function AgentModelPicker({
             </div>
           )}
 
-          {populatedGroups.length === 0 ? (
-            <div className="px-3 py-5 text-center text-xs text-gray-500 space-y-2">
-              <p>{availableModels.length === 0 ? "No API keys connected yet." : "No matching models."}</p>
-            </div>
+          {providerGroups.length === 0 ? (
+            <p className="px-3 py-5 text-center text-xs text-gray-500">
+              {availableModels.length === 0 ? "No API keys connected yet." : "No matching models."}
+            </p>
           ) : (
-            populatedGroups.map((group) => (
-              <div key={group.id} className="space-y-0.5">
-                <div className="px-2.5 py-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  <span className={`w-2 h-2 rounded-full ${group.dot}`} />
-                  {group.label}
-                </div>
-
-                {group.models.map((m) => {
-                  const selected = m.id === current?.id && m.sourceProviderId === current?.sourceProviderId;
-                  return (
+            <div className="space-y-1">
+              {providerGroups.map((group) => {
+                const isExpanded = Boolean(q) || expandedProvider === group.id;
+                const hasSelected = group.models.some((m) => m.id === current?.id && m.sourceProviderId === current?.sourceProviderId);
+                return (
+                  <div key={group.id}>
                     <button
-                      key={`${m.sourceProviderId}:${m.id}`}
                       type="button"
-                      onClick={() => {
-                        onChangeModel(m.id, m.sourceProviderId);
-                        setOpen(false);
-                      }}
+                      aria-expanded={isExpanded}
+                      onClick={() => setExpandedProvider((prev) => (prev === group.id ? null : group.id))}
                       className={`w-full flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left transition cursor-pointer ${
-                        selected ? "bg-indigo-50 text-indigo-700" : "hover:bg-gray-50 text-gray-700"
+                        isExpanded || hasSelected ? "bg-gray-50 text-gray-900" : "hover:bg-gray-50 text-gray-700"
                       }`}
                     >
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold truncate">{m.label}</div>
-                        <div className="text-[10px] text-gray-400 truncate">
-                          via {m.sourceLabel || m.sourceProviderId}
-                        </div>
-                      </div>
-                      {selected && <Check size={14} className="text-indigo-500 shrink-0" />}
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${hasSelected ? "bg-indigo-500" : "bg-gray-300"}`} />
+                        <span className="text-[11px] font-bold uppercase tracking-wider truncate">{group.label}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 shrink-0 text-[10px] font-semibold text-gray-400">
+                        {group.models.length}
+                        {isExpanded ? <ChevronDown size={13} className="text-gray-500" /> : <ChevronRight size={13} />}
+                      </span>
                     </button>
-                  );
-                })}
-              </div>
-            ))
+
+                    {isExpanded && (
+                      <div className="mt-0.5 ml-2 pl-2 border-l border-gray-200/80 max-h-52 overflow-y-auto space-y-0.5">
+                        {group.models.map((m) => {
+                          const selected = m.id === current?.id && m.sourceProviderId === current?.sourceProviderId;
+                          const brandDot = (BRAND_GROUPS.find((b) => b.id === m.brand) || BRAND_GROUPS[4]).dot;
+                          return (
+                            <button
+                              key={`${m.sourceProviderId}:${m.id}`}
+                              type="button"
+                              onClick={() => { onChangeModel(m.id, m.sourceProviderId); setOpen(false); setExpandedProvider(null); }}
+                              className={`w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left transition cursor-pointer ${
+                                selected ? "bg-indigo-50 text-indigo-700" : "hover:bg-gray-50 text-gray-700"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${brandDot}`} />
+                                <span className="text-xs font-semibold truncate">{m.label}</span>
+                              </span>
+                              {selected && <Check size={13} className="text-indigo-500 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           <div className="border-t border-gray-100 pt-1.5 px-1">
