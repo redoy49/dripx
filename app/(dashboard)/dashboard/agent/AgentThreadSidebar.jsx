@@ -1,16 +1,27 @@
 "use client";
 
-import { Plus, MessageSquare, Trash2, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Plus, MessageSquare, Trash2, Sparkles, Pencil, Check } from "lucide-react";
 
 export default function AgentThreadSidebar({
   threads,
   activeThreadId,
   onSelectThread,
   onNewChat,
+  onRenameThread,
   onDeleteThread,
   openMobile,
   onCloseMobile,
 }) {
+  const [editingId, setEditingId] = useState(null);
+  const [draftTitle, setDraftTitle] = useState("");
+
+  const commitRename = (id) => {
+    const clean = draftTitle.trim();
+    if (clean) onRenameThread?.(id, clean);
+    setEditingId(null);
+  };
+
   return (
     <aside
       className={`${
@@ -44,6 +55,8 @@ export default function AgentThreadSidebar({
         ) : (
           threads.map((t) => {
             const active = t.id === activeThreadId;
+            const isEditing = editingId === t.id;
+
             return (
               <div
                 key={t.id}
@@ -53,29 +66,73 @@ export default function AgentThreadSidebar({
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSelectThread(t.id);
-                    onCloseMobile?.();
-                  }}
-                  className="flex flex-1 items-center gap-2 min-w-0 text-left cursor-pointer"
-                >
-                  <MessageSquare size={13} className={active ? "text-indigo-500 shrink-0" : "text-gray-400 shrink-0"} />
-                  <span className="truncate">{t.title}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteThread(t.id);
-                  }}
-                  title="Delete session"
-                  aria-label="Delete session"
-                  className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer shrink-0"
-                >
-                  <Trash2 size={12} />
-                </button>
+                {isEditing ? (
+                  <div className="flex flex-1 items-center gap-1 min-w-0">
+                    <input
+                      autoFocus
+                      value={draftTitle}
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename(t.id);
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                      onBlur={() => commitRename(t.id)}
+                      className="flex-1 min-w-0 rounded-lg border border-indigo-300 bg-white px-2 py-0.5 text-xs text-gray-800 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        commitRename(t.id);
+                      }}
+                      aria-label="Save name"
+                      className="p-1 rounded-lg text-indigo-600 hover:bg-indigo-100 cursor-pointer shrink-0"
+                    >
+                      <Check size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectThread(t.id);
+                        onCloseMobile?.();
+                      }}
+                      className="flex flex-1 items-center gap-2 min-w-0 text-left cursor-pointer"
+                    >
+                      <MessageSquare size={13} className={active ? "text-indigo-500 shrink-0" : "text-gray-400 shrink-0"} />
+                      <span className="truncate">{t.title}</span>
+                    </button>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingId(t.id);
+                          setDraftTitle(t.title || "");
+                        }}
+                        title="Rename session"
+                        aria-label="Rename session"
+                        className="p-1 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-100/70 transition cursor-pointer"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteThread(t.id);
+                        }}
+                        title="Delete session"
+                        aria-label="Delete session"
+                        className="p-1 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })

@@ -103,6 +103,15 @@ export default function AgentWorkspaceClient() {
     if (id === threadId) handleNewChat();
   };
 
+  const handleRenameThread = async (id, title) => {
+    setThreads((prev) => prev.map((t) => (t.id === id ? { ...t, title } : t)));
+    await fetch(`/api/agent/threads/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    });
+  };
+
   if (!hasAccess) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -124,6 +133,7 @@ export default function AgentWorkspaceClient() {
         activeThreadId={threadId}
         onSelectThread={handleSelectThread}
         onNewChat={handleNewChat}
+        onRenameThread={handleRenameThread}
         onDeleteThread={handleDeleteThread}
         openMobile={mobileSidebar}
         onCloseMobile={() => setMobileSidebar(false)}

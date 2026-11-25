@@ -38,6 +38,44 @@ export async function GET(req, { params }) {
   }
 }
 
+export async function PATCH(req, { params }) {
+  try {
+    const { session, unauthorized } = await requireAuth();
+    if (unauthorized) return unauthorized;
+
+    const { ok, forbidden } = await requireAiAgentAccess(session);
+    if (!ok) return forbidden;
+
+    const { id } = await params;
+    if (!ObjectId.isValid(id)) {
+      return Response.json({ message: "Invalid thread ID" }, { status: 400 });
+    }
+
+    const body = await req.json();
+    const title = String(body?.title || "").trim().slice(0, 80);
+    if (!title) {
+      return Response.json({ message: "Title is required" }, { status: 400 });
+    }
+
+    const col = await dbConnect("agent_threads");
+    const updated = await col.findOneAndUpdate(
+      {
+        _id: new ObjectId(id),
+        workspaceId: new ObjectId(session.workspaceId),
+        userId: new ObjectId(session.userId),
+      },
+      { $set: { title } },
+      { returnDocument: "after" }
+    );
+    if (!updated) return Response.json({ message: "Thread not found" }, { status: 404 });
+
+    return Response.json({ id: updated._id.toString(), title: updated.title });
+  } catch (error) {
+    console.error("[AgentThread] PATCH error:", error);
+    return Response.json({ message: "Failed to rename thread" }, { status: 500 });
+  }
+}
+
 export async function DELETE(req, { params }) {
   try {
     const { session, unauthorized } = await requireAuth();
