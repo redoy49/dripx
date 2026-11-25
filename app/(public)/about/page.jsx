@@ -1,239 +1,136 @@
 import Link from "next/link";
-import {
-  ShieldCheck,
-  Server,
-  Sparkles,
-  Lock,
-  ArrowRight,
-  CheckCircle2,
-  XCircle,
-  Cpu,
-  Globe2,
-  Users2,
-  Award,
-} from "lucide-react";
+import { ShieldCheck, Server, Cpu, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
+import PublicHeroBanner from "@/app/components/public/PublicHeroBanner";
 
 export const metadata = {
-  title: "About Us & Engineering Mission | DripX",
+  title: "About DripX | Cloud Outbound Architecture",
   description:
-    "Learn about DripX's mission to replace fragile Chrome extension scrapers with enterprise-grade cloud automation, dedicated residential IPs, and account safety.",
+    "How DripX replaces fragile Chrome extension scrapers with 24/7 isolated cloud execution, dedicated residential IPs, and encrypted credentials.",
 };
+
+const PRINCIPLES = [
+  {
+    icon: ShieldCheck,
+    title: "Account safety over volume spikes",
+    desc: "Humanized randomized delays, daily mailbox ramp-up schedules, and automatic reply-pause circuit breakers are built in by default.",
+    accent: "text-emerald-600",
+  },
+  {
+    icon: Server,
+    title: "Cloud execution without laptop lock-in",
+    desc: "Outreach should never pause because a MacBook sleeps or Wi-Fi drops. Isolated cloud workers execute reliably around the clock.",
+    accent: "text-indigo-600",
+  },
+  {
+    icon: Cpu,
+    title: "Zero-bloat workflows with BYOK AI",
+    desc: "Visual React Flow branching paired with your own encrypted OpenRouter, River AI, Claude, OpenAI, or DeepSeek API keys.",
+    accent: "text-amber-600",
+  },
+];
+
+const SECURITY_CONTROLS = [
+  { name: "AES-256-GCM", desc: "Sender credentials and AI provider keys encrypted at rest." },
+  { name: "TLS 1.3", desc: "End-to-end encrypted transport across APIs and mail connectors." },
+  { name: "RBAC Controls", desc: "Owner, admin, and member-level AI Agent & workspace permissions." },
+  { name: "GDPR Ready", desc: "Clean data deletion controls with zero prospect list resale." },
+];
 
 export default function AboutPage() {
   return (
-    <div className="pt-28 pb-20">
-      {/* Hero & Mission */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/70 shadow-2xs mb-4">
-          <Sparkles size={13} className="text-indigo-500" />
-          <span>Our Engineering Mission</span>
-        </div>
+    <div className="bg-white text-slate-900 overflow-x-clip">
+      <PublicHeroBanner
+        variant="about"
+        title="Replacing fragile browser extensions with resilient cloud execution"
+        description="Outbound sales teams deserve reliable 24/7 infrastructure, clean RFC 2822 email deliverability, and strict account protection."
+      />
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight max-w-4xl mx-auto leading-tight">
-          Replacing Fragile Chrome Extensions with Enterprise Cloud Architecture
-        </h1>
-
-        <p className="mt-6 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          For years, B2B sales teams relied on glitchy browser extension scrapers that hijacked Chrome tabs, drained laptop batteries, and triggered account restrictions. We built DripX to provide the reliable, cloud-native foundation outbound sales deserves.
-        </p>
-      </section>
-
-      {/* The Architectural Shift */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Card 1: The Browser Extension Problem */}
-          <div className="rounded-2xl border border-rose-200/80 bg-rose-50/20 p-8 shadow-2xs">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs">
-                ✕
-              </span>
-              <h3 className="text-xl font-bold text-gray-900">
-                The Browser Extension Problem
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Browser extensions run scripts locally inside your personal browser. If your laptop goes to sleep, your Wi-Fi flickers, or you restart your computer, campaigns stall. Worse, LinkedIn regularly audits client-side DOM injections and shared datacenter proxies, leading to sudden account warnings and permanent bans.
+      {/* Architectural Shift */}
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          <div className="rounded-2xl bg-rose-50/35 p-7 sm:p-8 shadow-ring-card">
+            <h2 className="text-lg font-semibold text-slate-900">Legacy browser extensions</h2>
+            <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              Local Chrome plugins inject detectable scripts into your browser DOM and halt the moment your laptop closes or restarts.
             </p>
-            <ul className="mt-6 space-y-2.5 text-xs text-gray-600 list-none m-0 p-0">
-              <li className="flex items-center gap-2 text-rose-700">
-                <XCircle size={15} className="shrink-0" />
-                <span>Laptop must stay open and active 24/7</span>
-              </li>
-              <li className="flex items-center gap-2 text-rose-700">
-                <XCircle size={15} className="shrink-0" />
-                <span>Shared datacenter IPs trigger security checkpoints</span>
-              </li>
-              <li className="flex items-center gap-2 text-rose-700">
-                <XCircle size={15} className="shrink-0" />
-                <span>Memory leaks slow down your computer</span>
-              </li>
+            <ul className="mt-5 space-y-2.5 text-xs sm:text-sm text-rose-800 list-none m-0 p-0">
+              <li className="flex items-center gap-2"><XCircle size={15} className="shrink-0" /> Laptop must stay open and online</li>
+              <li className="flex items-center gap-2"><XCircle size={15} className="shrink-0" /> Shared datacenter IPs trigger checkpoints</li>
+              <li className="flex items-center gap-2"><XCircle size={15} className="shrink-0" /> No unified multi-rep collision guard</li>
             </ul>
           </div>
 
-          {/* Card 2: The DripX Cloud Standard */}
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/20 p-8 shadow-2xs">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
-                ✓
-              </span>
-              <h3 className="text-xl font-bold text-gray-900">
-                The DripX Cloud Standard
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              DripX executes all outbound operations in isolated cloud micro-workers with dedicated static residential IP proxies assigned to your specific geographical location. Your sequences run reliably around the clock with zero hardware load, authentic browser hardware emulation, and built-in safety circuit breakers.
+          <div className="rounded-2xl bg-indigo-50/35 p-7 sm:p-8 shadow-ring-elevated">
+            <h2 className="text-lg font-semibold text-slate-900">The DripX cloud standard</h2>
+            <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              Cloud workers pair dedicated static residential IPs with native Gmail/SMTP threading, Spintax rotation, and AI triage.
             </p>
-            <ul className="mt-6 space-y-2.5 text-xs text-gray-600 list-none m-0 p-0">
-              <li className="flex items-center gap-2 text-indigo-700">
-                <CheckCircle2 size={15} className="shrink-0 text-emerald-500" />
-                <span>Runs 24/7 in cloud micro-containers</span>
-              </li>
-              <li className="flex items-center gap-2 text-indigo-700">
-                <CheckCircle2 size={15} className="shrink-0 text-emerald-500" />
-                <span>Dedicated static residential IP in your home city</span>
-              </li>
-              <li className="flex items-center gap-2 text-indigo-700">
-                <CheckCircle2 size={15} className="shrink-0 text-emerald-500" />
-                <span>0% memory or battery consumption on your PC</span>
-              </li>
+            <ul className="mt-5 space-y-2.5 text-xs sm:text-sm text-slate-800 list-none m-0 p-0">
+              <li className="flex items-center gap-2"><CheckCircle2 size={15} className="text-emerald-600 shrink-0" /> Continuous 24/7 cloud scheduling</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={15} className="text-emerald-600 shrink-0" /> Isolated static residential IP per sender</li>
+              <li className="flex items-center gap-2"><CheckCircle2 size={15} className="text-emerald-600 shrink-0" /> Real-time team inbox thread locking</li>
             </ul>
           </div>
         </div>
       </section>
 
       {/* Core Engineering Principles */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Our Core Engineering Principles
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900 text-center mb-10">
+            Engineering principles
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-gray-600">
-            How we approach building resilient, enterprise-safe outreach systems.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <div className="rounded-2xl border border-gray-200/90 bg-white p-7 shadow-2xs">
-            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-              <ShieldCheck size={20} />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">
-              1. Account Safety Over Vanity Metrics
-            </h3>
-            <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              We will never implement dangerous volume spikes or aggressive scraping shortcuts that put your sender accounts at risk. Humanized jitter, ramp-up schedules, and safety circuit breakers are non-negotiable defaults.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200/90 bg-white p-7 shadow-2xs">
-            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-              <Server size={20} />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">
-              2. Cloud-First Reliability
-            </h3>
-            <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Your outbound pipeline shouldn&apos;t depend on an open Chrome tab on a MacBook. By hosting execution in dedicated cloud containers, outreach runs uninterrupted regardless of your location or device status.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-gray-200/90 bg-white p-7 shadow-2xs">
-            <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
-              <Cpu size={20} />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">
-              3. Radical Simplicity for Sales Teams
-            </h3>
-            <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Enterprise software is often bloated with confusing knobs and multi-week training manuals. We design DripX with clean ergonomics, intuitive drag-and-drop sequencing, and zero unnecessary fluff.
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 border border-slate-200/90 rounded-2xl bg-white overflow-hidden">
+            {PRINCIPLES.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className={`p-7 ${idx < 2 ? "border-b md:border-b-0 md:border-r border-slate-200/90" : ""}`}>
+                  <Icon size={18} className={`${item.accent} mb-3`} />
+                  <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
+                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Security & Compliance Stack */}
-      <section id="security" className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="rounded-3xl border border-gray-200/90 bg-gray-50/60 p-8 sm:p-14 max-w-5xl mx-auto shadow-2xs">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-200/80 shadow-2xs mb-3">
-              <Lock size={12} className="text-indigo-500" />
-              <span>Enterprise Trust Center</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Security & Compliance Built In
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Your prospect lists and account credentials are guarded with bank-grade encryption protocols.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div className="p-5 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-              <p className="text-base font-bold text-gray-900">AES-256</p>
-              <p className="text-xs text-gray-500 mt-1">Data encrypted at rest in isolated DB clusters</p>
-            </div>
-
-            <div className="p-5 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-              <p className="text-base font-bold text-gray-900">TLS 1.3</p>
-              <p className="text-xs text-gray-500 mt-1">End-to-end encrypted transport across all APIs</p>
-            </div>
-
-            <div className="p-5 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-              <p className="text-base font-bold text-gray-900">Zero-Knowledge</p>
-              <p className="text-xs text-gray-500 mt-1">Hashed session tokens stored in secure HSM vaults</p>
-            </div>
-
-            <div className="p-5 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-              <p className="text-base font-bold text-gray-900">GDPR Compliant</p>
-              <p className="text-xs text-gray-500 mt-1">1-click data erasure rights & zero data resale</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Milestone Stats */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto text-center">
-          <div className="p-6 rounded-2xl border border-gray-200/90 bg-white shadow-2xs">
-            <p className="text-3xl sm:text-4xl font-extrabold text-indigo-500">1,200+</p>
-            <p className="text-xs sm:text-sm font-semibold text-gray-800 mt-1">Active Teams</p>
-          </div>
-          <div className="p-6 rounded-2xl border border-gray-200/90 bg-white shadow-2xs">
-            <p className="text-3xl sm:text-4xl font-extrabold text-emerald-500">14.8M+</p>
-            <p className="text-xs sm:text-sm font-semibold text-gray-800 mt-1">Safe Drip Actions</p>
-          </div>
-          <div className="p-6 rounded-2xl border border-gray-200/90 bg-white shadow-2xs">
-            <p className="text-3xl sm:text-4xl font-extrabold text-sky-500">99.98%</p>
-            <p className="text-xs sm:text-sm font-semibold text-gray-800 mt-1">Cloud Uptime</p>
-          </div>
-          <div className="p-6 rounded-2xl border border-gray-200/90 bg-white shadow-2xs">
-            <p className="text-3xl sm:text-4xl font-extrabold text-amber-500">0.02%</p>
-            <p className="text-xs sm:text-sm font-semibold text-gray-800 mt-1">Flag Rate</p>
+      {/* Security & Compliance Grid */}
+      <section id="security" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-slate-50/80 p-8 sm:p-12 shadow-ring-card">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 text-center">
+            Security and credential isolation
+          </h2>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {SECURITY_CONTROLS.map((ctrl) => (
+              <div key={ctrl.name} className="rounded-xl bg-white p-5 shadow-ring-card">
+                <p className="text-sm font-semibold text-slate-900">{ctrl.name}</p>
+                <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">{ctrl.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Bottom CTA */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 mt-24">
-        <div className="rounded-3xl border border-gray-200/90 bg-gradient-to-b from-indigo-50/40 to-white p-8 sm:p-14 text-center max-w-4xl mx-auto shadow-2xs">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Ready to Upgrade Your Outbound Stack?
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-[linear-gradient(180deg,#fffbeb_0%,#ffffff_100%)] p-8 sm:p-12 text-center shadow-ring-card">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900">
+            Ready to upgrade your outbound infrastructure?
           </h2>
-          <p className="mt-3 text-sm text-gray-600 max-w-md mx-auto">
-            Start your 14-day free trial today. See the difference cloud micro-workers make to your pipeline.
-          </p>
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/register"
-              className="w-full sm:w-auto rounded-full bg-indigo-400 hover:bg-indigo-500 text-white font-bold px-7 py-3 text-sm shadow-sm active:scale-95 transition cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-7 py-3 text-sm shadow-ring-elevated transition"
             >
-              Start Free Trial
+              <span>Start free trial</span>
+              <ArrowRight size={15} />
             </Link>
             <Link
               href="/contact"
-              className="w-full sm:w-auto rounded-full border border-gray-200/90 bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3 text-sm shadow-2xs active:scale-95 transition cursor-pointer"
+              className="inline-flex items-center rounded-full bg-white hover:bg-slate-50 text-slate-800 font-semibold px-7 py-3 text-sm shadow-ring-card transition"
             >
-              Contact Team
+              Contact team
             </Link>
           </div>
         </div>
