@@ -62,6 +62,13 @@ Manage every prospect conversation in one single dashboard:
 * **Working Hours & Timezone Optimization:** Ensure emails and messages land strictly during business hours in your prospect's timezone.
 * **Account Safety Caps:** Hard daily limits at both workspace and campaign levels.
 
+### 5. Multi-Model AI Agent Workspace (`/dashboard/agent`)
+An embedded hybrid AI Agent + Outreach Copilot accessible from the sidebar:
+* **3 Execution Modes:** `Build` (full read, draft, and guarded live actions), `Plan` (read-only strategy & analytics), and `Ask` (copywriting & Q&A without workspace tool calls).
+* **Universal BYOK & Live Model Discovery:** Connect River AI, OpenRouter, Vercel AI Gateway, Groq, Anthropic, OpenAI, DeepSeek, Google Gemini, or Custom OpenAI/Anthropic-compatible endpoints in **Settings → AI Providers** (AES-256-GCM encrypted). DripX queries `/models` live and organizes unlocked models in a collapsible provider dropdown.
+* **Safe Drafts & Human-in-the-Loop Guardrails:** Builds draft campaigns, React Flow sequences, and lead enrollments automatically, while requiring explicit **Confirm & Execute** approval before activating campaigns, sending live inbox replies, or deleting campaigns.
+* **Session History & RBAC:** Persistent MongoDB chat sessions with inline rename/delete, `@` workspace context mentions, `/` quick commands, `.csv`/`.txt`/`.md`/`.json` snippet attachments, voice dictation, and per-member `AI Agent` access control under **Teams**.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -71,6 +78,7 @@ Manage every prospect conversation in one single dashboard:
 | **Framework** | Next.js 16.2.4 (Turbopack, App Router, Server Actions) |
 | **Frontend** | React 19.2.4 (`useOptimistic`, `useTransition`, `use`), Tailwind CSS 4, Lucide Icons |
 | **Visual Flow Engine** | `@xyflow/react` (React Flow) dynamically code-split |
+| **AI Agent Runtime** | Vercel AI SDK (`ai` v6, `@ai-sdk/react`, `ToolLoopAgent`) with Multi-Provider BYOK |
 | **Database** | MongoDB Atlas (official Node.js MongoDB driver v7) |
 | **Authentication** | JWT Sessions + Google OAuth 2.0 |
 | **Email Transport** | Google Workspace / Gmail API (OAuth 2.0), SMTP, Resend, Mock |
@@ -99,15 +107,16 @@ dripx/
 │   │   │   │   └── ConversationThread.jsx # 0ms optimistic message sending
 │   │   │   ├── leads/         # Lead lists, tags & CSV imports
 │   │   │   ├── new-campaign/  # Sequence builder & dynamic React Flow
-│   │   │   ├── settings/      # Sending limits, ramp-up & schedules
-│   │   │   └── teams/         # Team members, roles & permissions
+│   │   │   ├── settings/      # Sending limits, ramp-up, schedules & AI Providers
+│   │   │   ├── teams/         # Team members, roles & AI Agent permissions
+│   │   │   └── agent/         # Multi-Model AI Agent workspace & session history
 │   ├── actions/               # Next.js Server Actions
 │   │   ├── campaignActions.js # Optimistic campaign pause/play & deletion
 │   │   └── inboxActions.js    # Outbound email/LinkedIn reply dispatch
-│   ├── api/                   # REST API route handlers
+│   ├── api/                   # REST API route handlers (campaigns, inbox, agent, cron)
 │   ├── components/            # Reusable UI primitives
 │   │   └── ui/Skeleton.jsx    # Zero-CLS shimmer loading primitives
-│   └── lib/                   # Core engines (jobProcessor, sequenceEngine, email)
+│   └── lib/                   # Core engines (jobProcessor, sequenceEngine, email, ai/)
 ├── instrumentation.js         # Next.js startup hook for local scheduler
 ├── next.config.mjs            # Next 16 router caching & staleTimes config
 └── PROJECT_CONTEXT.md         # Architecture overview & developer notes
@@ -206,6 +215,9 @@ That's it. Your cold email and LinkedIn sequences will run around the clock with
 Ensure zero regressions before opening PRs:
 
 ```bash
+# Run AI Agent unit tests
+node --test app/lib/ai/agent_foundation.test.mjs
+
 # Run ESLint (enforcing 0 errors and 0 warnings)
 npm run lint
 
