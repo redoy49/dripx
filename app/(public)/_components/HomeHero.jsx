@@ -65,7 +65,7 @@ export default function HomeHero() {
 
       {/* Compact Verified Trust Strip */}
       <div className="mt-8 flex justify-center">
-        <div className="inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full bg-white/95 border border-slate-200/90 p-1.5 pr-4 shadow-ring-card">
+        <div className="inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full bg-white/95 p-1.5 pr-4 shadow-ring-card">
           <AvatarStack avatars={HERO_AVATARS} max={3} />
           <div className="flex items-center gap-1.5 text-xs text-slate-600">
             <span className="flex items-center text-amber-400">
@@ -83,9 +83,9 @@ export default function HomeHero() {
       {/* Framed Product Preview with Scroll Depth & BorderBeam */}
       <div className="scroll-depth-card relative w-full mx-auto mt-12">
         <div className="relative rounded-2xl sm:rounded-3xl bg-white p-2 sm:p-3 shadow-ring-elevated overflow-hidden">
-          <BorderBeam size={280} duration={12} anchor={90} borderWidth={2} colorFrom="#6366f1" colorTo="#38bdf8" />
+          <BorderBeam size={280} duration={12} anchor={90} borderWidth={1.25} colorFrom="#6366f1" colorTo="#38bdf8" />
 
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5 mb-2 bg-slate-50/80 rounded-t-xl">
+          <div className="flex items-center justify-between border-b border-slate-200/70 px-4 py-2.5 mb-2 bg-slate-50/80 rounded-t-xl">
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
               <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />

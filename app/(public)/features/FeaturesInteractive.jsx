@@ -154,11 +154,11 @@ export default function FeaturesInteractive() {
       </div>
 
       {/* Geometric 3-Column Infrastructure Strip */}
-      <div className="w-full grid grid-cols-1 md:grid-cols-3 border border-slate-200/90 rounded-2xl bg-white overflow-hidden">
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 rounded-2xl bg-white shadow-ring-card overflow-hidden">
         {SECONDARY_CAPABILITIES.map((cap, i) => {
           const Icon = cap.icon;
           return (
-            <div key={cap.title} className={`p-7 ${i < 2 ? "border-b md:border-b-0 md:border-r border-slate-200/90" : ""}`}>
+            <div key={cap.title} className={`p-7 ${i < 2 ? "border-b md:border-b-0 md:border-r border-slate-200/70" : ""}`}>
               <Icon size={18} className="text-indigo-600 mb-3" />
               <h3 className="text-base font-semibold text-slate-900">{cap.title}</h3>
               <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">{cap.desc}</p>

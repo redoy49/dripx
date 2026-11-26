@@ -80,11 +80,11 @@ export default function AboutPage() {
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900 text-center mb-10">
             Engineering principles
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 border border-slate-200/90 rounded-2xl bg-white overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 rounded-2xl bg-white shadow-ring-card overflow-hidden">
             {PRINCIPLES.map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className={`p-7 ${idx < 2 ? "border-b md:border-b-0 md:border-r border-slate-200/90" : ""}`}>
+                <div key={item.title} className={`p-7 ${idx < 2 ? "border-b md:border-b-0 md:border-r border-slate-200/70" : ""}`}>
                   <Icon size={18} className={`${item.accent} mb-3`} />
                   <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
                   <p className="mt-2 text-sm text-slate-600 leading-relaxed">{item.desc}</p>

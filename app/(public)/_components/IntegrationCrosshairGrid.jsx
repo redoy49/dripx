@@ -72,7 +72,7 @@ export default function IntegrationCrosshairGrid() {
         Messaging channels and AI engines we <span className="font-semibold text-slate-900">connect</span> natively.
       </p>
 
-      <div className="relative w-full grid grid-cols-2 sm:grid-cols-4 border border-slate-200/90 bg-white">
+      <div className="relative w-full grid grid-cols-2 sm:grid-cols-4 border border-slate-200/70 bg-white">
         {["left-1/4", "left-2/4", "left-3/4"].map((pos) => (
           <span
             key={pos}
@@ -90,11 +90,11 @@ export default function IntegrationCrosshairGrid() {
               key={item.name}
               type="button"
               onClick={() => setSelectedName(isSelected ? null : item.name)}
-              className={`group flex flex-col items-center justify-center py-8 px-4 text-center transition-all duration-200 cursor-pointer ${item.hoverBg} ${
-                isSelected ? "bg-indigo-50/50" : ""
-              } ${idx < 4 ? "border-b border-slate-200/90" : ""} ${
-                idx % 4 !== 3 ? "sm:border-r sm:border-slate-200/90" : ""
-              } ${idx % 2 === 0 ? "border-r sm:border-r-inherit border-slate-200/90" : ""}`}
+              className={`group flex flex-col items-center justify-center py-8 px-4 text-center transition-colors duration-200 cursor-pointer hover:bg-slate-50/80 ${
+                isSelected ? "bg-slate-50" : ""
+              } ${idx < 4 ? "border-b border-slate-200/70" : ""} ${
+                idx % 4 !== 3 ? "sm:border-r sm:border-slate-200/70" : ""
+              } ${idx % 2 === 0 ? "border-r sm:border-r-inherit border-slate-200/70" : ""}`}
             >
               <div className="flex items-center gap-2.5">
                 <Image

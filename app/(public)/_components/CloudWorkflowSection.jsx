@@ -38,10 +38,8 @@ export default function CloudWorkflowSection() {
         onClick={() => setSelectedSource((prev) => (prev === src.id ? null : src.id))}
         onMouseEnter={() => setHoveredSource(src.id)}
         onMouseLeave={() => setHoveredSource(null)}
-        className={`relative z-10 flex h-11 w-full items-center justify-center gap-2 rounded-full border bg-white px-3.5 text-xs sm:text-sm font-semibold text-slate-900 transition-all duration-200 cursor-pointer ${
-          selected
-            ? `border-slate-900/25 ring-2 ${src.ring} shadow-ring-elevated`
-            : "border-slate-200/90 shadow-ring-card hover:border-slate-300"
+        className={`relative z-10 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white px-3.5 text-xs sm:text-sm font-semibold text-slate-900 transition-all duration-200 cursor-pointer ${
+          selected ? "shadow-ring-elevated" : "shadow-ring-card hover:bg-slate-50/80"
         }`}
       >
         {src.logo ? (
@@ -79,7 +77,7 @@ export default function CloudWorkflowSection() {
             {/* Center Hub Pill (Consistent DripX Styling) */}
             <div className="flex items-center justify-center py-1 md:py-0">
               <div
-                className={`inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-900 px-5 py-2.5 text-white shadow-ring-elevated transition-transform duration-200 ${
+                className={`inline-flex items-center gap-2.5 rounded-full bg-slate-900 px-5 py-2.5 text-white shadow-ring-elevated transition-transform duration-200 ${
                   activeSource ? "scale-[1.03]" : ""
                 }`}
               >

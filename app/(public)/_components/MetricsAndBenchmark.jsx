@@ -78,13 +78,13 @@ export default function MetricsAndBenchmark() {
     <>
       {/* 1. Live Count-Up KPI Strip */}
       <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        <div className="w-full grid grid-cols-2 lg:grid-cols-4 border border-slate-200/90 bg-white rounded-2xl overflow-hidden">
+        <div className="w-full grid grid-cols-2 lg:grid-cols-4 bg-white rounded-2xl shadow-ring-card overflow-hidden">
           {KPI_METRICS.map((m, idx) => (
             <div
               key={m.label}
               className={`group p-6 sm:p-7 transition-colors hover:bg-slate-50/70 ${
-                idx < 3 ? "lg:border-r border-slate-200/90" : ""
-              } ${idx < 2 ? "border-b lg:border-b-0 border-slate-200/90" : ""}`}
+                idx < 3 ? "lg:border-r border-slate-200/70" : ""
+              } ${idx < 2 ? "border-b lg:border-b-0 border-slate-200/70" : ""}`}
             >
               <p className={`text-3xl sm:text-4xl font-bold tracking-tight ${m.color}`}>
                 <AnimatedNumber target={m.target} decimals={m.decimals} suffix={m.suffix} />
@@ -113,15 +113,15 @@ export default function MetricsAndBenchmark() {
           </p>
         </div>
 
-        <div className="w-full border-y border-slate-900/80 bg-white">
+        <div className="w-full border-y border-slate-200/80 bg-white">
           {/* Header Row */}
-          <div className="grid grid-cols-12 items-center py-3 text-[11px] font-mono uppercase tracking-wider text-slate-500 border-b border-slate-200">
+          <div className="grid grid-cols-12 items-center py-3 text-[11px] font-mono uppercase tracking-wider text-slate-500 border-b border-slate-200/70">
             <span className="col-span-5 sm:col-span-4">Measurement</span>
             <span className="col-span-5 sm:col-span-6">Performance Score</span>
             <span className="col-span-2 text-right">Value</span>
           </div>
 
-          <div className="divide-y divide-slate-200/90">
+          <div className="divide-y divide-slate-200/70">
             {BENCHMARKS.map((row) => {
               const dimmed = hoveredId && hoveredId !== row.id;
               return (
