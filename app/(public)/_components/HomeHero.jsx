@@ -44,7 +44,7 @@ export default function HomeHero() {
       variant="home"
       bottomSpacing="pb-20"
       title="Cloud outreach built for teams that ship pipeline"
-      description="Automate Email and LinkedIn sequences 24/7 from dedicated cloud workers with automatic Spintax rotation, RFC 2822 threading, collision-locked inboxes, and your own AI Agent."
+      description="Run 24/7 Email and LinkedIn sequences with automatic Spintax rotation, native threading, collision-locked inboxes, and a BYOK AI Agent."
     >
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
         <Link
@@ -74,7 +74,7 @@ export default function HomeHero() {
               ))}
             </span>
             <span className="tabular-nums">
-              Trusted by <strong className="font-semibold text-slate-900">1,200+</strong> B2B revenue teams.
+              Trusted by <strong className="font-semibold text-slate-900">1,200+</strong> B2B revenue teams
             </span>
           </div>
         </div>

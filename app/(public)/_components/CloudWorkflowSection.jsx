@@ -55,26 +55,20 @@ export default function CloudWorkflowSection() {
   };
 
   return (
-    <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="relative w-full overflow-hidden rounded-[28px] border border-[#EBEBF0] bg-[#F6F6F8] px-5 py-10 sm:px-9 sm:py-12 lg:px-14 lg:py-14 text-[#18181F] shadow-[0_18px_50px_-24px_rgba(15,23,42,0.12)]">
+    <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div className="relative w-full overflow-hidden rounded-3xl bg-[#F6F6F8] px-5 py-10 sm:px-9 sm:py-12 lg:px-14 lg:py-14 text-slate-900 shadow-ring-card">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"
         />
 
         {/* Header */}
-        <header className="mx-auto flex max-w-[660px] flex-col items-center text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#ECECF1] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#555562] shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#18181F]" />
-            <span>How Multi-Channel Works</span>
-          </div>
-
-          <h2 className="mt-4 text-[28px] sm:text-[38px] lg:text-[42px] font-semibold leading-[1.12] tracking-[-0.03em] text-[#18181F]">
-            Orchestrate email &amp; LinkedIn outreach from one cloud engine
+        <header className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl sm:text-4xl font-semibold leading-[1.12] tracking-[-0.025em] text-slate-900">
+            One cloud engine for email and LinkedIn
           </h2>
-
-          <p className="mt-3.5 max-w-[490px] text-[13.5px] sm:text-[14.5px] leading-[1.52] text-[#6E6E7A]">
-            Connect Gmail, Outlook, LinkedIn, and BYOK AI models. DripX handles Spintax variation, 9am–5pm delivery windows, and instant reply locks automatically.
+          <p className="mt-3 text-sm sm:text-base text-slate-600">
+            Routing, Spintax variation, and instant reply locks handled automatically.
           </p>
         </header>
 

@@ -77,13 +77,13 @@ export default function InteractiveProductTabs() {
   };
 
   return (
-    <section id="interactive-product" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <section id="interactive-product" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
       <div className="max-w-2xl mx-auto text-center mb-10">
         <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.025em] text-slate-900">
           One workspace from prospect list to booked call
         </h2>
-        <p className="mt-3 text-base text-slate-600">
-          Switch tabs to inspect each core engine or test the live Spintax randomizer.
+        <p className="mt-3 text-sm sm:text-base text-slate-600">
+          Inspect each core engine or test a live Spintax template.
         </p>
       </div>
 

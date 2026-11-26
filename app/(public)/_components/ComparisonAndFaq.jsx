@@ -108,11 +108,21 @@ export default function ComparisonAndFaq() {
 
       {/* FAQ Accordion */}
       <section id="faq" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900 text-center mb-10">
-            Frequently asked questions
-          </h2>
-          <div className="space-y-2.5">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          <div className="lg:col-span-4">
+            <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900">
+              Frequently asked questions
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+              Answers on cloud execution safety, AI keys, and reply handling.
+            </p>
+            <Link href="/contact" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+              <span>Ask our team</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <div className="lg:col-span-8 space-y-2.5">
             {FAQS.map((faq, idx) => {
               const isOpen = openFaq === idx;
               return (
@@ -135,13 +145,13 @@ export default function ComparisonAndFaq() {
       </section>
 
       {/* Bottom Atmospheric CTA */}
-      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20">
         <div className="w-full rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_55%,#ffffff_100%)] p-8 sm:p-14 text-center shadow-ring-card">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-slate-900 max-w-2xl mx-auto">
             Ready to launch your autonomous outbound engine?
           </h2>
-          <p className="mt-4 text-base text-slate-600 max-w-xl mx-auto">
-            Start with a 14-day free trial—no credit card required, instant cloud setup.
+          <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-xl mx-auto">
+            Start a 14-day free trial with instant cloud setup.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
