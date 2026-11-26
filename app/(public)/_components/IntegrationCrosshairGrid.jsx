@@ -1,17 +1,28 @@
+import {
+  GmailMark,
+  LinkedInMark,
+  UnipileMark,
+  OpenAIMark,
+  ClaudeMark,
+  DeepSeekMark,
+  GeminiMark,
+  MongoMark,
+} from "./BrandMarks";
+
 const ECOSYSTEM_PARTNERS = [
-  { name: "Google Gmail", role: "OAuth & RFC Threading", accent: "text-slate-800" },
-  { name: "LinkedIn Cloud", role: "Dedicated Residential IP", accent: "text-sky-700" },
-  { name: "Unipile Engine", role: "Real-Time Sync", accent: "text-indigo-700" },
-  { name: "OpenAI", role: "ChatGPT BYOK", accent: "text-slate-900" },
-  { name: "Claude", role: "Anthropic Reasoning", accent: "text-orange-700" },
-  { name: "DeepSeek", role: "Fast Model Inference", accent: "text-indigo-600" },
-  { name: "Google Gemini", role: "Multi-Modal Copilot", accent: "text-blue-600" },
-  { name: "MongoDB Atlas", role: "AES-256 Encrypted Vault", accent: "text-emerald-700" },
+  { name: "Google Gmail", role: "OAuth & RFC Threading", hoverBg: "hover:bg-rose-50/40", Mark: GmailMark },
+  { name: "LinkedIn Cloud", role: "Dedicated Residential IP", hoverBg: "hover:bg-sky-50/50", Mark: LinkedInMark },
+  { name: "Unipile Engine", role: "Real-Time Sync", hoverBg: "hover:bg-indigo-50/50", Mark: UnipileMark },
+  { name: "OpenAI", role: "ChatGPT BYOK", hoverBg: "hover:bg-slate-100/70", Mark: OpenAIMark },
+  { name: "Claude", role: "Anthropic Reasoning", hoverBg: "hover:bg-orange-50/50", Mark: ClaudeMark },
+  { name: "DeepSeek", role: "Fast Model Inference", hoverBg: "hover:bg-blue-50/50", Mark: DeepSeekMark },
+  { name: "Google Gemini", role: "Multi-Modal Copilot", hoverBg: "hover:bg-indigo-50/40", Mark: GeminiMark },
+  { name: "MongoDB Atlas", role: "AES-256 Encrypted Vault", hoverBg: "hover:bg-emerald-50/50", Mark: MongoMark },
 ];
 
 /**
- * Architectural 2x4 hairline grid with geometric `+` crosshair intersection markers
- * highlighting DripX's live messaging and BYOK AI integrations.
+ * Architectural 2x4 hairline grid with crisp brand marks and `+` crosshair
+ * intersection markers highlighting DripX's messaging & BYOK AI integrations.
  */
 export default function IntegrationCrosshairGrid() {
   return (
@@ -21,7 +32,6 @@ export default function IntegrationCrosshairGrid() {
       </p>
 
       <div className="relative max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 border border-slate-200/90 bg-white">
-        {/* Geometric + crosshair intersection markers */}
         {["left-1/4", "left-2/4", "left-3/4"].map((pos) => (
           <span
             key={pos}
@@ -32,23 +42,31 @@ export default function IntegrationCrosshairGrid() {
           </span>
         ))}
 
-        {ECOSYSTEM_PARTNERS.map((item, idx) => (
-          <div
-            key={item.name}
-            className={`group flex flex-col items-center justify-center py-7 px-4 text-center transition-colors hover:bg-slate-50/80 ${
-              idx < 4 ? "border-b border-slate-200/90" : ""
-            } ${idx % 4 !== 3 ? "sm:border-r sm:border-slate-200/90" : ""} ${
-              idx % 2 === 0 ? "border-r sm:border-r-inherit border-slate-200/90" : ""
-            }`}
-          >
-            <span className={`text-sm sm:text-base font-bold tracking-tight ${item.accent}`}>
-              {item.name}
-            </span>
-            <span className="mt-1 text-[11px] text-slate-500 group-hover:text-slate-700 transition-colors">
-              {item.role}
-            </span>
-          </div>
-        ))}
+        {ECOSYSTEM_PARTNERS.map((item, idx) => {
+          const BrandMark = item.Mark;
+          return (
+            <div
+              key={item.name}
+              className={`group flex flex-col items-center justify-center py-8 px-4 text-center transition-all duration-200 cursor-default ${item.hoverBg} ${
+                idx < 4 ? "border-b border-slate-200/90" : ""
+              } ${idx % 4 !== 3 ? "sm:border-r sm:border-slate-200/90" : ""} ${
+                idx % 2 === 0 ? "border-r sm:border-r-inherit border-slate-200/90" : ""
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="transition-transform duration-200 group-hover:scale-110">
+                  <BrandMark />
+                </span>
+                <span className="text-sm sm:text-base font-bold tracking-tight text-slate-900">
+                  {item.name}
+                </span>
+              </div>
+              <span className="mt-1.5 text-[11px] font-medium text-slate-500 group-hover:text-slate-700 transition-colors">
+                {item.role}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
