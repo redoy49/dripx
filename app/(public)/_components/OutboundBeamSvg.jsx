@@ -26,7 +26,7 @@ export default function OutboundBeamSvg({ activeSource, activeCard }) {
     >
       <defs>
         <filter id="dripx-beam-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2.2" result="blur" />
+          <feGaussianBlur stdDeviation="0.8" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -35,29 +35,30 @@ export default function OutboundBeamSvg({ activeSource, activeCard }) {
       </defs>
 
       {/* Left Top (Gmail) & Left Bottom (SMTP) -> Junction -> Center Hub */}
-      <path d="M 240 27 L 340 27 Q 356 27 356 43 L 356 68" className={`transition-colors duration-200 ${strokeCls(activeSource === "gmail")}`} strokeWidth={activeSource === "gmail" ? 1.8 : 1.25} />
-      <path d="M 240 109 L 340 109 Q 356 109 356 93 L 356 68" className={`transition-colors duration-200 ${strokeCls(activeSource === "smtp")}`} strokeWidth={activeSource === "smtp" ? 1.8 : 1.25} />
-      <path d="M 356 68 L 490 68" className={`transition-colors duration-200 ${strokeCls(activeSource === "gmail" || activeSource === "smtp")}`} strokeWidth={activeSource === "gmail" || activeSource === "smtp" ? 1.8 : 1.25} />
+      <path d="M 240 27 L 340 27 Q 356 27 356 43 L 356 68" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeSource === "gmail")}`} strokeWidth={activeSource === "gmail" ? 1.5 : 1.1} />
+      <path d="M 240 109 L 340 109 Q 356 109 356 93 L 356 68" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeSource === "smtp")}`} strokeWidth={activeSource === "smtp" ? 1.5 : 1.1} />
+      <path d="M 356 68 L 490 68" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeSource === "gmail" || activeSource === "smtp")}`} strokeWidth={activeSource === "gmail" || activeSource === "smtp" ? 1.5 : 1.1} />
 
       {/* Right Top (LinkedIn) & Right Bottom (AI Agent) -> Junction -> Center Hub */}
-      <path d="M 960 27 L 860 27 Q 844 27 844 43 L 844 68" className={`transition-colors duration-200 ${strokeCls(activeSource === "linkedin")}`} strokeWidth={activeSource === "linkedin" ? 1.8 : 1.25} />
-      <path d="M 960 109 L 860 109 Q 844 109 844 93 L 844 68" className={`transition-colors duration-200 ${strokeCls(activeSource === "ai")}`} strokeWidth={activeSource === "ai" ? 1.8 : 1.25} />
-      <path d="M 844 68 L 710 68" className={`transition-colors duration-200 ${strokeCls(activeSource === "linkedin" || activeSource === "ai")}`} strokeWidth={activeSource === "linkedin" || activeSource === "ai" ? 1.8 : 1.25} />
+      <path d="M 960 27 L 860 27 Q 844 27 844 43 L 844 68" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeSource === "linkedin")}`} strokeWidth={activeSource === "linkedin" ? 1.5 : 1.1} />
+      <path d="M 960 109 L 860 109 Q 844 109 844 93 L 844 68" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeSource === "ai")}`} strokeWidth={activeSource === "ai" ? 1.5 : 1.1} />
+      <path d="M 844 68 L 710 68" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeSource === "linkedin" || activeSource === "ai")}`} strokeWidth={activeSource === "linkedin" || activeSource === "ai" ? 1.5 : 1.1} />
 
       {/* Hub -> Bottom Junction -> 3 Cards */}
-      <path d="M 600 106 L 600 164" className={`transition-colors duration-200 ${strokeCls(Boolean(activeCard || activeSource))}`} strokeWidth={activeCard || activeSource ? 1.6 : 1.25} />
-      <path d="M 600 164 L 212 164 Q 196 164 196 180 L 196 214" className={`transition-colors duration-200 ${strokeCls(activeCard === "delivery")}`} strokeWidth={activeCard === "delivery" ? 1.8 : 1.25} />
-      <path d="M 600 164 L 600 214" className={`transition-colors duration-200 ${strokeCls(activeCard === "routing")}`} strokeWidth={activeCard === "routing" ? 1.8 : 1.25} />
-      <path d="M 600 164 L 988 164 Q 1004 164 1004 180 L 1004 214" className={`transition-colors duration-200 ${strokeCls(activeCard === "inbox")}`} strokeWidth={activeCard === "inbox" ? 1.8 : 1.25} />
+      <path d="M 600 106 L 600 164" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(Boolean(activeCard || activeSource))}`} strokeWidth={activeCard || activeSource ? 1.4 : 1.1} />
+      <path d="M 600 164 L 212 164 Q 196 164 196 180 L 196 214" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeCard === "delivery")}`} strokeWidth={activeCard === "delivery" ? 1.5 : 1.1} />
+      <path d="M 600 164 L 600 214" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeCard === "routing")}`} strokeWidth={activeCard === "routing" ? 1.5 : 1.1} />
+      <path d="M 600 164 L 988 164 Q 1004 164 1004 180 L 1004 214" vectorEffect="non-scaling-stroke" className={`transition-colors duration-200 ${strokeCls(activeCard === "inbox")}`} strokeWidth={activeCard === "inbox" ? 1.5 : 1.1} />
 
-      {/* Animated Glowing Data Beams (normalized with pathLength=100) */}
+      {/* Animated Thin Glowing Data Beams (normalized with pathLength=100) */}
       {[...INBOUND_BEAMS, ...OUTBOUND_BEAMS].map((beam) => (
         <path
           key={beam.id}
           d={beam.d}
           pathLength={100}
+          vectorEffect="non-scaling-stroke"
           stroke={beam.color}
-          strokeWidth="2.5"
+          strokeWidth="1.4"
           strokeLinecap="round"
           filter="url(#dripx-beam-glow)"
           className="beam-pulse-path"

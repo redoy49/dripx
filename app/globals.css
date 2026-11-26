@@ -163,24 +163,24 @@ body {
 
   @keyframes beam-travel {
     0% {
-      stroke-dashoffset: 122;
+      stroke-dashoffset: 116;
       opacity: 0;
     }
     12% {
-      opacity: 1;
+      opacity: 0.95;
     }
     85% {
-      opacity: 1;
+      opacity: 0.95;
     }
     100% {
-      stroke-dashoffset: -24;
+      stroke-dashoffset: -18;
       opacity: 0;
     }
   }
 
   .beam-pulse-path {
-    stroke-dasharray: 22 100;
-    stroke-dashoffset: 122;
+    stroke-dasharray: 14 105;
+    stroke-dashoffset: 116;
     animation: beam-travel 2.4s linear infinite;
     will-change: stroke-dashoffset, opacity;
   }
