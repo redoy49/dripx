@@ -29,7 +29,7 @@ export default function PublicHeroBanner({
   const glow = GLOW_ACCENTS[variant] || GLOW_ACCENTS.features;
 
   return (
-    <section className={`relative overflow-hidden pt-32 ${bottomSpacing} ${gradient} text-slate-900`}>
+    <section className={`relative overflow-hidden pt-28 ${bottomSpacing} ${gradient} text-slate-900`}>
       <div
         aria-hidden="true"
         className="bg-geometry-squares pointer-events-none absolute inset-0 opacity-85 [mask-image:linear-gradient(180deg,black_0%,rgba(0,0,0,0.45)_62%,transparent_100%)]"
@@ -40,17 +40,17 @@ export default function PublicHeroBanner({
       />
 
       <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="text-4xl sm:text-5xl lg:text-[3.35rem] font-semibold tracking-[-0.03em] text-slate-900 max-w-4xl mx-auto leading-[1.08]">
+        <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold tracking-[-0.03em] text-slate-900 max-w-3xl mx-auto leading-[1.08]">
           {title}
         </h1>
 
         {description && (
-          <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
             {description}
           </p>
         )}
 
-        {children && <div className="mt-8">{children}</div>}
+        {children && <div className="mt-7">{children}</div>}
       </div>
     </section>
   );

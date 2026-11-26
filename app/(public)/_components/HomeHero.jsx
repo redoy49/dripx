@@ -42,9 +42,9 @@ export default function HomeHero() {
   return (
     <PublicHeroBanner
       variant="home"
-      bottomSpacing="pb-20"
-      title="Cloud outreach built for teams that ship pipeline"
-      description="Run 24/7 Email and LinkedIn sequences with automatic Spintax rotation, native threading, collision-locked inboxes, and a BYOK AI Agent."
+      bottomSpacing="pb-14"
+      title="Scale outbound across Email and LinkedIn"
+      description="24/7 cloud sequences, automatic Spintax rotation, and a built-in AI Agent."
     >
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
         <Link
@@ -64,7 +64,7 @@ export default function HomeHero() {
       </div>
 
       {/* Compact Verified Trust Strip */}
-      <div className="mt-8 flex justify-center">
+      <div className="mt-6 flex justify-center">
         <div className="inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full bg-white/95 p-1.5 pr-4 shadow-ring-card">
           <AvatarStack avatars={HERO_AVATARS} max={3} />
           <div className="flex items-center gap-1.5 text-xs text-slate-600">
@@ -80,26 +80,10 @@ export default function HomeHero() {
         </div>
       </div>
 
-      {/* Framed Product Preview with Scroll Depth & BorderBeam */}
-      <div className="scroll-depth-card relative w-full mx-auto mt-12">
-        <div className="relative rounded-2xl sm:rounded-3xl bg-white p-2 sm:p-3 shadow-ring-elevated overflow-hidden">
+      {/* Framed Product Video with Scroll Depth & BorderBeam */}
+      <div className="scroll-depth-card relative w-full mx-auto mt-9">
+        <div className="relative rounded-2xl sm:rounded-3xl bg-white p-2 shadow-ring-elevated overflow-hidden">
           <BorderBeam size={280} duration={12} anchor={90} borderWidth={1.25} colorFrom="#6366f1" colorTo="#38bdf8" />
-
-          <div className="flex items-center justify-between border-b border-slate-200/70 px-4 py-2.5 mb-2 bg-slate-50/80 rounded-t-xl">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            </div>
-            <span className="text-[11px] font-mono text-slate-500 bg-white px-3.5 py-0.5 rounded-full shadow-ring-card">
-              dripx.io/dashboard/campaigns
-            </span>
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Cloud Worker Online
-            </span>
-          </div>
-
           <HeroVideoPlayer />
         </div>
       </div>

@@ -20,7 +20,7 @@ export default function HeroVideoPlayer() {
   };
 
   return (
-    <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-950">
+    <div className="relative w-full h-[240px] sm:h-[380px] lg:h-[460px] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950">
       <video
         ref={videoRef}
         src="/Automate-LinkedIn-compressed.webm"
@@ -30,7 +30,7 @@ export default function HeroVideoPlayer() {
         muted
         playsInline
         preload="metadata"
-        className="h-full w-full object-cover"
+        className="h-full w-full object-cover object-center"
       />
 
       <button
