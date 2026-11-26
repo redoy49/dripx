@@ -105,9 +105,9 @@ export default function AgentThreadSidebar({
                       <Image
                         src="/grokbot.svg"
                         alt=""
-                        width={15}
-                        height={15}
-                        className={`h-[15px] w-[15px] shrink-0 object-contain transition-opacity ${
+                        width={18}
+                        height={18}
+                        className={`ml-1 h-[18px] w-[18px] shrink-0 object-contain transition-opacity ${
                           active ? "opacity-90" : "opacity-55 group-hover:opacity-80"
                         }`}
                       />
