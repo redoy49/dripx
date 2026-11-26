@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Layers, Inbox, Check } from "lucide-react";
+import { Send, GitBranch, MessageSquareCheck, Check } from "lucide-react";
 
 const DELIVERY_SEGMENTS = [
   { id: "sent", label: "Sent", value: 342, pct: 66, color: "#7DA9F7" },
@@ -29,19 +29,21 @@ export default function OutboundChannelCards({ activeCard, onHoverCard }) {
   const [hoverStep, setHoverStep] = useState(null);
 
   return (
-    <div className="mt-8 grid grid-cols-1 gap-5 md:mt-[78px] md:grid-cols-3">
+    <div className="mt-6 grid grid-cols-1 gap-5 md:mt-[68px] md:grid-cols-3">
       {/* CARD 1: Smart Email Delivery (Lavender) */}
       <article
         onMouseEnter={() => onHoverCard("delivery")}
         onMouseLeave={() => onHoverCard(null)}
-        className={`group relative flex h-[368px] flex-col overflow-hidden rounded-[20px] border-[3px] border-white bg-gradient-to-b from-[#F7F1FC] via-[#F2E9F9] to-[#E9DDF5] transition-shadow duration-300 ${
-          activeCard === "delivery" ? "shadow-[0_16px_36px_-12px_rgba(88,48,140,0.2)]" : "shadow-[0_10px_28px_-10px_rgba(15,23,42,0.09)]"
+        className={`group relative flex h-[368px] flex-col overflow-hidden rounded-[20px] border border-purple-200/60 bg-gradient-to-b from-[#F7F1FC] via-[#F2E9F9] to-[#E9DDF5] transition-shadow duration-300 ${
+          activeCard === "delivery" ? "shadow-[0_16px_36px_-12px_rgba(88,48,140,0.2)]" : "shadow-ring-card"
         }`}
       >
         <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={meshStyle("rgba(130, 95, 175, 0.11)")} />
         <div className="relative z-10 px-6 pt-6">
-          <div className="flex items-center gap-2 text-[#18181F]">
-            <Mail size={16} className="text-indigo-700" />
+          <div className="flex items-center gap-2.5 text-slate-900">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-purple-600 shadow-2xs ring-1 ring-purple-200/60">
+              <Send size={14} />
+            </span>
             <h3 className="text-[16px] font-semibold tracking-[-0.02em]">Smart email delivery</h3>
           </div>
           <p className="mt-2 text-[12.5px] leading-[1.48] text-[#5F5E6B]">
@@ -91,12 +93,14 @@ export default function OutboundChannelCards({ activeCard, onHoverCard }) {
       <article
         onMouseEnter={() => onHoverCard("routing")}
         onMouseLeave={() => onHoverCard(null)}
-        className={`group relative flex h-[368px] flex-col overflow-hidden rounded-[20px] border-[3px] border-white bg-gradient-to-b from-[#EDF6FE] via-[#E5F1FC] to-[#DCEAFB] transition-shadow duration-300 ${activeCard === "routing" ? "shadow-[0_16px_36px_-12px_rgba(25,75,145,0.2)]" : "shadow-[0_10px_28px_-10px_rgba(15,23,42,0.09)]"}`}
+        className={`group relative flex h-[368px] flex-col overflow-hidden rounded-[20px] border border-sky-200/70 bg-gradient-to-b from-[#EDF6FE] via-[#E5F1FC] to-[#DCEAFB] transition-shadow duration-300 ${activeCard === "routing" ? "shadow-[0_16px_36px_-12px_rgba(25,75,145,0.2)]" : "shadow-ring-card"}`}
       >
         <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={meshStyle("rgba(60, 120, 195, 0.11)")} />
         <div className="relative z-10 px-6 pt-6">
-          <div className="flex items-center gap-2 text-[#18181F]">
-            <Layers size={16} className="text-sky-700" />
+          <div className="flex items-center gap-2.5 text-slate-900">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-sky-600 shadow-2xs ring-1 ring-sky-200/70">
+              <GitBranch size={14} />
+            </span>
             <h3 className="text-[16px] font-semibold tracking-[-0.02em]">Multi-channel routing</h3>
           </div>
           <p className="mt-2 text-[12.5px] leading-[1.48] text-[#5F5E6B]">
@@ -139,14 +143,16 @@ export default function OutboundChannelCards({ activeCard, onHoverCard }) {
       <article
         onMouseEnter={() => onHoverCard("inbox")}
         onMouseLeave={() => onHoverCard(null)}
-        className={`group relative flex h-[368px] flex-col overflow-hidden rounded-[20px] border-[3px] border-white bg-gradient-to-b from-[#FDF2EA] via-[#FBECE2] to-[#F8E4D8] transition-shadow duration-300 ${
-          activeCard === "inbox" ? "shadow-[0_16px_36px_-12px_rgba(165,85,40,0.2)]" : "shadow-[0_10px_28px_-10px_rgba(15,23,42,0.09)]"
+        className={`group relative flex h-[368px] flex-col overflow-hidden rounded-[20px] border border-orange-200/70 bg-gradient-to-b from-[#FDF2EA] via-[#FBECE2] to-[#F8E4D8] transition-shadow duration-300 ${
+          activeCard === "inbox" ? "shadow-[0_16px_36px_-12px_rgba(165,85,40,0.2)]" : "shadow-ring-card"
         }`}
       >
         <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={meshStyle("rgba(185, 115, 70, 0.1)")} />
         <div className="relative z-10 px-6 pt-6">
-          <div className="flex items-center gap-2 text-[#18181F]">
-            <Inbox size={16} className="text-orange-700" />
+          <div className="flex items-center gap-2.5 text-slate-900">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-orange-600 shadow-2xs ring-1 ring-orange-200/70">
+              <MessageSquareCheck size={14} />
+            </span>
             <h3 className="text-[16px] font-semibold tracking-[-0.02em]">Unified inbox &amp; auto-pause</h3>
           </div>
           <p className="mt-2 text-[12.5px] leading-[1.48] text-[#5F5E6B]">
