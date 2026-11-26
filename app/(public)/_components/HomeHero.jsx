@@ -3,6 +3,40 @@ import Image from "next/image";
 import { ArrowRight, Star } from "lucide-react";
 import PublicHeroBanner from "@/app/components/public/PublicHeroBanner";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { AvatarStack } from "@/components/ui/avatar-08";
+
+const HERO_AVATARS = [
+  {
+    name: "Olivia Sparks",
+    src: "https://cdn.21st.dev/assets/localized/b539abc60701ab9cbcd73f9241d13a14a09582a4fd06c65784cb5567d77a2e0e.webp",
+    fallback: "OS",
+  },
+  {
+    name: "Hallie Richards",
+    src: "https://cdn.21st.dev/assets/localized/61fda783ca2662349458bad61a434038016f05d6a14bd7c5a314f48c8ee8be03.webp",
+    fallback: "HR",
+  },
+  {
+    name: "Howard Lloyd",
+    src: "https://cdn.21st.dev/assets/localized/2bc5f22fa3400c61a2161d14e3dce5a0804badebfc1b3d9cbe844feaa3b72180.webp",
+    fallback: "HL",
+  },
+  {
+    name: "Jenny Wilson",
+    src: "https://cdn.21st.dev/assets/localized/c5ee2e124ea7334450d30a46607f793534f567e97d4b708cda110a06aeed4953.webp",
+    fallback: "JW",
+  },
+  {
+    name: "Daniel Park",
+    src: "https://cdn.21st.dev/assets/localized/3ac4ad42a8a76abc8f29025d958460be1771e6e4d12a771e2bef33b21b0a30d6.jpg",
+    fallback: "DP",
+  },
+  {
+    name: "Alice Morgan",
+    src: "https://cdn.21st.dev/assets/localized/c70d48e47d3a2d79ad07d16bff3aa3cff686580be031b6102cad73a15b47d8fd.jpg",
+    fallback: "AM",
+  },
+];
 
 export default function HomeHero() {
   return (
@@ -30,26 +64,19 @@ export default function HomeHero() {
       </div>
 
       {/* Compact Verified Trust Strip */}
-      <div className="mt-8 flex items-center justify-center gap-3">
-        <div className="flex -space-x-2">
-          {["JJ", "DR", "SC", "AM"].map((initials, idx) => (
-            <span
-              key={initials}
-              className={`inline-flex h-7 w-7 items-center justify-center rounded-full ring-2 ring-white text-[10px] font-bold text-white ${
-                ["bg-indigo-500", "bg-sky-500", "bg-emerald-500", "bg-amber-500"][idx]
-              }`}
-            >
-              {initials}
+      <div className="mt-8 flex justify-center">
+        <div className="inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full bg-white/95 border border-slate-200/90 p-1.5 pr-4 shadow-ring-card">
+          <AvatarStack avatars={HERO_AVATARS} max={3} />
+          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+            <span className="flex items-center text-amber-400">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={12} className="fill-amber-400 stroke-none" />
+              ))}
             </span>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-          <span className="flex items-center text-amber-400">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={12} className="fill-amber-400 stroke-none" />
-            ))}
-          </span>
-          <span className="tabular-nums">Trusted by 1,200+ B2B revenue teams</span>
+            <span className="tabular-nums">
+              Trusted by <strong className="font-semibold text-slate-900">1,200+</strong> B2B revenue teams.
+            </span>
+          </div>
         </div>
       </div>
 
