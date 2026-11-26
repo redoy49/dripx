@@ -58,7 +58,7 @@ export default function OutboundBeamSvg({ activeSource, activeCard }) {
           pathLength={100}
           vectorEffect="non-scaling-stroke"
           stroke={beam.color}
-          strokeWidth="1.2"
+          strokeWidth="0.3"
           strokeLinecap="round"
           filter="url(#dripx-beam-glow)"
           className="beam-pulse-path"
