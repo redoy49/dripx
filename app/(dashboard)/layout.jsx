@@ -344,17 +344,17 @@ export default function DashboardLayout({ children }) {
                 onMouseEnter={() => handlePrefetch(item.href)}
                 onTouchStart={() => handlePrefetch(item.href)}
                 title={collapsed ? item.name : undefined}
-                className={`flex items-center rounded-xl transition group relative ${
+                className={`flex items-center rounded-full transition group relative ${
                   collapsed
                     ? "justify-center p-3 text-base"
-                    : "gap-3 p-2.5 text-[15px]"
+                    : "gap-3 p-2 text-[15px]"
                 } ${
                   active
                     ? "bg-indigo-400 text-white shadow-xs font-semibold"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
-                <Icon size={19} className="shrink-0" />
+                <Icon size={19} className="shrink-0 ml-1.5" />
                 {!collapsed && <span>{item.name}</span>}
 
                 {/* Navigation-wide Unread Message Badge */}
