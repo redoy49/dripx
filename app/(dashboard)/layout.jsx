@@ -196,16 +196,27 @@ export default function DashboardLayout({ children }) {
         <div className={`flex items-center mb-5 ${collapsed ? "flex-col gap-3 justify-center" : "justify-between"}`}>
           <Link
             href="/"
-            className="flex items-center gap-2 group transition"
+            className="flex items-center group transition"
             title="Go to home page"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-400 to-violet-400 flex items-center justify-center text-white font-black text-base shadow-xs group-hover:scale-105 transition-transform shrink-0">
-              <span>D</span>
-            </div>
-            {!collapsed && (
-              <span className="text-xl font-bold tracking-tight text-gray-900 transition-opacity duration-200">
-                Dripi<span className="text-[#FF385C] font-black text-2xl -ml-0.5 inline-block -rotate-3">X</span>
-              </span>
+            {collapsed ? (
+              <Image
+                src="/dripx.svg"
+                alt="DripX"
+                width={32}
+                height={32}
+                priority
+                className="h-8 w-8 object-cover object-left group-hover:scale-105 transition-transform shrink-0"
+              />
+            ) : (
+              <Image
+                src="/dripx.svg"
+                alt="DripX"
+                width={116}
+                height={32}
+                priority
+                className="h-7 w-auto object-contain group-hover:scale-[1.02] transition-transform"
+              />
             )}
           </Link>
 
