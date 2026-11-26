@@ -2,22 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
-
-const METRICS = [
-  { value: "4.2x", label: "Higher reply rate", sub: "Multi-channel vs single channel", color: "text-indigo-600" },
-  { value: "68%", label: "Average open rate", sub: "Spintax + mailbox ramp-up", color: "text-emerald-600" },
-  { value: "15 hrs", label: "Saved per rep weekly", sub: "Automated cloud follow-ups", color: "text-amber-600" },
-  { value: "0.02%", label: "Account flag rate", sub: "Static residential IP isolation", color: "text-sky-600" },
-];
-
-const COMPARISON_ROWS = [
-  { cap: "Execution Model", cloud: "24/7 Cloud Micro-Containers", ext: "Local Chrome Tab Must Stay Open" },
-  { cap: "IP Isolation", cloud: "Dedicated Static Residential IP", ext: "Shared Datacenter or Home Wi-Fi" },
-  { cap: "Email Threading", cloud: "Native RFC 2822 Message-ID Chains", ext: "Broken Subjects / Separate Threads" },
-  { cap: "Team Inbox", cloud: "Live Collision Locks + Unified Feed", ext: "Manual Tab Switching Across Reps" },
-  { cap: "AI Automation", cloud: "BYOK Multi-Model Agent Workspace", ext: "None or Hardcoded Copy Templates" },
-];
+import { ArrowRight, ChevronDown } from "lucide-react";
+import MetricsAndBenchmark from "./MetricsAndBenchmark";
 
 const FAQS = [
   {
@@ -43,77 +29,16 @@ export default function ComparisonAndFaq() {
 
   return (
     <>
-      {/* Architectural Metrics Strip */}
-      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="w-full grid grid-cols-2 lg:grid-cols-4 border border-slate-200/90 bg-white rounded-2xl overflow-hidden">
-          {METRICS.map((m, idx) => (
-            <div
-              key={m.label}
-              className={`p-6 sm:p-8 ${idx < 3 ? "lg:border-r border-slate-200/90" : ""} ${
-                idx < 2 ? "border-b lg:border-b-0 border-slate-200/90" : ""
-              }`}
-            >
-              <p className={`text-3xl sm:text-4xl font-bold tabular-nums tracking-tight ${m.color}`}>{m.value}</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{m.label}</p>
-              <p className="mt-1 text-xs text-slate-500">{m.sub}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Cloud vs Browser Extensions Table */}
-      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="w-full">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900">
-              DripX Cloud vs. Browser Extensions
-            </h2>
-            <p className="mt-2.5 text-sm sm:text-base text-slate-600">
-              Built for teams that cannot afford account bans, missed follow-ups, or double-pitched leads.
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white shadow-ring-card overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/70">
-                  <th className="py-3.5 px-5 font-semibold text-slate-900">Capability</th>
-                  <th className="py-3.5 px-5 font-semibold text-indigo-700 bg-indigo-50/40">DripX Cloud</th>
-                  <th className="py-3.5 px-5 font-semibold text-slate-500">Extensions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {COMPARISON_ROWS.map((row) => (
-                  <tr key={row.cap} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-5 font-medium text-slate-900">{row.cap}</td>
-                    <td className="py-3.5 px-5 bg-indigo-50/20 text-slate-900 font-medium">
-                      <span className="inline-flex items-center gap-2">
-                        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
-                        {row.cloud}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-5 text-slate-500">
-                      <span className="inline-flex items-center gap-2">
-                        <XCircle size={15} className="text-rose-400 shrink-0" />
-                        {row.ext}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+      <MetricsAndBenchmark />
 
       {/* FAQ Accordion */}
-      <section id="faq" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <section id="faq" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <div className="lg:col-span-4">
             <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900">
               Frequently asked questions
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+            <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed">
               Answers on cloud execution safety, AI keys, and reply handling.
             </p>
             <Link href="/contact" className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
@@ -145,15 +70,15 @@ export default function ComparisonAndFaq() {
       </section>
 
       {/* Bottom Atmospheric CTA */}
-      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20">
-        <div className="w-full rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_55%,#ffffff_100%)] p-8 sm:p-14 text-center shadow-ring-card">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16">
+        <div className="w-full rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_55%,#ffffff_100%)] p-8 sm:p-12 text-center shadow-ring-card">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-slate-900 max-w-2xl mx-auto">
             Ready to launch your autonomous outbound engine?
           </h2>
           <p className="mt-3 text-sm sm:text-base text-slate-600 max-w-xl mx-auto">
             Start a 14-day free trial with instant cloud setup.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+          <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
               href="/register"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-8 py-3 text-sm shadow-ring-elevated active:scale-95 transition"
