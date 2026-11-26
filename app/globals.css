@@ -159,28 +159,29 @@ body {
       animation-timeline: view();
       animation-range: entry 0% entry 34%;
     }
+  }
 
-    @keyframes beam-travel {
-      0% {
-        stroke-dashoffset: 340;
-        opacity: 0;
-      }
-      15% {
-        opacity: 0.95;
-      }
-      85% {
-        opacity: 0.95;
-      }
-      100% {
-        stroke-dashoffset: -40;
-        opacity: 0;
-      }
+  @keyframes beam-travel {
+    0% {
+      stroke-dashoffset: 122;
+      opacity: 0;
     }
+    12% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: -24;
+      opacity: 0;
+    }
+  }
 
-    .beam-pulse-path {
-      stroke-dasharray: 46 340;
-      stroke-dashoffset: 340;
-      animation: beam-travel 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-    }
+  .beam-pulse-path {
+    stroke-dasharray: 22 100;
+    stroke-dashoffset: 122;
+    animation: beam-travel 2.4s linear infinite;
+    will-change: stroke-dashoffset, opacity;
   }
 }

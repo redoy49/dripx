@@ -44,8 +44,8 @@ export default function ComparisonAndFaq() {
   return (
     <>
       {/* Architectural Metrics Strip */}
-      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 border border-slate-200/90 bg-white rounded-2xl overflow-hidden">
+      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="w-full grid grid-cols-2 lg:grid-cols-4 border border-slate-200/90 bg-white rounded-2xl overflow-hidden">
           {METRICS.map((m, idx) => (
             <div
               key={m.label}
@@ -62,8 +62,8 @@ export default function ComparisonAndFaq() {
       </section>
 
       {/* Cloud vs Browser Extensions Table */}
-      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="max-w-4xl mx-auto">
+      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="w-full">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900">
               DripX Cloud vs. Browser Extensions
@@ -107,7 +107,7 @@ export default function ComparisonAndFaq() {
       </section>
 
       {/* FAQ Accordion */}
-      <section id="faq" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <section id="faq" className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900 text-center mb-10">
             Frequently asked questions
@@ -135,8 +135,8 @@ export default function ComparisonAndFaq() {
       </section>
 
       {/* Bottom Atmospheric CTA */}
-      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_55%,#ffffff_100%)] p-8 sm:p-14 text-center shadow-ring-card">
+      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+        <div className="w-full rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_55%,#ffffff_100%)] p-8 sm:p-14 text-center shadow-ring-card">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] text-slate-900 max-w-2xl mx-auto">
             Ready to launch your autonomous outbound engine?
           </h2>

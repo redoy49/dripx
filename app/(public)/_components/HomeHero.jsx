@@ -81,7 +81,7 @@ export default function HomeHero() {
       </div>
 
       {/* Framed Product Preview with Scroll Depth & BorderBeam */}
-      <div className="scroll-depth-card relative max-w-5xl mx-auto mt-12">
+      <div className="scroll-depth-card relative w-full mx-auto mt-12">
         <div className="relative rounded-2xl sm:rounded-3xl bg-white p-2 sm:p-3 shadow-ring-elevated overflow-hidden">
           <BorderBeam size={280} duration={12} anchor={90} borderWidth={2} colorFrom="#6366f1" colorTo="#38bdf8" />
 

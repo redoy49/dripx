@@ -77,7 +77,7 @@ export default function InteractiveProductTabs() {
   };
 
   return (
-    <section id="interactive-product" className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <section id="interactive-product" className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
       <div className="max-w-2xl mx-auto text-center mb-10">
         <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.025em] text-slate-900">
           One workspace from prospect list to booked call
@@ -99,7 +99,7 @@ export default function InteractiveProductTabs() {
               onClick={() => setActiveId(tab.id)}
               className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${
                 selected
-                  ? "bg-indigo-600 text-white shadow-ring-elevated"
+                  ? "bg-indigo-400 hover:bg-indigo-500 text-white shadow-ring-elevated"
                   : "bg-white text-slate-600 shadow-ring-card hover:text-slate-900"
               }`}
             >
@@ -111,14 +111,14 @@ export default function InteractiveProductTabs() {
       </div>
 
       {/* Tab Content Panel */}
-      <div className="max-w-5xl mx-auto rounded-3xl bg-white p-6 sm:p-10 shadow-ring-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <div className="w-full rounded-3xl bg-white p-6 sm:p-10 shadow-ring-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-5 space-y-4">
           <h3 className="text-2xl font-semibold tracking-tight text-slate-900">{active.heading}</h3>
           <p className="text-sm text-slate-600 leading-relaxed">{active.description}</p>
           <ul className="space-y-2.5 text-sm text-slate-700 list-none m-0 p-0">
             {active.bullets.map((bullet) => (
               <li key={bullet} className="flex items-start gap-2.5">
-                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-indigo-600 shrink-0" />
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-indigo-400 shrink-0" />
                 <span>{bullet}</span>
               </li>
             ))}
@@ -142,7 +142,7 @@ export default function InteractiveProductTabs() {
                 <button
                   type="button"
                   onClick={handleSpin}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-semibold shrink-0 active:scale-95 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white px-4 py-2 text-xs font-semibold shrink-0 active:scale-95 transition cursor-pointer"
                 >
                   <RefreshCw size={12} />
                   Spin Variant

@@ -55,8 +55,8 @@ export default function CloudWorkflowSection() {
   };
 
   return (
-    <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="relative w-full max-w-[1060px] mx-auto overflow-hidden rounded-[28px] border border-[#EBEBF0] bg-[#F6F6F8] px-5 py-10 sm:px-9 sm:py-12 lg:px-14 lg:py-14 text-[#18181F] shadow-[0_18px_50px_-24px_rgba(15,23,42,0.12)]">
+    <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative w-full overflow-hidden rounded-[28px] border border-[#EBEBF0] bg-[#F6F6F8] px-5 py-10 sm:px-9 sm:py-12 lg:px-14 lg:py-14 text-[#18181F] shadow-[0_18px_50px_-24px_rgba(15,23,42,0.12)]">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"
@@ -82,7 +82,7 @@ export default function CloudWorkflowSection() {
         <div className="relative mt-9 sm:mt-11">
           <OutboundBeamSvg activeSource={activeSource} activeCard={derivedCard} />
 
-          <div className="relative z-10 grid grid-cols-1 items-center gap-4 md:h-[136px] md:grid-cols-[184px_1fr_184px] md:gap-0">
+          <div className="relative z-10 grid grid-cols-1 items-center gap-4 md:h-[136px] md:grid-cols-[20%_60%_20%] md:gap-0">
             <div className="grid grid-cols-2 gap-3 md:flex md:flex-col md:justify-between md:gap-7">
               {LEFT_SOURCES.map(renderSourceButton)}
             </div>

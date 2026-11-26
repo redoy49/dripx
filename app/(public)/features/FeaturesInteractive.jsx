@@ -94,9 +94,9 @@ export default function FeaturesInteractive() {
   const current = ARCHITECTURE_PILLARS.find((p) => p.id === selectedId) || ARCHITECTURE_PILLARS[0];
 
   return (
-    <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-20">
+    <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-20">
       {/* Interactive Pillar Switcher */}
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full">
         <div className="flex flex-wrap justify-center gap-2 mb-10">
           {ARCHITECTURE_PILLARS.map((pillar) => {
             const Icon = pillar.icon;
@@ -107,7 +107,7 @@ export default function FeaturesInteractive() {
                 type="button"
                 onClick={() => setSelectedId(pillar.id)}
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                  active ? "bg-indigo-600 text-white shadow-ring-elevated" : "bg-white text-slate-600 shadow-ring-card hover:text-slate-900"
+                  active ? "bg-indigo-400 hover:bg-indigo-500 text-white shadow-ring-elevated" : "bg-white text-slate-600 shadow-ring-card hover:text-slate-900"
                 }`}
               >
                 <Icon size={14} />
@@ -154,7 +154,7 @@ export default function FeaturesInteractive() {
       </div>
 
       {/* Geometric 3-Column Infrastructure Strip */}
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 border border-slate-200/90 rounded-2xl bg-white overflow-hidden">
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 border border-slate-200/90 rounded-2xl bg-white overflow-hidden">
         {SECONDARY_CAPABILITIES.map((cap, i) => {
           const Icon = cap.icon;
           return (
@@ -168,7 +168,7 @@ export default function FeaturesInteractive() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="max-w-4xl mx-auto rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#ffffff_100%)] p-8 sm:p-12 text-center shadow-ring-card">
+      <div className="w-full rounded-3xl bg-[linear-gradient(180deg,#eef2ff_0%,#ffffff_100%)] p-8 sm:p-12 text-center shadow-ring-card">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900">
           See every workflow running in your own workspace
         </h2>

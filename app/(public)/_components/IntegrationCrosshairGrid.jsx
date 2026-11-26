@@ -67,12 +67,12 @@ export default function IntegrationCrosshairGrid() {
   const selectedItem = ECOSYSTEM_PARTNERS.find((p) => p.name === selectedName);
 
   return (
-    <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <p className="text-center text-base sm:text-lg font-medium text-slate-500 mb-8">
         Messaging channels and AI engines we <span className="font-semibold text-slate-900">connect</span> natively.
       </p>
 
-      <div className="relative max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 border border-slate-200/90 bg-white">
+      <div className="relative w-full grid grid-cols-2 sm:grid-cols-4 border border-slate-200/90 bg-white">
         {["left-1/4", "left-2/4", "left-3/4"].map((pos) => (
           <span
             key={pos}
@@ -117,7 +117,7 @@ export default function IntegrationCrosshairGrid() {
       </div>
 
       {selectedItem && (
-        <div className="max-w-5xl mx-auto mt-3 rounded-xl bg-white px-4 py-2.5 text-xs text-slate-700 shadow-ring-card flex items-center justify-between gap-3">
+        <div className="w-full mt-3 rounded-xl bg-white px-4 py-2.5 text-xs text-slate-700 shadow-ring-card flex items-center justify-between gap-3">
           <span>
             <strong className="text-slate-900">{selectedItem.name}:</strong> {selectedItem.detail}
           </span>

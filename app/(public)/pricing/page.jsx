@@ -78,7 +78,7 @@ export default function PricingPage() {
             type="button"
             onClick={() => setIsAnnual(false)}
             className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer ${
-              !isAnnual ? "bg-indigo-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              !isAnnual ? "bg-indigo-400 hover:bg-indigo-500 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Monthly
@@ -87,7 +87,7 @@ export default function PricingPage() {
             type="button"
             onClick={() => setIsAnnual(true)}
             className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer inline-flex items-center gap-2 ${
-              isAnnual ? "bg-indigo-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
+              isAnnual ? "bg-indigo-400 hover:bg-indigo-500 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <span>Annual</span>
@@ -99,8 +99,8 @@ export default function PricingPage() {
       </PublicHeroBanner>
 
       {/* Tier Cards */}
-      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
+      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full items-stretch">
           {TIERS.map((tier) => {
             const price = isAnnual ? tier.annualPrice : tier.monthlyPrice;
             return (
