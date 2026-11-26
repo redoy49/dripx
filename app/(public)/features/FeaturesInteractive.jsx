@@ -175,7 +175,7 @@ export default function FeaturesInteractive() {
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-7 py-3 text-sm shadow-ring-elevated transition"
+            className="inline-flex items-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-7 py-3 text-sm shadow-ring-elevated transition"
           >
             <span>Start 14-day free trial</span>
             <ArrowRight size={15} />

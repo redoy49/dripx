@@ -142,7 +142,7 @@ export default function PricingPage() {
                   href={tier.ctaHref}
                   className={`mt-8 w-full text-center rounded-full py-3 px-5 text-sm font-semibold transition active:scale-95 ${
                     tier.highlighted
-                      ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-ring-elevated"
+                      ? "bg-indigo-400 hover:bg-indigo-500 text-white shadow-ring-elevated"
                       : "bg-slate-900 hover:bg-slate-800 text-white"
                   }`}
                 >

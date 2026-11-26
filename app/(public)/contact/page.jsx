@@ -102,7 +102,7 @@ export default function ContactPage() {
                   >
                     Send another message
                   </button>
-                  <Link href="/" className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-sm font-semibold">
+                  <Link href="/" className="rounded-full bg-indigo-400 hover:bg-indigo-500 text-white px-5 py-2.5 text-sm font-semibold">
                     Return home
                   </Link>
                 </div>
@@ -151,7 +151,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold px-7 py-3 text-sm shadow-ring-elevated transition cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 disabled:opacity-60 text-white font-semibold px-7 py-3 text-sm shadow-ring-elevated transition cursor-pointer"
                 >
                   <span>{loading ? "Sending..." : "Submit inquiry"}</span>
                   <ArrowRight size={15} />

@@ -146,7 +146,7 @@ export default function ComparisonAndFaq() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
             <Link
               href="/register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 text-sm shadow-ring-elevated active:scale-95 transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-8 py-3 text-sm shadow-ring-elevated active:scale-95 transition"
             >
               <span>Start 14-day free trial</span>
               <ArrowRight size={15} />
