@@ -68,9 +68,14 @@ export default function IntegrationCrosshairGrid() {
 
   return (
     <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-      <p className="text-center text-base sm:text-lg font-medium text-slate-500 mb-8">
-        Messaging channels and AI engines we <span className="font-semibold text-slate-900">connect</span> natively.
-      </p>
+      <div className="max-w-2xl mx-auto text-center mb-8">
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.025em] leading-[1.12] text-slate-900">
+          Connected channels and AI engines
+        </h2>
+        <p className="mt-2.5 text-sm sm:text-base text-slate-600">
+          Native integrations across email, LinkedIn, and your BYOK model providers.
+        </p>
+      </div>
 
       <div className="relative w-full grid grid-cols-2 sm:grid-cols-4 border border-slate-200/70 bg-white">
         {["left-1/4", "left-2/4", "left-3/4"].map((pos) => (

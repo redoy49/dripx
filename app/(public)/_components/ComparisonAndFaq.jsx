@@ -35,7 +35,7 @@ export default function ComparisonAndFaq() {
       <section id="faq" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <div className="lg:col-span-4">
-            <h2 className="text-3xl font-semibold tracking-[-0.025em] text-slate-900">
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.025em] leading-[1.12] text-slate-900">
               Frequently asked questions
             </h2>
             <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed">

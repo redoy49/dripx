@@ -98,7 +98,7 @@ export default function AboutPage() {
       {/* Security & Compliance Grid */}
       <section id="security" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="w-full rounded-3xl bg-slate-50/80 p-8 sm:p-12 shadow-ring-card">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 text-center">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900 text-center">
             Security and credential isolation
           </h2>
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
