@@ -30,7 +30,7 @@ export default function HeroVideoPlayer() {
         muted
         playsInline
         preload="metadata"
-        className="h-full w-full object-cover object-center"
+        className="h-full w-full object-fill object-center"
       />
 
       <button
