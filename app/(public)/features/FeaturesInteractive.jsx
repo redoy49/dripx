@@ -94,7 +94,7 @@ export default function FeaturesInteractive() {
   const current = ARCHITECTURE_PILLARS.find((p) => p.id === selectedId) || ARCHITECTURE_PILLARS[0];
 
   return (
-    <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-20">
+    <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-20">
       {/* Interactive Pillar Switcher */}
       <div className="w-full">
         <div className="flex flex-wrap justify-center gap-2 mb-10">

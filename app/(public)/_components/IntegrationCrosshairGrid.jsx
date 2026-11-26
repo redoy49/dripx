@@ -67,7 +67,7 @@ export default function IntegrationCrosshairGrid() {
   const selectedItem = ECOSYSTEM_PARTNERS.find((p) => p.name === selectedName);
 
   return (
-    <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <p className="text-center text-base sm:text-lg font-medium text-slate-500 mb-8">
         Messaging channels and AI engines we <span className="font-semibold text-slate-900">connect</span> natively.
       </p>

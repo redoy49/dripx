@@ -58,7 +58,7 @@ export default function OutboundBeamSvg({ activeSource, activeCard }) {
           pathLength={100}
           vectorEffect="non-scaling-stroke"
           stroke={beam.color}
-          strokeWidth="1.4"
+          strokeWidth="1.2"
           strokeLinecap="round"
           filter="url(#dripx-beam-glow)"
           className="beam-pulse-path"
@@ -67,9 +67,9 @@ export default function OutboundBeamSvg({ activeSource, activeCard }) {
       ))}
 
       {/* Junction Nodes */}
-      <circle cx="356" cy="68" r="3.5" fill="#ffffff" stroke="#B8B8C6" strokeWidth="1.4" />
-      <circle cx="844" cy="68" r="3.5" fill="#ffffff" stroke="#B8B8C6" strokeWidth="1.4" />
-      <circle cx="600" cy="164" r="3.5" fill="#ffffff" stroke="#B8B8C6" strokeWidth="1.4" />
+      <circle cx="356" cy="68" r="3.5" fill="#ffffff" stroke="#B8B8C6" strokeWidth="1.2" />
+      <circle cx="844" cy="68" r="3.5" fill="#ffffff" stroke="#B8B8C6" strokeWidth="1.2" />
+      <circle cx="600" cy="164" r="3.5" fill="#ffffff" stroke="#B8B8C6" strokeWidth="1.2" />
     </svg>
   );
 }

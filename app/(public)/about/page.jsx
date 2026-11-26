@@ -46,7 +46,7 @@ export default function AboutPage() {
       />
 
       {/* Architectural Shift */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-16">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           <div className="rounded-2xl bg-rose-50/35 p-7 sm:p-8 shadow-ring-card">
             <h2 className="text-lg font-semibold text-slate-900">Legacy browser extensions</h2>
@@ -75,7 +75,7 @@ export default function AboutPage() {
       </section>
 
       {/* Core Engineering Principles */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="w-full">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900 text-center mb-10">
             Engineering principles
@@ -96,7 +96,7 @@ export default function AboutPage() {
       </section>
 
       {/* Security & Compliance Grid */}
-      <section id="security" className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <section id="security" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="w-full rounded-3xl bg-slate-50/80 p-8 sm:p-12 shadow-ring-card">
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900 text-center">
             Security and credential isolation
@@ -113,7 +113,7 @@ export default function AboutPage() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20">
         <div className="w-full rounded-3xl bg-[linear-gradient(180deg,#fffbeb_0%,#ffffff_100%)] p-8 sm:p-12 text-center shadow-ring-card">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-900">
             Ready to upgrade your outbound infrastructure?

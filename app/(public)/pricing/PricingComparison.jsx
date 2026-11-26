@@ -37,7 +37,7 @@ export default function PricingComparison() {
   const [openFaq, setOpenFaq] = useState(0);
 
   return (
-    <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 space-y-20 pb-20">
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 space-y-20 pb-20">
       {/* Feature Comparison Table */}
       <div className="w-full">
         <div className="text-center mb-10">

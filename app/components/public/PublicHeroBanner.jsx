@@ -39,7 +39,7 @@ export default function PublicHeroBanner({
         className={`pointer-events-none absolute -top-36 left-1/2 -translate-x-1/2 h-[420px] w-[780px] rounded-full bg-gradient-to-b ${glow} blur-3xl`}
       />
 
-      <div className="relative max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl sm:text-5xl lg:text-[3.35rem] font-semibold tracking-[-0.03em] text-slate-900 max-w-4xl mx-auto leading-[1.08]">
           {title}
         </h1>

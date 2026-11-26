@@ -50,7 +50,7 @@ export default function ContactPage() {
         description="Book a tailored walkthrough, consult on multi-mailbox deliverability, or scope custom agency capacity."
       />
 
-      <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-20">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 -mt-4 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-start">
           {/* Left Column */}
           <div className="lg:col-span-5 space-y-5">

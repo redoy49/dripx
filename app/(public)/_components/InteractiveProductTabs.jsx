@@ -77,7 +77,7 @@ export default function InteractiveProductTabs() {
   };
 
   return (
-    <section id="interactive-product" className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <section id="interactive-product" className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
       <div className="max-w-2xl mx-auto text-center mb-10">
         <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.025em] text-slate-900">
           One workspace from prospect list to booked call

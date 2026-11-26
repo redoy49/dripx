@@ -55,7 +55,7 @@ export default function CloudWorkflowSection() {
   };
 
   return (
-    <section className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="relative w-full overflow-hidden rounded-[28px] border border-[#EBEBF0] bg-[#F6F6F8] px-5 py-10 sm:px-9 sm:py-12 lg:px-14 lg:py-14 text-[#18181F] shadow-[0_18px_50px_-24px_rgba(15,23,42,0.12)]">
         <div
           aria-hidden="true"
