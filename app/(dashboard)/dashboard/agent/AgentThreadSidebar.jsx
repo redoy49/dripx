@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, MessageSquare, Trash2, Sparkles, Pencil, Check } from "lucide-react";
+import Image from "next/image";
+import { Plus, Trash2, Sparkles, Pencil, Check } from "lucide-react";
 
 export default function AgentThreadSidebar({
   threads,
@@ -35,7 +36,7 @@ export default function AgentThreadSidebar({
             onNewChat();
             onCloseMobile?.();
           }}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-400 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 px-3 shadow-xs transition active:scale-95 cursor-pointer"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-indigo-400 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 px-3 shadow-xs transition active:scale-95 cursor-pointer"
         >
           <Plus size={15} />
           <span>New Agent Chat</span>
@@ -60,7 +61,7 @@ export default function AgentThreadSidebar({
             return (
               <div
                 key={t.id}
-                className={`group flex items-center justify-between gap-1 rounded-xl px-2.5 py-2 text-xs transition ${
+                className={`group flex items-center justify-between gap-1 rounded-full px-2 py-2 text-xs transition ${
                   active
                     ? "bg-indigo-50 text-indigo-700 font-semibold"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -101,7 +102,15 @@ export default function AgentThreadSidebar({
                       }}
                       className="flex flex-1 items-center gap-2 min-w-0 text-left cursor-pointer"
                     >
-                      <MessageSquare size={13} className={active ? "text-indigo-500 shrink-0" : "text-gray-400 shrink-0"} />
+                      <Image
+                        src="/grokbot.svg"
+                        alt=""
+                        width={15}
+                        height={15}
+                        className={`h-[15px] w-[15px] shrink-0 object-contain transition-opacity ${
+                          active ? "opacity-90" : "opacity-55 group-hover:opacity-80"
+                        }`}
+                      />
                       <span className="truncate">{t.title}</span>
                     </button>
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition shrink-0">
