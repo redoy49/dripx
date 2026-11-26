@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Star } from "lucide-react";
 import PublicHeroBanner from "@/app/components/public/PublicHeroBanner";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { AvatarStack } from "@/components/ui/avatar-08";
+import HeroVideoPlayer from "./HeroVideoPlayer";
 
 const HERO_AVATARS = [
   {
@@ -100,15 +100,7 @@ export default function HomeHero() {
             </span>
           </div>
 
-          <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-900">
-            <Image
-              src="/hero-dashboard-preview.png"
-              alt="DripX Multi-Channel Sequence Engine"
-              fill
-              priority
-              className="object-cover object-top"
-            />
-          </div>
+          <HeroVideoPlayer />
         </div>
       </div>
     </PublicHeroBanner>
