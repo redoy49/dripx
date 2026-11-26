@@ -89,7 +89,7 @@ export default function AgentThreadSidebar({
                       aria-label="Save name"
                       className="p-1 rounded-lg text-indigo-600 hover:bg-indigo-100 cursor-pointer shrink-0"
                     >
-                      <Check size={12} />
+                      <Check size={13} />
                     </button>
                   </div>
                 ) : (
@@ -125,7 +125,7 @@ export default function AgentThreadSidebar({
                         aria-label="Rename session"
                         className="p-1 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-100/70 transition cursor-pointer"
                       >
-                        <Pencil size={12} />
+                        <Pencil size={13} />
                       </button>
                       <button
                         type="button"
@@ -137,7 +137,7 @@ export default function AgentThreadSidebar({
                         aria-label="Delete session"
                         className="p-1 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 transition cursor-pointer"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </>
