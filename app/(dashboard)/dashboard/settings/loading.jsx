@@ -183,6 +183,7 @@ export default function SettingsLoading() {
     "Integrations",
     "Working hours",
     "Sequence templates",
+    "AI Providers",
     "Data scrubber",
     "Lead tagging",
   ];

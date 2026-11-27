@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { KeyRound, ShieldCheck, RefreshCw, Trash2, CheckCircle2, AlertTriangle } from "lucide-react";
 import AiProviderAddForm from "./AiProviderAddForm";
+import { AiProvidersSkeleton } from "./_components/SettingsTabSkeletons";
 
 export default function AiProvidersTab() {
   const [connected, setConnected] = useState([]);
@@ -82,7 +83,7 @@ export default function AiProvidersTab() {
     }
   };
 
-  if (loading) return <div className="p-8 text-xs text-gray-400 animate-pulse">Loading AI provider configuration...</div>;
+  if (loading) return <AiProvidersSkeleton />;
   if (forbidden) {
     return (
       <div className="p-10 text-center text-sm text-gray-500">

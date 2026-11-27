@@ -291,9 +291,18 @@ export default function CampaignQueueTab({ campaignId, onTriggerDispatch, dispat
       {/* 3. Job Roster Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs overflow-hidden">
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-2 text-gray-400">
-            <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-            <span className="text-xs">Loading execution queue...</span>
+          <div className="divide-y divide-gray-100 animate-pulse p-4 space-y-1">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="grid grid-cols-4 items-center gap-4 py-3.5 px-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-full bg-gray-200/80 shrink-0" />
+                  <div className="h-3.5 w-28 rounded bg-gray-200/80" />
+                </div>
+                <div className="h-5 w-24 rounded-full bg-indigo-50" />
+                <div className="h-3 w-24 rounded bg-gray-100" />
+                <div className="h-6 w-16 rounded-full bg-gray-100 justify-self-end" />
+              </div>
+            ))}
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="py-20 text-center text-gray-400 text-xs">

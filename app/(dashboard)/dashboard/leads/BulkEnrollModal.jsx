@@ -102,9 +102,9 @@ export default function BulkEnrollModal({ isOpen, onClose, selectedLeadIds, onEn
               Select Target Campaign
             </label>
             {loading ? (
-              <div className="py-6 flex items-center justify-center gap-2 text-xs text-gray-400">
-                <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
-                <span>Loading campaigns...</span>
+              <div className="space-y-2 animate-pulse">
+                <div className="h-10 w-full rounded-xl bg-gray-100 border border-gray-200/60" />
+                <div className="h-3 w-40 rounded bg-gray-100" />
               </div>
             ) : campaigns.length === 0 ? (
               <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-100">

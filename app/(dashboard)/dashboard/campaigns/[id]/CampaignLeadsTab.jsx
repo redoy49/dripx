@@ -209,9 +209,22 @@ export default function CampaignLeadsTab({ campaignId }) {
 
       {/* Leads Table */}
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center text-xs text-gray-400 gap-2">
-          <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
-          <span>Loading campaign leads...</span>
+        <div className="divide-y divide-gray-100 animate-pulse p-4 space-y-1">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="grid grid-cols-5 items-center gap-4 py-3.5 px-2">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-full bg-gray-200/80 shrink-0" />
+                <div className="space-y-1">
+                  <div className="h-3.5 w-24 rounded bg-gray-200/80" />
+                  <div className="h-2.5 w-16 rounded bg-gray-100" />
+                </div>
+              </div>
+              <div className="h-3 w-28 rounded bg-gray-100" />
+              <div className="h-5 w-20 rounded-full bg-gray-100" />
+              <div className="h-5 w-16 rounded-full bg-emerald-50" />
+              <div className="h-3 w-16 rounded bg-gray-100 justify-self-end" />
+            </div>
+          ))}
         </div>
       ) : filteredLeads.length === 0 ? (
         <div className="py-20 text-center text-xs text-gray-400 space-y-1">

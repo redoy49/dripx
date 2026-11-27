@@ -12,7 +12,16 @@ const LeadSourceModal = dynamic(
 );
 const CampaignSettingsTab = dynamic(
   () => import("@/app/(dashboard)/dashboard/new-campaign/CampaignSettingsTab"),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-6 space-y-4 animate-pulse">
+        <div className="h-5 w-44 rounded bg-gray-200/80" />
+        <div className="h-28 w-full rounded-2xl bg-gray-100" />
+        <div className="h-28 w-full rounded-2xl bg-gray-100" />
+      </div>
+    ),
+  }
 );
 
 const SequenceBuilder = dynamic(
@@ -321,7 +330,7 @@ function NewCampaignInner() {
 
 export default function NewCampaignPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<NewCampaignLoading />}>
       <NewCampaignInner />
     </Suspense>
   );

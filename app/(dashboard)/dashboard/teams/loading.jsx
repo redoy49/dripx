@@ -2,10 +2,11 @@ export function MembersTableSkeleton() {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200/90 shadow-2xs animate-pulse">
       {/* Table Header */}
-      <div className="grid grid-cols-[2fr_1fr_1fr_auto] bg-gray-50/70 px-5 py-3 text-xs font-bold text-gray-500">
+      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] bg-gray-50/70 px-5 py-3 text-xs font-bold text-gray-500">
         <div className="h-3.5 w-16 bg-gray-200/80 rounded" />
         <div className="h-3.5 w-12 bg-gray-200/80 rounded" />
         <div className="h-3.5 w-14 bg-gray-200/80 rounded" />
+        <div className="h-3.5 w-16 bg-gray-200/80 rounded" />
         <div className="h-3.5 w-14 bg-gray-200/80 rounded justify-self-end" />
       </div>
 
@@ -14,7 +15,7 @@ export function MembersTableSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="grid grid-cols-[2fr_1fr_1fr_auto] items-center px-5 py-4 gap-4"
+            className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center px-5 py-4 gap-4"
           >
             {/* Member info */}
             <div className="flex items-center gap-3">
@@ -33,6 +34,11 @@ export function MembersTableSkeleton() {
             {/* Status badge */}
             <div>
               <div className="h-5 w-16 bg-emerald-100 rounded-full" />
+            </div>
+
+            {/* AI Agent toggle */}
+            <div>
+              <div className="h-6 w-11 bg-gray-100 rounded-full" />
             </div>
 
             {/* Actions */}
@@ -108,21 +114,14 @@ export function TeamsProfileSkeleton() {
           </div>
         </div>
 
-        {/* Activity rows preview */}
-        <div className="space-y-3 pt-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-[#FAFAFC]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-200/80" />
-                <div className="space-y-1">
-                  <div className="h-3.5 w-32 bg-gray-200/80 rounded" />
-                  <div className="h-2.5 w-24 bg-gray-200/50 rounded" />
-                </div>
-              </div>
-              <div className="h-3 w-20 bg-gray-200/60 rounded" />
+        {/* Outreach Activity Bar Chart Skeleton */}
+        <div className="pt-4 flex items-end justify-between gap-4 h-[260px] border-b border-gray-100 pb-2 px-4">
+          {[45, 70, 35, 85, 55, 75, 50].map((h, i) => (
+            <div key={i} className="flex-1 flex items-end justify-center gap-1 h-full">
+              <div style={{ height: `${h}%` }} className="w-2.5 bg-indigo-200/70 rounded-full" />
+              <div style={{ height: `${Math.max(20, h - 18)}%` }} className="w-2.5 bg-violet-200/70 rounded-full" />
+              <div style={{ height: `${Math.max(15, h - 30)}%` }} className="w-2.5 bg-sky-200/70 rounded-full" />
+              <div style={{ height: `${Math.max(25, h - 10)}%` }} className="w-2.5 bg-emerald-200/70 rounded-full" />
             </div>
           ))}
         </div>

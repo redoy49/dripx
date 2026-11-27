@@ -3,12 +3,12 @@ export default function AgentLoading() {
     <div className="flex h-full w-full overflow-hidden bg-[#FAFAFC] animate-pulse">
       {/* Left History Drawer Skeleton */}
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-gray-200/80 bg-white p-4 gap-3">
-        <div className="h-9 w-full rounded-xl bg-gray-100" />
-        <div className="h-3 w-24 rounded bg-gray-100 mt-2" />
+        <div className="h-9 w-full rounded-full bg-indigo-200/70" />
+        <div className="h-3 w-24 rounded bg-gray-100 mt-2 ml-2" />
         <div className="space-y-2">
-          <div className="h-8 w-full rounded-xl bg-gray-100" />
-          <div className="h-8 w-5/6 rounded-xl bg-gray-100" />
-          <div className="h-8 w-4/5 rounded-xl bg-gray-100" />
+          <div className="h-8 w-full rounded-full bg-gray-100" />
+          <div className="h-8 w-5/6 rounded-full bg-gray-100" />
+          <div className="h-8 w-4/5 rounded-full bg-gray-100" />
         </div>
       </aside>
 

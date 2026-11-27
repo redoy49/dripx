@@ -11,6 +11,11 @@ import {
   SettingsLimitsSkeleton,
   WorkingHoursSkeleton,
 } from "./loading";
+import {
+  AiProvidersSkeleton,
+  IntegrationsSkeleton,
+  SequenceTemplatesSkeleton,
+} from "./_components/SettingsTabSkeletons";
 import SettingsLimitsPanel from "./_components/SettingsSliders";
 
 const EmailAccountsTab = dynamic(
@@ -19,7 +24,7 @@ const EmailAccountsTab = dynamic(
 );
 const IntegrationsTab = dynamic(
   () => import("@/app/(dashboard)/dashboard/settings/IntegrationsTab"),
-  { ssr: false },
+  { ssr: false, loading: () => <IntegrationsSkeleton /> },
 );
 const WorkingHoursTab = dynamic(
   () => import("@/app/(dashboard)/dashboard/settings/WorkingHoursTab"),
@@ -27,11 +32,11 @@ const WorkingHoursTab = dynamic(
 );
 const SequenceTemplatesTab = dynamic(
   () => import("@/app/(dashboard)/dashboard/settings/SequenceTemplatesTab"),
-  { ssr: false },
+  { ssr: false, loading: () => <SequenceTemplatesSkeleton /> },
 );
 const AiProvidersTab = dynamic(
   () => import("@/app/(dashboard)/dashboard/settings/AiProvidersTab"),
-  { ssr: false },
+  { ssr: false, loading: () => <AiProvidersSkeleton /> },
 );
 
 const TABS = [

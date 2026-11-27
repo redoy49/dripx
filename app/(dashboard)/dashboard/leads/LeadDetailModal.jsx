@@ -59,7 +59,30 @@ export default function LeadDetailModal({ leadId, onClose, onChanged }) {
 
         <div className="p-6">
           {loading || !lead ? (
-            <p className="py-10 text-center text-sm text-gray-400">Loading...</p>
+            <div className="space-y-5 animate-pulse">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-full bg-gray-200/80 shrink-0" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-40 rounded bg-gray-200/80" />
+                    <div className="h-3 w-52 rounded bg-gray-100" />
+                  </div>
+                </div>
+                <div className="h-8 w-20 rounded-full bg-gray-100" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="rounded-xl border border-gray-100 bg-gray-50/60 p-3 space-y-1.5">
+                    <div className="h-2.5 w-16 rounded bg-gray-200/70" />
+                    <div className="h-3.5 w-28 rounded bg-gray-200/80" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-2 pt-2">
+                <div className="h-3 w-32 rounded bg-gray-200/70" />
+                <div className="h-12 w-full rounded-xl bg-gray-100" />
+              </div>
+            </div>
           ) : (
             <>
               <div className="mb-5 flex items-center justify-between gap-4">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { SequenceTemplatesSkeleton } from "./_components/SettingsTabSkeletons";
 import {
   Layers,
   Sparkles,
@@ -160,12 +161,7 @@ export default function SequenceTemplatesTab() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
-        <span className="text-xs font-medium text-gray-400">Loading playbooks & templates...</span>
-      </div>
-    );
+    return <SequenceTemplatesSkeleton />;
   }
 
   return (
