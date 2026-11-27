@@ -109,6 +109,7 @@ export default function DashboardShell({
     else if (href === "/dashboard/leads") prefetchData("/api/leads?page=1&limit=25");
     else if (href === "/dashboard/inbox") prefetchData("/api/conversations?filter=all");
     else if (href === "/dashboard/teams") prefetchData("/api/team/profile?range=7");
+    else if (href === "/dashboard/settings") prefetchData("/api/settings/limits");
     else if (href === "/dashboard/agent") prefetchData("/api/agent/threads");
   };
 
