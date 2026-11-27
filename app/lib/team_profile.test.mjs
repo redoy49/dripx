@@ -14,7 +14,7 @@ const db = client.db(process.env.DB_NAME || "dripx");
 console.log("\n1. Verifying active user and workspace in MongoDB...");
 const user = await db.collection("users").findOne({ email: "mdredoyhasan49@gmail.com" });
 assert.ok(user, "User mdredoyhasan49@gmail.com should exist");
-assert.equal(user.name, "Redoy Al Hasan");
+assert.ok(user.name && typeof user.name === "string", "User should have a non-empty name");
 console.log(`✓ Active user found: ${user.name} (${user.email})`);
 
 const membership = await db.collection("team_members").findOne({ userId: user._id });

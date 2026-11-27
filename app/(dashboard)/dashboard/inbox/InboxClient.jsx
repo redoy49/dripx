@@ -37,22 +37,29 @@ function formatMessageTime(dateString) {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-export default function InboxClient() {
+export default function InboxClient({ initialConversations = null }) {
   const [tab, setTab] = useState("all");
   const [channel, setChannel] = useState("all");
   const [search, setSearch] = useState("");
   const [conversations, setConversations] = useState(() => {
+    if (initialConversations) return initialConversations;
     const cached = getCached("/api/conversations?filter=all");
     return cached?.items || [];
   });
   const [activeId, setActiveId] = useState(null);
   const [activeConversationData, setActiveConversationData] = useState(null);
   const [loading, setLoading] = useState(() => {
-    return !getCached("/api/conversations?filter=all");
+    return !initialConversations && !getCached("/api/conversations?filter=all");
   });
   const [refreshing, setRefreshing] = useState(false);
   const isSyncingRef = useRef(false);
   const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    if (initialConversations) {
+      setCached("/api/conversations?filter=all", { items: initialConversations });
+    }
+  }, [initialConversations]);
 
   useEffect(() => {
     isMountedRef.current = true;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
@@ -15,19 +15,28 @@ function createHexObjectId() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export default function AgentWorkspaceClient() {
+export default function AgentWorkspaceClient({ initialAgentData = null }) {
   const [threadId, setThreadId] = useState(() => createHexObjectId());
-  const [threads, setThreads] = useState([]);
-  const [hasAccess, setHasAccess] = useState(true);
-  const [availableModels, setAvailableModels] = useState([]);
+  const [threads, setThreads] = useState(() => initialAgentData?.threads || []);
+  const [hasAccess, setHasAccess] = useState(() =>
+    initialAgentData ? Boolean(initialAgentData.hasAccess) : true,
+  );
+  const [availableModels, setAvailableModels] = useState(
+    () => initialAgentData?.availableModels || [],
+  );
   const [mobileSidebar, setMobileSidebar] = useState(false);
 
   const [input, setInput] = useState("");
   const [mode, setMode] = useState("build");
-  const [modelId, setModelId] = useState("");
-  const [sourceProviderId, setSourceProviderId] = useState("");
+  const [modelId, setModelId] = useState(
+    () => initialAgentData?.availableModels?.[0]?.id || "",
+  );
+  const [sourceProviderId, setSourceProviderId] = useState(
+    () => initialAgentData?.availableModels?.[0]?.sourceProviderId || "",
+  );
   const [reasoningEffort, setReasoningEffort] = useState("high");
   const [contextRefs, setContextRefs] = useState([]);
+  const skipInitialFetchRef = useRef(Boolean(initialAgentData));
 
   const refreshThreads = useCallback(async () => {
     try {
@@ -51,6 +60,10 @@ export default function AgentWorkspaceClient() {
   }, []);
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      return;
+    }
     queueMicrotask(() => {
       refreshThreads();
     });

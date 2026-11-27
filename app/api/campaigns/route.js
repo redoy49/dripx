@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { dbConnect } from "@/app/lib/mongoDb";
 import { requireAuth } from "@/app/lib/session";
+import { getWorkspaceCampaigns } from "@/app/lib/campaignsLoader";
 
 export async function serializeCampaign(campaign, campaignLeadsCollection) {
   const [leadCount, pendingCount, inProgressCount, completedCount, repliedCount] = await Promise.all([
@@ -37,15 +38,7 @@ export async function GET() {
     const { session, unauthorized } = await requireAuth();
     if (unauthorized) return unauthorized;
 
-    const campaigns = await dbConnect("campaigns");
-    const campaignLeads = await dbConnect("campaign_leads");
-
-    const docs = await campaigns
-      .find({ workspaceId: new ObjectId(session.workspaceId) })
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    const items = await Promise.all(docs.map((doc) => serializeCampaign(doc, campaignLeads)));
+    const items = await getWorkspaceCampaigns(session.workspaceId);
 
     return Response.json({ items });
   } catch (error) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -20,11 +21,12 @@ import {
   Flame,
   Info,
 } from "lucide-react";
-import ConnectEmailModal from "./ConnectEmailModal";
-import DnsDiagnosticsModal from "./DnsDiagnosticsModal";
-import RampUpSettingsModal from "./RampUpSettingsModal";
-import TestEmailModal from "./TestEmailModal";
 import { EmailAccountsSkeleton } from "./loading";
+
+const ConnectEmailModal = dynamic(() => import("./ConnectEmailModal"), { ssr: false });
+const DnsDiagnosticsModal = dynamic(() => import("./DnsDiagnosticsModal"), { ssr: false });
+const RampUpSettingsModal = dynamic(() => import("./RampUpSettingsModal"), { ssr: false });
+const TestEmailModal = dynamic(() => import("./TestEmailModal"), { ssr: false });
 
 const PROVIDER_INFO = {
   google: {
@@ -545,14 +547,16 @@ export default function EmailAccountsTab() {
       </div>
 
       {/* Connect Email Modal */}
-      <ConnectEmailModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onConnected={() => {
-          loadData();
-          setToast({ type: "success", message: "Account connected successfully!" });
-        }}
-      />
+      {modalOpen && (
+        <ConnectEmailModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onConnected={() => {
+            loadData();
+            setToast({ type: "success", message: "Account connected successfully!" });
+          }}
+        />
+      )}
 
       {/* DNS Diagnostics Modal */}
       {dnsModalAccount && (

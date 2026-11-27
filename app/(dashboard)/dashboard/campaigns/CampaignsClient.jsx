@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useOptimistic, useTransition } from "react";
+import { useEffect, useState, useCallback, useOptimistic, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { getCached, setCached } from "@/app/lib/swrCache";
 import BellIcon from "@/app/components/ui/BellIcon";
@@ -51,19 +51,27 @@ function campaignProgress(breakdown, leadCount) {
   return segments.length ? segments : [{ color: "bg-gray-200", value: 100 }];
 }
 
-export default function CampaignsClient() {
+export default function CampaignsClient({ initialCampaigns = null }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
   const [campaignList, setCampaignList] = useState(() => {
+    if (initialCampaigns) return initialCampaigns;
     const cached = getCached("/api/campaigns");
     return cached?.items || [];
   });
   const [loading, setLoading] = useState(() => {
-    return !getCached("/api/campaigns");
+    return !initialCampaigns && !getCached("/api/campaigns");
   });
   const [creating, setCreating] = useState(false);
   const [, startTransition] = useTransition();
+  const skipInitialLoadRef = useRef(Boolean(initialCampaigns));
+
+  useEffect(() => {
+    if (initialCampaigns) {
+      setCached("/api/campaigns", { items: initialCampaigns });
+    }
+  }, [initialCampaigns]);
 
   const [optimisticCampaigns, setOptimisticCampaigns] = useOptimistic(
     campaignList,
@@ -98,6 +106,10 @@ export default function CampaignsClient() {
   }, []);
 
   useEffect(() => {
+    if (skipInitialLoadRef.current) {
+      skipInitialLoadRef.current = false;
+      return;
+    }
     load();
   }, [load]);
 

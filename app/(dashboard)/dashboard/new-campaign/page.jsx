@@ -4,9 +4,16 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Users, Settings, FileText, Plus, Trash2 } from "lucide-react";
-import LeadSourceModal from "@/app/(dashboard)/dashboard/new-campaign/LeadSourceModal";
-import CampaignSettingsTab from "@/app/(dashboard)/dashboard/new-campaign/CampaignSettingsTab";
 import NewCampaignLoading, { FlowCanvasSkeleton } from "./loading";
+
+const LeadSourceModal = dynamic(
+  () => import("@/app/(dashboard)/dashboard/new-campaign/LeadSourceModal"),
+  { ssr: false }
+);
+const CampaignSettingsTab = dynamic(
+  () => import("@/app/(dashboard)/dashboard/new-campaign/CampaignSettingsTab"),
+  { ssr: false }
+);
 
 const SequenceBuilder = dynamic(
   () => import("@/app/(dashboard)/dashboard/new-campaign/SequenceBuilder"),
@@ -300,12 +307,14 @@ function NewCampaignInner() {
         )}
       </div>
 
-      <LeadSourceModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        campaignId={campaignId}
-        onImported={handleImported}
-      />
+      {openModal && (
+        <LeadSourceModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          campaignId={campaignId}
+          onImported={handleImported}
+        />
+      )}
     </>
   );
 }
