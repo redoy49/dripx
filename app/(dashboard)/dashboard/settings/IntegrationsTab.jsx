@@ -108,7 +108,16 @@ function WebhooksCard() {
         <div className="border-t border-gray-100 pt-4">
           <p className="mb-2 text-xs font-semibold text-gray-700">Outbound Webhooks</p>
 
-          {!loading &&
+          {loading ? (
+            <div className="mb-3 space-y-2 animate-pulse">
+              <div className="h-10 rounded-xl bg-gray-100" />
+              <div className="flex flex-wrap gap-1.5">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-6 w-20 rounded-full bg-gray-100" />
+                ))}
+              </div>
+            </div>
+          ) : (
             webhooks.map((w) => (
               <div key={w.id} className="mb-2 flex items-center justify-between rounded-xl border border-gray-200/90 bg-gray-50/50 px-3.5 py-2 shadow-2xs">
                 <div className="min-w-0">
@@ -122,7 +131,8 @@ function WebhooksCard() {
                   <Trash2 size={14} />
                 </button>
               </div>
-            ))}
+            ))
+          )}
 
           <div className="mt-3 space-y-2.5">
             <input
