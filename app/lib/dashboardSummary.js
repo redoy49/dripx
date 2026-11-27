@@ -95,35 +95,29 @@ export const getDashboardSummary = cache(async ({ userId, workspaceId, range = "
   const memberUserIds = teamDocs.map((t) => t.userId).filter(Boolean);
   if (me?._id) memberUserIds.push(me._id);
 
+  const facetStages = {
+    enrolledDistinct: [{ $group: { _id: "$leadId" } }, { $count: "count" }],
+    byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+    byCampaign: [
+      { $match: { campaignId: { $in: topCampaignIds } } },
+      {
+        $group: {
+          _id: "$campaignId",
+          total: { $sum: 1 },
+          inProgress: { $sum: { $cond: [{ $eq: ["$status", "in_progress"] }, 1, 0] } },
+          replied: { $sum: { $cond: [{ $eq: ["$status", "replied"] }, 1, 0] } },
+        },
+      },
+    ],
+  };
+  if (recentLogs.length === 0) {
+    facetStages.recentEnrollments = [{ $sort: { enrolledAt: -1, _id: -1 } }, { $limit: 6 }];
+  }
+
   // Batch 2: Scoped campaign_leads $facet + message counts + velocity chart + users in 1 RTT
   const [campaignLeadFacet, messageCountsAgg, velocityChart, teamUsers] = await Promise.all([
     workspaceCampaignIds.length > 0
-      ? campaignLeads
-          .aggregate([
-            { $match: { campaignId: { $in: workspaceCampaignIds } } },
-            {
-              $facet: {
-                enrolledDistinct: [{ $group: { _id: "$leadId" } }, { $count: "count" }],
-                byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
-                byCampaign: [
-                  { $match: { campaignId: { $in: topCampaignIds } } },
-                  {
-                    $group: {
-                      _id: "$campaignId",
-                      total: { $sum: 1 },
-                      inProgress: { $sum: { $cond: [{ $eq: ["$status", "in_progress"] }, 1, 0] } },
-                      replied: { $sum: { $cond: [{ $eq: ["$status", "replied"] }, 1, 0] } },
-                    },
-                  },
-                ],
-                recentEnrollments:
-                  recentLogs.length === 0
-                    ? [{ $sort: { enrolledAt: -1, _id: -1 } }, { $limit: 6 }]
-                    : [{ $limit: 0 }],
-              },
-            },
-          ])
-          .toArray()
+      ? campaignLeads.aggregate([{ $match: { campaignId: { $in: workspaceCampaignIds } } }, { $facet: facetStages }]).toArray()
       : Promise.resolve([]),
     convoIds.length > 0
       ? messages
