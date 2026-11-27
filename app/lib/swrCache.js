@@ -1,15 +1,25 @@
 /**
  * Lightweight, zero-dependency in-memory client-side cache and prefetching engine.
  * Implements the Stale-While-Revalidate (SWR) pattern to achieve instantaneous (<10ms)
- * tab transitions without full-page loading spinners.
+ * tab transitions without full-page loading spinners, scoped safely per workspace/user.
  */
 
 const memoryCache = new Map();
 const inFlightRequests = new Map();
+let activeScope = null;
 
 const DEFAULT_TTL_MS = 60 * 1000; // 60 seconds fresh window
 
 const isClient = typeof window !== "undefined" || process.env.NODE_ENV === "test";
+
+export function setCacheScope(scope) {
+  if (!isClient) return;
+  if (scope && activeScope && activeScope !== scope) {
+    memoryCache.clear();
+    inFlightRequests.clear();
+  }
+  activeScope = scope || null;
+}
 
 export function getCached(key) {
   if (!isClient) return null;
@@ -37,6 +47,8 @@ export function clearCache(prefix = null) {
   if (!isClient) return;
   if (!prefix) {
     memoryCache.clear();
+    inFlightRequests.clear();
+    activeScope = null;
     return;
   }
   for (const key of memoryCache.keys()) {

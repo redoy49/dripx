@@ -175,13 +175,11 @@ export async function GET(req) {
     return Response.json({
       user: {
         id: user._id.toString(),
-        name: user.name || "Redoy Al Hasan",
-        email: user.email || "mdredoyhasan49@gmail.com",
-        avatarUrl:
-          user.avatarUrl ||
-          "https://lh3.googleusercontent.com/a/ACg8ocIu5efqnnF2BwfGfEdCH5P-uuTyrrlV2bMuJhHpUs5SSFne_zwl=s96-c",
-        linkedinUrl: user.linkedinUrl || "https://www.linkedin.com/in/redoyalhasan",
-        headline: user.headline || "Growth Lead & Founder",
+        name: user.name || user.email?.split("@")[0] || "Account",
+        email: user.email || "",
+        avatarUrl: user.avatarUrl || user.image || null,
+        linkedinUrl: user.linkedinUrl || "",
+        headline: user.headline || "Team Member",
         connectionsCount,
       },
       stats: [

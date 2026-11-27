@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { clearCache } from "@/app/lib/swrCache";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,8 +42,8 @@ export default function LoginPage() {
         return;
       }
 
+      clearCache();
       router.push("/dashboard");
-      router.refresh();
     } catch {
       alert("Something went wrong. Please try again.");
     } finally {

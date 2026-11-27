@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { clearCache } from "@/app/lib/swrCache";
 
 function RegisterForm() {
   const router = useRouter();
@@ -43,8 +44,8 @@ function RegisterForm() {
         return;
       }
 
+      clearCache();
       router.push("/dashboard");
-      router.refresh();
     } catch {
       alert("Something went wrong. Please try again.");
     } finally {

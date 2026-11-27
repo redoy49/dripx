@@ -65,11 +65,21 @@ async function ensureIndexesOnce(db) {
     await Promise.allSettled([
       db.collection("leads").createIndex({ workspaceId: 1, createdAt: -1 }),
       db.collection("leads").createIndex({ workspaceId: 1, status: 1 }),
+      db.collection("campaigns").createIndex({ workspaceId: 1, status: 1, createdAt: -1 }),
       db.collection("campaign_leads").createIndex({ workspaceId: 1, campaignId: 1, status: 1 }),
+      db.collection("campaign_leads").createIndex({ campaignId: 1, status: 1 }),
+      db.collection("campaign_leads").createIndex({ campaignId: 1, enrolledAt: -1 }),
       db.collection("campaign_leads").createIndex({ leadId: 1 }),
       db.collection("activity_logs").createIndex({ workspaceId: 1, actionType: 1, occurredAt: -1 }),
+      db.collection("activity_logs").createIndex({ workspaceId: 1, occurredAt: -1 }),
       db.collection("conversations").createIndex({ workspaceId: 1, updatedAt: -1 }),
+      db.collection("conversations").createIndex({ workspaceId: 1, unreadCount: 1, status: 1 }),
       db.collection("messages").createIndex({ conversationId: 1, createdAt: 1 }),
+      db.collection("messages").createIndex({ conversationId: 1, direction: 1, sentAt: -1 }),
+      db.collection("email_accounts").createIndex({ workspaceId: 1, status: 1 }),
+      db.collection("jobs").createIndex({ workspaceId: 1, status: 1 }),
+      db.collection("team_members").createIndex({ userId: 1, status: 1 }),
+      db.collection("team_members").createIndex({ workspaceId: 1, joinedAt: 1 }),
     ]);
   } catch (err) {
     console.warn("Index setup warning (non-fatal):", err.message);

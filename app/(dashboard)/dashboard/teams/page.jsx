@@ -267,20 +267,31 @@ export default function TeamsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* Left */}
             <div className="flex items-center gap-4">
-              <img
-                alt="avatar"
-                className="w-14 h-14 rounded-full object-cover border border-gray-200/90 shadow-2xs"
-                src={
-                  profile?.user?.avatarUrl ||
-                  me?.user?.avatarUrl ||
-                  "https://lh3.googleusercontent.com/a/ACg8ocIu5efqnnF2BwfGfEdCH5P-uuTyrrlV2bMuJhHpUs5SSFne_zwl=s96-c"
-                }
-              />
+              {profile?.user?.avatarUrl || me?.user?.avatarUrl ? (
+                <img
+                  alt={profile?.user?.name || me?.user?.name || "Profile"}
+                  className="w-14 h-14 rounded-full object-cover border border-gray-200/90 shadow-2xs"
+                  src={profile?.user?.avatarUrl || me?.user?.avatarUrl}
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 flex items-center justify-center text-white font-bold text-lg border border-gray-200/90 shadow-2xs">
+                  {(profile?.user?.name || me?.user?.name || me?.user?.email || "U")
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((p) => p[0])
+                    .join("")
+                    .toUpperCase()}
+                </div>
+              )}
 
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                    {profile?.user?.name || me?.user?.name || "Redoy Al Hasan"}
+                    {profile?.user?.name ||
+                      me?.user?.name ||
+                      me?.user?.email?.split("@")[0] ||
+                      "Account"}
                   </h2>
 
                   <button
