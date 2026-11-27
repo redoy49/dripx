@@ -13,16 +13,17 @@
 
 ---
 
-## ⚡ Next.js 16.4 & React 19 Performance Architecture
+## ⚡ Next.js 16.2 & React 19 Performance Architecture
 
-DripX is built from the ground up on Next.js 16 and React 19, incorporating the instant-navigation design patterns pioneered by Vercel v0:
+DripX is built on Next.js 16 (`Turbopack`) and React 19 with end-to-end streaming, parallelized MongoDB aggregations, and aggressive code splitting:
 
-* **0ms Optimistic UI Mutations:** Powered by React 19 `useOptimistic` and Next.js Server Actions (`app/actions/`). Sending inbox replies or toggling campaign statuses updates the UI in **0ms** without waiting for network round-trips.
-* **Server Component Streaming:** Route pages (`/dashboard`, `/dashboard/campaigns`, `/dashboard/inbox`) render as lightweight Server Component Shells with `<Suspense>`. The static layout renders in <20ms while database data streams over HTTP chunked transfer encoding.
-* **Sub-50ms Instant Navigation:** Next.js 16 client router cache with `staleTimes` (`dynamic: 30s`, `static: 180s`) paired with `optimisticClientCache: true` and intent-based `<Link prefetch={true}>`.
-* **Zero Layout Shift (CLS = 0) Skeleton UI:** Handcrafted, theme-matched shimmer loading states across all 8 dashboard routes (`loading.jsx` + reusable `app/components/ui/Skeleton.jsx`).
-* **Bundle Splitting & Lazy Flow Canvas:** Drag-and-drop canvas engine (`@xyflow/react`) is dynamically imported via `next/dynamic` with `ssr: false`, trimming **~350 KB** off the initial bundle.
-* **Zero-CLS Typography:** Self-hosted Google Fonts (`Outfit` and `Playfair_Display`) via `next/font/google` eliminate external render-blocking stylesheets.
+* **Full Server Component Streaming (`<Suspense>`):** `app/(dashboard)/layout.jsx` and all core dashboard routes (`/dashboard`, `/dashboard/campaigns`, `/dashboard/inbox`, `/dashboard/leads`, `/dashboard/teams`, `/dashboard/settings`, `/dashboard/agent`) render as async Server Components wrapped in `<Suspense>`, streaming skeleton shells immediately while server data hydrates without client fetch waterfalls.
+* **Request-Memoized Auth & Zero-Flash Profile:** `app/lib/serverSession.js` (`React.cache`) loads the authenticated user, workspace, role, and unread count in one parallel DB round-trip so the sidebar renders the real user name and avatar (or initials badge) on SSR byte #1.
+* **Batched MongoDB Aggregations & Compound Indexes:** `app/lib/dashboardSummary.js`, `app/lib/dashboardVelocity.js`, and `app/lib/campaignsLoader.js` replace sequential/N+1 queries with workspace-scoped `$facet` / `$group` pipelines backed by compound indexes in `app/lib/mongoDb.js`.
+* **0ms Optimistic UI Mutations:** Powered by React 19 `useOptimistic` and Next.js Server Actions (`app/actions/`) for instant inbox replies and campaign status toggles.
+* **Account-Scoped SWR Cache & Hover Prefetch:** `app/lib/swrCache.js` (`setCacheScope`) pairs with Next.js 16 `staleTimes` (`dynamic: 30s`, `static: 180s`), `optimisticClientCache: true`, and sidebar hover prefetching for `<10ms` tab transitions.
+* **Heavy Modal & Tab Code Splitting:** `next/dynamic(..., { ssr: false })` lazy-loads `@xyflow/react` (`SequenceBuilder`), `LeadSourceModal`, `LeadDetailModal`, `BulkEnrollModal`, `BulkTagModal`, `FeatureRequestModal`, `MembersTab`, `EditProfileModal`, and Settings sub-tabs/modals on demand.
+* **Zero-CLS Skeletons & Typography:** Shimmer loading states (`loading.jsx`) across dashboard routes paired with self-hosted `Outfit` and `Playfair_Display` via `next/font/google`.
 
 ---
 
@@ -78,9 +79,9 @@ An embedded hybrid AI Agent + Outreach Copilot accessible from the sidebar:
 | **Framework** | Next.js 16.2.4 (Turbopack, App Router, Server Actions) |
 | **Frontend** | React 19.2.4 (`useOptimistic`, `useTransition`, `use`), Tailwind CSS 4, Lucide Icons |
 | **Visual Flow Engine** | `@xyflow/react` (React Flow) dynamically code-split |
-| **AI Agent Runtime** | Vercel AI SDK (`ai` v6, `@ai-sdk/react`, `ToolLoopAgent`) with Multi-Provider BYOK |
+| **AI Agent Runtime** | Vercel AI SDK (`ai` v7, `@ai-sdk/react`, `ToolLoopAgent`) with Multi-Provider BYOK |
 | **Database** | MongoDB Atlas (official Node.js MongoDB driver v7) |
-| **Authentication** | JWT Sessions + Google OAuth 2.0 |
+| **Authentication** | JWT Sessions (`proxy.js`) + Google OAuth 2.0 |
 | **Email Transport** | Google Workspace / Gmail API (OAuth 2.0), SMTP, Resend, Mock |
 | **LinkedIn Gateway** | Unipile Cloud API Connector |
 | **Deployment** | Vercel (Hobby Tier) + `cron-job.org` (24/7 background queue runner) |
@@ -92,34 +93,30 @@ An embedded hybrid AI Agent + Outreach Copilot accessible from the sidebar:
 ```text
 dripx/
 ├── app/
+│   ├── (public)/              # Marketing pages (/, /features, /pricing, /about, /contact)
 │   ├── (auth)/                # Clean centered login & register pages
-│   ├── (dashboard)/           # Protected dashboard layout & navigation
-│   │   ├── dashboard/
-│   │   │   ├── page.jsx       # Server Component Shell (Overview)
-│   │   │   ├── DashboardClient.jsx # Interactive dashboard client leaf
-│   │   │   ├── campaigns/     # Campaign management & performance
-│   │   │   │   ├── page.jsx   # Server Component Shell (Campaigns)
-│   │   │   │   ├── CampaignsClient.jsx # Optimistic status switches
-│   │   │   │   └── [id]/      # Campaign Command Center & live queue
-│   │   │   ├── inbox/         # Unified cross-channel inbox
-│   │   │   │   ├── page.jsx   # Server Component Shell (Inbox)
-│   │   │   │   ├── InboxClient.jsx # Fast conversation switching
-│   │   │   │   └── ConversationThread.jsx # 0ms optimistic message sending
-│   │   │   ├── leads/         # Lead lists, tags & CSV imports
-│   │   │   ├── new-campaign/  # Sequence builder & dynamic React Flow
-│   │   │   ├── settings/      # Sending limits, ramp-up, schedules & AI Providers
-│   │   │   ├── teams/         # Team members, roles & AI Agent permissions
-│   │   │   └── agent/         # Multi-Model AI Agent workspace & session history
-│   ├── actions/               # Next.js Server Actions
-│   │   ├── campaignActions.js # Optimistic campaign pause/play & deletion
-│   │   └── inboxActions.js    # Outbound email/LinkedIn reply dispatch
+│   ├── (dashboard)/           # Protected dashboard shell & routes
+│   │   ├── layout.jsx         # Async Server Component auth + unread count loader
+│   │   ├── layout/            # DashboardShell, SidebarNav, SidebarProfileMenu, SidebarTrialCard
+│   │   └── dashboard/
+│   │       ├── page.jsx       # Server Component Shell (Overview)
+│   │       ├── DashboardClient.jsx & _components/ # Modular overview cards & charts
+│   │       ├── campaigns/     # Server-streamed campaigns list & [id] command center
+│   │       ├── inbox/         # Server-streamed unified cross-channel inbox
+│   │       ├── leads/         # Server-streamed leads table + lazy-loaded modals
+│   │       ├── new-campaign/  # Sequence builder & lazy-loaded React Flow / modals
+│   │       ├── settings/      # Server-streamed limits + lazy-loaded tabs & modals
+│   │       ├── teams/         # Server-streamed team profile, activity chart & MembersTab
+│   │       └── agent/         # Multi-Model AI Agent workspace & session history
+│   ├── actions/               # Next.js Server Actions (campaignActions, inboxActions)
 │   ├── api/                   # REST API route handlers (campaigns, inbox, agent, cron)
-│   ├── components/            # Reusable UI primitives
-│   │   └── ui/Skeleton.jsx    # Zero-CLS shimmer loading primitives
-│   └── lib/                   # Core engines (jobProcessor, sequenceEngine, email, ai/)
+│   ├── components/            # Reusable UI primitives & Skeletons
+│   └── lib/                   # Server loaders (serverSession, dashboardSummary, leadsLoader,
+│                              # campaignsLoader, conversationsLoader, teamProfile), swrCache,
+│                              # jobProcessor, sequenceEngine, email/, ai/
 ├── instrumentation.js         # Next.js startup hook for local scheduler
 ├── next.config.mjs            # Next 16 router caching & staleTimes config
-└── PROJECT_CONTEXT.md         # Architecture overview & developer notes
+└── proxy.js                   # JWT session protection for /dashboard & auth routes
 ```
 
 ---
@@ -215,6 +212,15 @@ That's it. Your cold email and LinkedIn sequences will run around the clock with
 Ensure zero regressions before opening PRs:
 
 ```bash
+# Run SWR cache & non-blocking inbox benchmark tests
+NODE_ENV=test node app/lib/navigation_benchmark.test.mjs
+
+# Run Dashboard KPI & multi-tenant analytics tests
+node --env-file=.env.local app/lib/dashboard_analytics.test.mjs
+
+# Run Team Profile integration tests
+node --env-file=.env.local app/lib/team_profile.test.mjs
+
 # Run AI Agent unit tests
 node --test app/lib/ai/agent_foundation.test.mjs
 
